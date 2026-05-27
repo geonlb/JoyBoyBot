@@ -3,10 +3,10 @@ const Database = require('better-sqlite3');
 
 // Configuration
 const config = {
-  BOT_USERNAME: 'JoyBoy_Bot',
-  BOT_TOKEN: 'oauth:f2z9d88qfwprxp8ucq63zjjjuxi0w2',
-  CHANNEL: 'NeyLaBrise',
-  STREAMER: 'NeyLaBrise'
+  BOT_USERNAME: process.env.JoyBoyBot,
+  BOT_TOKEN: process.env.oauth:9w76c932djulze7uhrqdwjbk4d5fnn,
+  CHANNEL: process.env.NeyLaBrise,
+  STREAMER: process.env.NeyLaBrise
 };
 
 // Base de données
