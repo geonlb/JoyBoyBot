@@ -66,6 +66,12 @@ const images = {
 let dernierVideo = 0;
 const COOLDOWN_VIDEO = 60000;
 
+// Cooldown primes
+const COOLDOWN_MESSAGE_BERRY = 30000; // 30 secondes
+const COOLDOWN_MAPRIME = 600000; // 10 minutes
+let dernierTopPrime = 0;
+const COOLDOWN_TOPPRIME = 120000; // 2 minutes
+
 // Vidéos disponibles
 const videos = {
   'onepiece': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\onepiece.mp4',
@@ -93,6 +99,15 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS compteur (
     username TEXT PRIMARY KEY,
     subs INTEGER DEFAULT 0
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS primes (
+    username TEXT PRIMARY KEY,
+    berrys INTEGER DEFAULT 0,
+    dernierMessage INTEGER DEFAULT 0,
+    dernierePrime INTEGER DEFAULT 0
   )
 `);
 
@@ -176,10 +191,18 @@ client.on('message', async (channel, tags, message, self) => {
     }
     return;
   }
-  if (self) return;
-  const username = tags['display-name'];
-  const msg = message.trim().toLowerCase();
-  const isMod = tags.mod || username.toLowerCase() === config.STREAMER.toLowerCase();
+ if (self) return;
+const username = tags['display-name'];
+const msg = message.trim().toLowerCase();
+const isMod = tags.mod || username.toLowerCase() === config.STREAMER.toLowerCase();
+
+// Gagner des Berrys en chattant
+const now = Date.now();
+db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
+const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY) {
+  db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
+}
 
   // !paliers
   if (msg === '!paliers') {
@@ -234,6 +257,43 @@ if (msg === '!messubs') {
   }
   return;
 }
+
+// !maprime
+if (msg === '!maprime') {
+  const now = Date.now();
+  const row = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+  if (row && now - row.dernierePrime < COOLDOWN_MAPRIME) {
+    const restant = Math.ceil((COOLDOWN_MAPRIME - (now - row.dernierePrime)) / 60000);
+    client.say(channel, `⏳ ${username} attend encore ${restant} minute(s) pour checker ta prime !`);
+    return;
+  }
+  db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
+  db.prepare('UPDATE primes SET dernierePrime = ? WHERE username = ?').run(now, username.toLowerCase());
+  const prime = db.prepare('SELECT berrys FROM primes WHERE username = ?').get(username.toLowerCase());
+  client.say(channel, `💰 ${username} ta prime est de ${prime.berrys.toLocaleString()} Berrys ! 🏴‍☠️`);
+  return;
+}
+
+// !topprime
+if (msg === '!topprime') {
+  const now = Date.now();
+  if (now - dernierTopPrime < COOLDOWN_TOPPRIME) {
+    const restant = Math.ceil((COOLDOWN_TOPPRIME - (now - dernierTopPrime)) / 1000);
+    client.say(channel, `⏳ Attends encore ${restant} secondes pour le classement !`);
+    return;
+  }
+  dernierTopPrime = now;
+  const top = db.prepare('SELECT username, berrys FROM primes ORDER BY berrys DESC LIMIT 5').all();
+  if (top.length === 0) {
+    client.say(channel, 'Aucune prime pour le moment !');
+    return;
+  }
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+  const liste = top.map((r, i) => `${medals[i]} ${r.username}: ${r.berrys.toLocaleString()} Berrys`).join(' | ');
+  client.say(channel, `🏆 Top primes: ${liste}`);
+  return;
+}
+
   // !equipage
   if (msg.startsWith('!equipage')) {
     const faction = msg.split(' ')[1];
@@ -437,5 +497,39 @@ async function afficherPersonnage(personnage) {
     console.log('Erreur OBS:', err.message);
   }
 }
+
+// Détection des subs automatiques
+client.on('subscription', (channel, username, method, message, userstate) => {
+  const user = username.toLowerCase();
+  let row = db.prepare('SELECT * FROM compteur WHERE username = ?').get(user);
+  if (!row) {
+    db.prepare('INSERT INTO compteur (username, subs) VALUES (?, 1)').run(user);
+    row = { subs: 1 };
+  } else {
+    db.prepare('UPDATE compteur SET subs = subs + 1 WHERE username = ?').run(user);
+    row.subs += 1;
+  }
+  client.say(channel, `🏴‍☠️ ${username} a rejoint le Grand Line ! Total : ${row.subs} sub(s) !`);
+  if ([10, 25, 50, 80].includes(row.subs)) {
+    client.say(channel, `🎉 ${username} atteint le palier ${row.subs} subs ! Tape !dispo pour choisir ton personnage !`);
+  }
+});
+
+// Détection des subs offerts
+client.on('subgift', (channel, username, streakMonths, recipient, methods, userstate) => {
+  const user = recipient.toLowerCase();
+  let row = db.prepare('SELECT * FROM compteur WHERE username = ?').get(user);
+  if (!row) {
+    db.prepare('INSERT INTO compteur (username, subs) VALUES (?, 1)').run(user);
+    row = { subs: 1 };
+  } else {
+    db.prepare('UPDATE compteur SET subs = subs + 1 WHERE username = ?').run(user);
+    row.subs += 1;
+  }
+  client.say(channel, `🎁 ${username} a offert un sub à ${recipient} ! ${recipient} a maintenant ${row.subs} sub(s) !`);
+  if ([10, 25, 50, 80].includes(row.subs)) {
+    client.say(channel, `🎉 ${recipient} atteint le palier ${row.subs} subs ! Tape !dispo pour choisir ton personnage !`);
+  }
+});
 
 console.log('JoyBoyBot est en ligne ! 🏴‍☠️');
