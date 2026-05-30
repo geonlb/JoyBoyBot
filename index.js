@@ -7,7 +7,7 @@ const obs = new OBSWebSocket();
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(
   'https://usbsivjrputwwrohezwk.supabase.co',
-  'TASERVICEROLEKEY'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs'
 );
 
 // Connexion OBS
@@ -208,9 +208,11 @@ db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dern
 const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
 if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY) {
   db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
+  const updatedPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+  supabase.from('primes').upsert({ username: username.toLowerCase(), berrys: updatedPrime.berrys, derniermessage: now, derniereprime: updatedPrime.dernierePrime }).then(({error}) => {
+    if (error) console.log('Erreur Supabase:', error.message);
+  });
 }
-const updatedPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
-supabase.from('primes').upsert({ username: username.toLowerCase(), berrys: updatedPrime.berrys, dernierMessage: now, dernierePrime: updatedPrime.dernierePrime }).then();
 
   // !paliers
   if (msg === '!paliers') {
