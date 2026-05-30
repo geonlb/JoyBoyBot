@@ -4,6 +4,12 @@ const Database = require('better-sqlite3');
 const OBSWebSocket = require('obs-websocket-js').default;
 const obs = new OBSWebSocket();
 
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(
+  'https://usbsivjrputwwrohezwk.supabase.co',
+  'TASERVICEROLEKEY'
+);
+
 // Connexion OBS
 obs.connect('ws://localhost:4455', 'XsTEosj4q37LH4nF').catch(err => {
   console.log('OBS non connecté:', err.message);
@@ -135,7 +141,7 @@ const personnages = {
     'marine': ['Fujitora','Ryokugyu','Aokiji','Kizaru']
   },
   4: {
-    'equipage': ['Zoro'],
+    'equipage': ['Zoro','Luffy'],
     'bigmom': [],
     'empereurs': ['Shanks','Kaido','BarbeBlanche','BarbeNoire'],
     'grandscorsaires': [],
@@ -203,6 +209,8 @@ const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(user
 if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY) {
   db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
 }
+const updatedPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+supabase.from('primes').upsert({ username: username.toLowerCase(), berrys: updatedPrime.berrys, dernierMessage: now, dernierePrime: updatedPrime.dernierePrime }).then();
 
   // !paliers
   if (msg === '!paliers') {
@@ -357,7 +365,8 @@ if (msg === '!topprime') {
       return;
     }
     db.prepare('INSERT OR REPLACE INTO membres (username, personnage, faction, niveau) VALUES (?, ?, ?, ?)')
-      .run(targetUser.toLowerCase(), personnage.toLowerCase(), info.faction, info.niveau);
+  .run(targetUser.toLowerCase(), personnage.toLowerCase(), info.faction, info.niveau);
+supabase.from('membres').upsert({ username: targetUser.toLowerCase(), personnage: personnage.toLowerCase(), faction: info.faction, niveau: info.niveau }).then();
     client.say(channel, `⚔️ ${targetUser} rejoint officiellement l'équipage en tant que ${personnage} ! Bienvenue dans le Grand Line ! 🏴‍☠️`);
     return;
   }
@@ -384,13 +393,15 @@ if (msg.startsWith('!addsub') && username.toLowerCase() === config.STREAMER.toLo
   }
   let row = db.prepare('SELECT * FROM compteur WHERE username = ?').get(targetUser.toLowerCase());
   if (!row) {
+
     db.prepare('INSERT INTO compteur (username, subs) VALUES (?, ?)').run(targetUser.toLowerCase(), nombre);
     row = { subs: nombre };
   } else {
     db.prepare('UPDATE compteur SET subs = subs + ? WHERE username = ?').run(nombre, targetUser.toLowerCase());
     row.subs += nombre;
-  }
-  client.say(channel, `🏴‍☠️ ${targetUser} a maintenant ${row.subs} sub(s) ! Paliers : 10/25/50/80 !`);
+supabase.from('compteur').upsert({ username: targetUser.toLowerCase(), subs: row.subs }).then();
+
+  }  client.say(channel, `🏴‍☠️ ${targetUser} a maintenant ${row.subs} sub(s) ! Paliers : 10/25/50/80 !`);
   if ([10, 25, 50, 80].includes(row.subs)) {
     client.say(channel, `🎉 ${targetUser} atteint le palier ${row.subs} subs ! Tape !dispo pour voir les personnages disponibles !`);
   }
