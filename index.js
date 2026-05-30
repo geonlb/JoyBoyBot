@@ -379,7 +379,7 @@ client.on('message', async (channel, tags, message, self) => {
   }
  
   // !addsub (streamer seulement)
-  if (msg.startsWith('!addsub') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+  if (msg.startsWith('!addsub') && (username.toLowerCase() === config.STREAMER.toLowerCase() || username.toLowerCase() === 'biig_maama')) {
     const parts = msg.split(' ');
     const targetUser = parts[1];
     const nombre = parseInt(parts[2]) || 1;
