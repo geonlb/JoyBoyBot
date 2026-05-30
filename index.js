@@ -423,6 +423,26 @@ client.on('message', async (channel, tags, message, self) => {
     client.say(channel, `✅ ${targetUser} a maintenant ${newSubs} sub(s) !`);
     return;
   }
+
+// !addberrys (streamer seulement)
+if (msg.startsWith('!addberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+  const parts = msg.split(' ');
+  const targetUser = parts[1];
+  const nombre = parseInt(parts[2]) || 0;
+  if (!targetUser || nombre <= 0) {
+    client.say(channel, 'Usage: !addberrys [username] [nombre]');
+    return;
+  }
+  db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
+  db.prepare('UPDATE primes SET berrys = berrys + ? WHERE username = ?').run(nombre, targetUser.toLowerCase());
+  const prime = db.prepare('SELECT berrys FROM primes WHERE username = ?').get(targetUser.toLowerCase());
+  const primeActuelle = db.prepare('SELECT * FROM primes WHERE username = ?').get(targetUser.toLowerCase());
+supabase.from('primes').upsert({ username: targetUser.toLowerCase(), berrys: primeActuelle.berrys, derniermessage: primeActuelle.dernierMessage, derniereprime: primeActuelle.dernierePrime }).then(({error}) => {
+  if (error) console.log('Erreur Supabase addberrys:', error.message);
+});
+  client.say(channel, `💰 ${targetUser} reçoit ${nombre.toLocaleString()} Berrys ! Sa prime est maintenant de ${prime.berrys.toLocaleString()} Berrys ! 🏴‍☠️`);
+  return;
+}
  
   // !equipagecomplet (mod seulement)
   if (msg === '!equipagecomplet' && isMod) {
