@@ -62,6 +62,7 @@ const images = {
   'sengoku': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\sengoku.png',
   'bigmom': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\bigmom.png',
   'luffy': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\luffy.png',
+  'cheater': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\cheater.png',
   'barbenoire': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\barbenoire.png',
 };
  
@@ -99,21 +100,27 @@ const personnages = {
     'bigmom': ['Perospero','Daifuku','Oven','Brulee','Montdor'],
     'empereurs': [],
     'grandscorsaires': [],
-    'marine': ['Koby']
+    'marine': ['Koby'],
+    'antagonistes': ['Sugar','Hawkins','Urouge'],
+    'allies': ['Tama']
   },
   2: {
     'equipage': ['Nami','Robin','Franky','Brook','Vivi','Bonney'],
     'bigmom': ['Smoothie','Cracker','Compote'],
     'empereurs': [],
     'grandscorsaires': ['Baggy','Kuma','Weevil'],
-    'marine': ['Sengoku','Garp','Smoker']
+    'marine': ['Sengoku','Garp','Smoker'],
+    'antagonistes': ['Apoo','Drake','Moria'],
+    'allies': ['Hiyori','Perona','Shirahoshi']
   },
   3: {
     'equipage': ['Sanji','Jinbe','Yamato','Sabo','Rayleigh','Law','Ace'],
     'bigmom': ['Katakuri'],
     'empereurs': [],
     'grandscorsaires': ['Mihawk','Hancock','Doflamingo'],
-    'marine': ['Fujitora','Ryokugyu','Aokiji','Kizaru']
+    'marine': ['Fujitora','Ryokugyu','Aokiji','Kizaru'],
+    'antagonistes': ['Kid','Killer','Crocodile','Lucci'],
+    'allies': ['Marco','Uta','Momonosuke']
   },
   4: {
     'equipage': ['Zoro','Luffy'],
@@ -121,6 +128,8 @@ const personnages = {
     'empereurs': ['Shanks','Kaido','BarbeBlanche','BarbeNoire'],
     'grandscorsaires': [],
     'marine': ['Akainu'],
+    'antagonistes': ['Enel','Kuma'],
+    'allies': ['Oden'],
     'special': ['GoldRoger']
   }
 };
@@ -287,7 +296,7 @@ client.on('message', async (channel, tags, message, self) => {
       return;
     }
     dernierTopPrime = now3;
-    const top = db.prepare('SELECT username, berrys FROM primes ORDER BY berrys DESC LIMIT 5').all();
+    const top = db.prepare("SELECT username, berrys FROM primes WHERE username NOT IN ('neylabrise', 'louiiise_la_brise') ORDER BY berrys DESC LIMIT 5").all();
     if (top.length === 0) {
       client.say(channel, 'Aucune prime pour le moment !');
       return;
