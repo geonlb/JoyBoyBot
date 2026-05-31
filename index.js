@@ -175,6 +175,7 @@ client.on('message', async (channel, tags, message, self) => {
   const username = tags['display-name'];
   const msg = message.trim().toLowerCase();
   const isMod = tags.mod || username.toLowerCase() === config.STREAMER.toLowerCase();
+  const exempts = ['neylabrise', 'louiiise_la_brise'];
  
   // Détection récompenses points de chaîne
   if (tags['custom-reward-id']) {
@@ -199,7 +200,7 @@ client.on('message', async (channel, tags, message, self) => {
   const now = Date.now();
   db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
   const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
-  if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY) {
+  if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY && !exempts.includes(username.toLowerCase())) {
     db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
     const updatedPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
     supabase.from('primes').upsert({ username: username.toLowerCase(), berrys: updatedPrime.berrys, derniermessage: now, derniereprime: updatedPrime.dernierePrime }).then(({ error }) => {
@@ -378,7 +379,7 @@ client.on('message', async (channel, tags, message, self) => {
     return;
   }
  
-  // !addsub (streamer seulement)
+  // !addsub (streamer + mod autorisé)
   if (msg.startsWith('!addsub') && (username.toLowerCase() === config.STREAMER.toLowerCase() || username.toLowerCase() === 'biig_maama')) {
     const parts = msg.split(' ');
     const targetUser = parts[1];
@@ -423,26 +424,42 @@ client.on('message', async (channel, tags, message, self) => {
     client.say(channel, `✅ ${targetUser} a maintenant ${newSubs} sub(s) !`);
     return;
   }
-
-// !addberrys (streamer seulement)
-if (msg.startsWith('!addberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
-  const parts = msg.split(' ');
-  const targetUser = parts[1];
-  const nombre = parseInt(parts[2]) || 0;
-  if (!targetUser || nombre <= 0) {
-    client.say(channel, 'Usage: !addberrys [username] [nombre]');
+ 
+  // !addberrys (streamer seulement)
+  if (msg.startsWith('!addberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+    const parts = msg.split(' ');
+    const targetUser = parts[1];
+    const nombre = parseInt(parts[2]) || 0;
+    if (!targetUser || nombre <= 0) {
+      client.say(channel, 'Usage: !addberrys [username] [nombre]');
+      return;
+    }
+    db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
+    db.prepare('UPDATE primes SET berrys = berrys + ? WHERE username = ?').run(nombre, targetUser.toLowerCase());
+    const primeActuelle = db.prepare('SELECT * FROM primes WHERE username = ?').get(targetUser.toLowerCase());
+    supabase.from('primes').upsert({ username: targetUser.toLowerCase(), berrys: primeActuelle.berrys, derniermessage: primeActuelle.dernierMessage, derniereprime: primeActuelle.dernierePrime }).then(({ error }) => {
+      if (error) console.log('Erreur Supabase addberrys:', error.message);
+    });
+    client.say(channel, `💰 ${targetUser} reçoit ${nombre.toLocaleString()} Berrys ! Sa prime est maintenant de ${primeActuelle.berrys.toLocaleString()} Berrys ! 🏴‍☠️`);
     return;
   }
-  db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
-  db.prepare('UPDATE primes SET berrys = berrys + ? WHERE username = ?').run(nombre, targetUser.toLowerCase());
-  const prime = db.prepare('SELECT berrys FROM primes WHERE username = ?').get(targetUser.toLowerCase());
-  const primeActuelle = db.prepare('SELECT * FROM primes WHERE username = ?').get(targetUser.toLowerCase());
-supabase.from('primes').upsert({ username: targetUser.toLowerCase(), berrys: primeActuelle.berrys, derniermessage: primeActuelle.dernierMessage, derniereprime: primeActuelle.dernierePrime }).then(({error}) => {
-  if (error) console.log('Erreur Supabase addberrys:', error.message);
-});
-  client.say(channel, `💰 ${targetUser} reçoit ${nombre.toLocaleString()} Berrys ! Sa prime est maintenant de ${prime.berrys.toLocaleString()} Berrys ! 🏴‍☠️`);
-  return;
-}
+ 
+  // !removeberrys (streamer seulement)
+  if (msg.startsWith('!removeberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+    const parts = msg.split(' ');
+    const targetUser = parts[1];
+    const nombre = parseInt(parts[2]) || 0;
+    if (!targetUser || nombre <= 0) {
+      client.say(channel, 'Usage: !removeberrys [username] [nombre]');
+      return;
+    }
+    db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
+    db.prepare('UPDATE primes SET berrys = MAX(0, berrys - ?) WHERE username = ?').run(nombre, targetUser.toLowerCase());
+    const prime = db.prepare('SELECT * FROM primes WHERE username = ?').get(targetUser.toLowerCase());
+    supabase.from('primes').upsert({ username: targetUser.toLowerCase(), berrys: prime.berrys, derniermessage: prime.dernierMessage, derniereprime: prime.dernierePrime }).then();
+    client.say(channel, `💸 ${targetUser} perd ${nombre.toLocaleString()} Berrys ! Sa prime est maintenant de ${prime.berrys.toLocaleString()} Berrys !`);
+    return;
+  }
  
   // !equipagecomplet (mod seulement)
   if (msg === '!equipagecomplet' && isMod) {
@@ -526,3 +543,4 @@ client.on('subgift', (channel, username, streakMonths, recipient, methods, users
 });
  
 console.log('JoyBoyBot est en ligne ! 🏴‍☠️');
+ 
