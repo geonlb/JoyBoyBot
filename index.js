@@ -76,12 +76,11 @@ const images = {
   'crocodile': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\crocodile.png',
   'roblucci': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\roblucci.png',
   'enel': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\enel.png',
-  'tama': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\tama.png',
   'otama': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\otama.png',
-  'perona': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\perona.png',
   'hiyori': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\hiyori.png',
   'marco': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\marco.png',
   'uta': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\uta.png',
+  'shirahoshi': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\shirahoshi.png',
   'oden': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\oden.png',
   'momonosuke': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\momonosuke.png',
 };
@@ -122,7 +121,7 @@ const personnages = {
     'grandscorsaires': [],
     'marine': ['Koby'],
     'antagonistes': ['Sugar','Hawkins','Urouge'],
-    'allies': ['Tama']
+    'allies': ['Otama']
   },
   2: {
     'equipage': ['Nami','Robin','Franky','Brook','Vivi','Bonney'],
@@ -139,7 +138,7 @@ const personnages = {
     'empereurs': [],
     'grandscorsaires': ['Mihawk','Hancock','Doflamingo'],
     'marine': ['Fujitora','Ryokugyu','Aokiji','Kizaru'],
-    'antagonistes': ['Kid','Killer','Crocodile','Lucci'],
+    'antagonistes': ['Kid','Killer','Crocodile','RobLucci'],
     'allies': ['Marco','Uta','Momonosuke']
   },
   4: {
@@ -331,7 +330,7 @@ client.on('message', async (channel, tags, message, self) => {
   if (msg.startsWith('!equipage')) {
     const faction = msg.split(' ')[1];
     if (!faction) {
-      client.say(channel, 'Usage: !equipage [equipage/bigmom/empereurs/grandscorsaires/marine]');
+      client.say(channel, 'Usage: !equipage [equipage/bigmom/empereurs/grandscorsaires/marine/antagonistes/allies]');
       return;
     }
     const membres = db.prepare('SELECT username, personnage FROM membres WHERE faction = ?').all(faction);
