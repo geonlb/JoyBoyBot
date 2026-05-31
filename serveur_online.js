@@ -108,12 +108,14 @@ app.get('/grandline', async (req, res) => {
   }
 
   const factions = [
-    { id: 'equipage', nom: '⚓ Équipage de Luffy', couleur: '#e74c3c', bg: '#2c0a0a' },
-    { id: 'bigmom', nom: '🍰 Équipage de Big Mom', couleur: '#e91e8c', bg: '#2c0a1f' },
-    { id: 'empereurs', nom: '👑 Les Empereurs', couleur: '#f39c12', bg: '#2c1a00' },
-    { id: 'grandscorsaires', nom: '⚔️ Les Grands Corsaires', couleur: '#9b59b6', bg: '#1a0a2c' },
-    { id: 'marine', nom: '🌊 La Marine', couleur: '#3498db', bg: '#0a1a2c' }
-  ];
+  { id: 'equipage', nom: '⚓ Équipage de Luffy', couleur: '#e74c3c', bg: '#2c0a0a' },
+  { id: 'bigmom', nom: '🍰 Équipage de Big Mom', couleur: '#e91e8c', bg: '#2c0a1f' },
+  { id: 'empereurs', nom: '👑 Les Empereurs', couleur: '#f39c12', bg: '#2c1a00' },
+  { id: 'grandscorsaires', nom: '⚔️ Les Grands Corsaires', couleur: '#9b59b6', bg: '#1a0a2c' },
+  { id: 'marine', nom: '🌊 La Marine', couleur: '#3498db', bg: '#0a1a2c' },
+  { id: 'antagonistes', nom: '😈 Les Antagonistes', couleur: '#e74c3c', bg: '#1a0000' },
+  { id: 'allies', nom: '🌸 Les Alliés', couleur: '#2ecc71', bg: '#0a2c1a' }
+];
 
   const factionCards = factions.map(f => {
     const factionMembres = (membres || []).filter(m => m.faction === f.id);
