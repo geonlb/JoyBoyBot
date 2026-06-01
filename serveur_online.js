@@ -270,19 +270,31 @@ app.get('/collection/:username', async (req, res) => {
     'Commun': { emoji: '🟢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
   };
 
-  const fruitsCards = (fruits || []).map(f => {
-    const config = rareteConfig[f.rarete] || rareteConfig['Commun'];
-    const date = new Date(f.obtenu_le).toLocaleDateString('fr-FR');
-    return `
-      <div class="fruit-card" style="border-color: ${config.couleur}; background: ${config.bg}; box-shadow: 0 0 15px ${config.glow};">
-        <div class="fruit-rarete" style="color: ${config.couleur};">${config.emoji} ${f.rarete}</div>
-<img src="/fruits/${f.fruit}.png" alt="${f.fruit}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
-        <div class="fruit-nom">${f.fruit}</div>
-        <div class="fruit-nom-complet" style="color: ${config.couleur};">${f.fruit} no Mi</div>
-        <div class="fruit-date">Obtenu le ${date}</div>
-      </div>
-    `;
-  }).join('');
+  // Regrouper les fruits en double
+const fruitsGroupes = {};
+(fruits || []).forEach(f => {
+  const key = f.fruit;
+  if (fruitsGroupes[key]) {
+    fruitsGroupes[key].count += 1;
+  } else {
+    fruitsGroupes[key] = { ...f, count: 1 };
+  }
+});
+
+const fruitsCards = Object.values(fruitsGroupes).map(f => {
+  const config = rareteConfig[f.rarete] || rareteConfig['Commun'];
+  const date = new Date(f.obtenu_le).toLocaleDateString('fr-FR');
+  return `
+    <div class="fruit-card" style="border-color: ${config.couleur}; background: ${config.bg}; box-shadow: 0 0 15px ${config.glow};">
+      ${f.count > 1 ? `<div class="fruit-count" style="color: ${config.couleur}; font-size: 13px; font-weight: bold; margin-bottom: 5px;">x${f.count}</div>` : ''}
+      <div class="fruit-rarete" style="color: ${config.couleur};">${config.emoji} ${f.rarete}</div>
+      <img src="/fruits/${f.fruit}.png" alt="${f.fruit}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
+      <div class="fruit-nom">${f.fruit}</div>
+      <div class="fruit-nom-complet" style="color: ${config.couleur};">${f.fruit} no Mi</div>
+      <div class="fruit-date">Obtenu le ${date}</div>
+    </div>
+  `;
+}).join('');
 
   const stats = {};
   (fruits || []).forEach(f => { stats[f.rarete] = (stats[f.rarete] || 0) + 1; });
