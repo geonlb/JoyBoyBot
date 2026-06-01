@@ -502,7 +502,7 @@ if (msg === '!fruit') {
     'Légendaire': { chance: 8, liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
     'Épique': { chance: 20, liste: ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Hito-Hito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'] },
     'Rare': { chance: 30, liste: ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'] },
-    'Commun': { chance: 40, liste: ['Bomu-Bomu', 'Uo-Uo', 'Ushi-Ushi', 'Sube-Sube', 'Baku-Baku'] }
+    'Commun': { chance: 40, liste: ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku'] }
   };
 
   // Vérifier si assez de Berrys
