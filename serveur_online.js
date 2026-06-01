@@ -379,11 +379,11 @@ app.get('/animation', (req, res) => {
     .slot-inner { animation: spin 0.1s linear infinite; }
     .slot.stopped .slot-inner { animation: none; }
     @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
-    .fruit-name { color: white; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; animation: showName 0.5s 2.5s forwards; }
+    .fruit-name { color: white; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; animation: showName 0.5s 4s forwards; }
     @keyframes showName { to { opacity: 1; } }
-    .rarete-badge { display: inline-block; background: COULEUR22; border: 2px solid COULEUR; color: COULEUR; padding: 5px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; letter-spacing: 3px; opacity: 0; animation: showBadge 0.5s 3s forwards; }
+    .rarete-badge { display: inline-block; background: COULEUR22; border: 2px solid COULEUR; color: COULEUR; padding: 5px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; letter-spacing: 3px; opacity: 0; animation: showBadge 0.5s 4.5s forwards; }
     @keyframes showBadge { to { opacity: 1; } }
-    .fruit-img { width: 60px; height: 60px; object-fit: contain; opacity: 0; animation: showImg 0.5s 2.8s forwards; }
+    .fruit-img { width: 60px; height: 60px; object-fit: contain; opacity: 0; animation: showImg 0.5s 4s forwards; }
     @keyframes showImg { to { opacity: 1; } }
   </style>
 </head>
@@ -400,9 +400,9 @@ app.get('/animation', (req, res) => {
     <div class="rarete-badge">RARETE</div>
   </div>
   <script>
-    setTimeout(() => document.getElementById('s1').classList.add('stopped'), 2000);
-setTimeout(() => document.getElementById('s2').classList.add('stopped'), 3000);
-setTimeout(() => document.getElementById('s3').classList.add('stopped'), 4000);
+    setTimeout(() => document.getElementById('s1').classList.add('stopped'), 1500);
+setTimeout(() => document.getElementById('s2').classList.add('stopped'), 2500);
+setTimeout(() => document.getElementById('s3').classList.add('stopped'), 3500);
 setTimeout(() => { document.querySelectorAll('.slot-inner').forEach(s => s.innerHTML = '<img src="/fruits/FRUIT.png" style="width:70px;height:70px;object-fit:contain">'; }, 4000);
   </script>
 </body>
