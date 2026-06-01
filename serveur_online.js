@@ -400,11 +400,28 @@ app.get('/animation', (req, res) => {
     <div class="rarete-badge">RARETE</div>
   </div>
   <script>
-    setTimeout(() => document.getElementById('s1').classList.add('stopped'), 1500);
-setTimeout(() => document.getElementById('s2').classList.add('stopped'), 2500);
-setTimeout(() => document.getElementById('s3').classList.add('stopped'), 3500);
-setTimeout(() => { document.querySelectorAll('.slot-inner').forEach(s => s.innerHTML = '<img src="/fruits/FRUIT.png" style="width:70px;height:70px;object-fit:contain">'; }, 4000);
-  </script>
+  const slots = [
+    document.getElementById('s1'),
+    document.getElementById('s2'),
+    document.getElementById('s3')
+  ];
+  
+  const stopTimes = [1500, 2500, 3500];
+  
+  slots.forEach((slot, i) => {
+    let pos = 0;
+    const interval = setInterval(() => {
+      pos -= 10;
+      slot.querySelector('.slot-inner').style.transform = 'translateY(' + (pos % 350) + 'px)';
+    }, 30);
+    
+    setTimeout(() => {
+      clearInterval(interval);
+      slot.querySelector('.slot-inner').style.transform = 'translateY(0)';
+      slot.querySelector('.slot-inner').style.animation = 'none';
+    }, stopTimes[i]);
+  });
+</script>
 </body>
 </html>`;
   res.send(html.replace(/COULEUR/g, couleur).replace(/FRUIT/g, fruit).replace(/RARETE/g, rarete));
