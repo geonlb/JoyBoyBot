@@ -93,6 +93,8 @@ const COOLDOWN_MESSAGE_BERRY = 30000;
 const COOLDOWN_MAPRIME = 600000;
 let dernierTopPrime = 0;
 const COOLDOWN_TOPPRIME = 120000;
+let dernierFruitGlobal = 0;
+const COOLDOWN_FRUIT_GLOBAL = 10000; // 10 secondes
  
 // Vidéos
 const videos = {
@@ -498,6 +500,12 @@ if (msg === '!messubs') {
 
 // !fruit
 if (msg === '!fruit') {
+if (Date.now() - dernierFruitGlobal < COOLDOWN_FRUIT_GLOBAL) {
+  const restant = Math.ceil((COOLDOWN_FRUIT_GLOBAL - (Date.now() - dernierFruitGlobal)) / 1000);
+  client.say(channel, `⏳ Une animation est en cours ! Attends encore ${restant} seconde(s) ! 🍎`);
+  return;
+}
+dernierFruitGlobal = Date.now();
   const fruits = {
     'Mythique': { chance: 2, liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
     'Légendaire': { chance: 8, liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
