@@ -186,6 +186,7 @@ async function afficherPersonnage(personnage) {
     });
     const itemId = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'perso' }).then(r => r.sceneItemId);
     await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: itemId, sceneItemEnabled: true });
+
     setTimeout(async () => {
       const id = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'perso' }).then(r => r.sceneItemId);
       await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: id, sceneItemEnabled: false });
@@ -552,6 +553,20 @@ try {
   });
   const itemId = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
   await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: itemId, sceneItemEnabled: true });
+
+// Son machine à sous
+try {
+  const sonId = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'son_fruit' }).then(r => r.sceneItemId);
+  await obs.call('TriggerMediaInputAction', { inputName: 'son_fruit', mediaAction: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART' });
+  await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: sonId, sceneItemEnabled: true });
+  setTimeout(async () => {
+    const id = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'son_fruit' }).then(r => r.sceneItemId);
+    await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: id, sceneItemEnabled: false });
+  }, 6000);
+} catch (err) {
+  console.log('Erreur son:', err.message);
+}
+
   setTimeout(async () => {
     const id = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
     await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: id, sceneItemEnabled: false });
