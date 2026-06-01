@@ -112,6 +112,11 @@ const db = new Database('joyboy.db');
 db.exec(`CREATE TABLE IF NOT EXISTS membres (username TEXT PRIMARY KEY, personnage TEXT, faction TEXT, niveau INTEGER)`);
 db.exec(`CREATE TABLE IF NOT EXISTS compteur (username TEXT PRIMARY KEY, subs INTEGER DEFAULT 0)`);
 db.exec(`CREATE TABLE IF NOT EXISTS primes (username TEXT PRIMARY KEY, berrys INTEGER DEFAULT 0, dernierMessage INTEGER DEFAULT 0, dernierePrime INTEGER DEFAULT 0)`);
+
+db.exec(`CREATE TABLE IF NOT EXISTS primes (username TEXT PRIMARY KEY, berrys INTEGER DEFAULT 0, dernierMessage INTEGER DEFAULT 0, dernierePrime INTEGER DEFAULT 0)`);
+db.exec(`CREATE TABLE IF NOT EXISTS fruits_stream (username TEXT PRIMARY KEY, fruit TEXT, timestamp INTEGER DEFAULT 0)`);
+
+// Personnages par niveau
  
 // Personnages par niveau
 const personnages = {
@@ -227,7 +232,6 @@ client.on('message', async (channel, tags, message, self) => {
  
   // Gagner des Berrys en chattant
   const now = Date.now();
-  db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
   const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
   if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY && !exempts.includes(username.toLowerCase())) {
     db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
@@ -490,6 +494,59 @@ if (msg === '!messubs') {
     client.say(channel, `💸 ${targetUser} perd ${nombre.toLocaleString()} Berrys ! Sa prime est maintenant de ${prime.berrys.toLocaleString()} Berrys !`);
     return;
   }
+
+// !fruit
+if (msg === '!fruit') {
+  const fruits = {
+    'Mythique': { chance: 2, liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
+    'Légendaire': { chance: 8, liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
+    'Épique': { chance: 20, liste: ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Hito-Hito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'] },
+    'Rare': { chance: 30, liste: ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'] },
+    'Commun': { chance: 40, liste: ['Bomu-Bomu', 'Uo-Uo', 'Ushi-Ushi', 'Sube-Sube', 'Baku-Baku'] }
+  };
+
+  // Vérifier si assez de Berrys
+  const primeRow = db.prepare('SELECT berrys FROM primes WHERE username = ?').get(username.toLowerCase());
+  if (!primeRow || primeRow.berrys < 500) {
+    client.say(channel, `❌ ${username} tu n'as pas assez de Berrys ! Il faut 500 Berrys pour tenter ta chance ! 🍎`);
+    return;
+  }
+
+  // Vérifier si déjà utilisé ce stream
+  const dernierFruit = db.prepare('SELECT fruit, timestamp FROM fruits_stream WHERE username = ?').get(username.toLowerCase());
+if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
+  const restant = Math.ceil((300000 - (Date.now() - dernierFruit.timestamp)) / 60000);
+  client.say(channel, `⏳ ${username} attends encore ${restant} minute(s) avant de retenter ta chance ! 🍎`);
+  return;
+}
+
+  // Tirer la rareté
+  const rand = Math.random() * 100;
+  let rarete = 'Commun';
+  if (rand < 2) rarete = 'Mythique';
+  else if (rand < 10) rarete = 'Légendaire';
+  else if (rand < 30) rarete = 'Épique';
+  else if (rand < 60) rarete = 'Rare';
+
+  // Tirer le fruit
+  const liste = fruits[rarete].liste;
+  const fruit = liste[Math.floor(Math.random() * liste.length)];
+
+  // Déduire les Berrys
+  db.prepare('UPDATE primes SET berrys = berrys - 500 WHERE username = ?').run(username.toLowerCase());
+  const newPrime = db.prepare('SELECT berrys FROM primes WHERE username = ?').get(username.toLowerCase());
+  supabase.from('primes').upsert({ username: username.toLowerCase(), berrys: newPrime.berrys, derniermessage: 0, derniereprime: 0 }).then();
+
+  // Sauvegarder dans la collection
+  db.prepare('INSERT OR REPLACE INTO fruits_stream (username, fruit, timestamp) VALUES (?, ?, ?)').run(username.toLowerCase(), fruit, Date.now());
+  supabase.from('collection').insert({ username: username.toLowerCase(), fruit, rarete }).then();
+
+  // Emojis par rareté
+  const emojis = { 'Mythique': '🔱', 'Légendaire': '⭐', 'Épique': '💜', 'Rare': '💙', 'Commun': '🟢' };
+
+  client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
+  return;
+}
  
   // !equipagecomplet (mod seulement)
   if (msg === '!equipagecomplet' && isMod) {

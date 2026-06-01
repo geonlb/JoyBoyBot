@@ -246,4 +246,97 @@ async function enregistrerEventSub() {
 
 enregistrerEventSub();
 
+app.get('/collection/:username', async (req, res) => {
+  const username = req.params.username.toLowerCase();
+
+  let avatar = 'https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-300x300.png';
+  try {
+    const response = await axios.get(`https://api.twitch.tv/helix/users?login=${username}`, {
+      headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+    });
+    if (response.data.data.length > 0) avatar = response.data.data[0].profile_image_url;
+  } catch (err) {}
+
+  const { data: fruits } = await supabase.from('collection').select('*').eq('username', username).order('obtenu_le', { ascending: false });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  const berrys = primeData ? primeData.berrys : 0;
+
+  const rareteConfig = {
+    'Mythique': { emoji: '🔱', couleur: '#ff00ff', bg: '#2a0a2a', glow: 'rgba(255,0,255,0.5)' },
+    'Légendaire': { emoji: '⭐', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
+    'Épique': { emoji: '💜', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
+    'Rare': { emoji: '💙', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
+    'Commun': { emoji: '🟢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
+  };
+
+  const fruitsCards = (fruits || []).map(f => {
+    const config = rareteConfig[f.rarete] || rareteConfig['Commun'];
+    const date = new Date(f.obtenu_le).toLocaleDateString('fr-FR');
+    return `
+      <div class="fruit-card" style="border-color: ${config.couleur}; background: ${config.bg}; box-shadow: 0 0 15px ${config.glow};">
+        <div class="fruit-rarete" style="color: ${config.couleur};">${config.emoji} ${f.rarete}</div>
+        <div class="fruit-nom">${f.fruit}</div>
+        <div class="fruit-nom-complet" style="color: ${config.couleur};">${f.fruit} no Mi</div>
+        <div class="fruit-date">Obtenu le ${date}</div>
+      </div>
+    `;
+  }).join('');
+
+  const stats = {};
+  (fruits || []).forEach(f => { stats[f.rarete] = (stats[f.rarete] || 0) + 1; });
+
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collection de ${username}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; min-height: 100vh; padding: 30px 20px; font-family: 'Roboto', sans-serif; color: white; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .profile { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
+    .profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #f39c12; }
+    .profile-info h1 { font-family: 'Oswald', sans-serif; font-size: 32px; color: #f39c12; letter-spacing: 3px; }
+    .profile-info p { color: #888; font-size: 14px; }
+    .berrys { font-size: 18px; color: #f39c12; margin-top: 5px; }
+    .divider { width: 200px; height: 2px; background: linear-gradient(to right, transparent, #f39c12, transparent); margin: 15px auto; }
+    .stats { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
+    .stat-badge { padding: 5px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; }
+    .collection-title { font-family: 'Oswald', sans-serif; font-size: 24px; letter-spacing: 4px; color: #f39c12; text-align: center; margin-bottom: 20px; }
+    .fruits-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+    .fruit-card { border: 2px solid; border-radius: 12px; padding: 20px; text-align: center; transition: transform 0.2s; }
+    .fruit-card:hover { transform: scale(1.05); }
+    .fruit-rarete { font-size: 13px; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+    .fruit-nom { font-family: 'Oswald', sans-serif; font-size: 22px; margin-bottom: 5px; }
+    .fruit-nom-complet { font-size: 14px; font-style: italic; margin-bottom: 10px; }
+    .fruit-date { font-size: 11px; color: #666; }
+    .empty { text-align: center; padding: 60px; color: #555; font-size: 18px; }
+    .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; letter-spacing: 3px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="profile">
+      <img src="${avatar}" alt="${username}">
+      <div class="profile-info">
+        <h1>${username}</h1>
+        <p class="berrys">💰 ${berrys.toLocaleString()} Berrys</p>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="stats">
+      ${Object.entries(rareteConfig).map(([r, c]) => stats[r] ? `<span class="stat-badge" style="background: ${c.bg}; color: ${c.couleur}; border: 1px solid ${c.couleur};">${c.emoji} ${r}: ${stats[r]}</span>` : '').join('')}
+    </div>
+    <div class="collection-title">🍎 COLLECTION DE FRUITS DU DÉMON 🍎</div>
+  </div>
+  <div class="fruits-grid">
+    ${fruitsCards || '<div class="empty">Aucun fruit collecté pour le moment !<br>Tape !fruit dans le chat pour commencer !</div>'}
+  </div>
+  <div class="footer"><p>🏴‍☠️ NeyLaBrise — Grand Line 🏴‍☠️</p></div>
+</body>
+</html>`);
+});
+
 app.listen(3000, () => console.log('Serveur online démarré !'));
