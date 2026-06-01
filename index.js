@@ -555,7 +555,7 @@ try {
   setTimeout(async () => {
     const id = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
     await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: id, sceneItemEnabled: false });
-  }, 5000);
+  }, 8000);
 } catch (err) {
   console.log('Erreur OBS fruit:', err.message);
 }
