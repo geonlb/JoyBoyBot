@@ -22,6 +22,7 @@ const images = {
   'chopper': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\chopper.png',
   'carrot': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\carrot.png',
   'bartolomeo': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\bartolomeo.png',
+  'perospero': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\perospero.png',
   'brulee': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\brulee.png',
   'daifuku': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\daifuku.png',
   'oven': 'C:\\Users\\sdeni\\Downloads\\PERSO OP OBS\\oven.png',

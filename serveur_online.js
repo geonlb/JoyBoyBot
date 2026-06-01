@@ -2,6 +2,11 @@ const express = require('express');
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
+const REWARD_ID = '5b62a20f-6679-402f-b5de-f307c3224eb8';
+const BROADCASTER_ID = '122593539';
+const TWITCH_CLIENT_ID = '4wl3wc4mnurd77ctzhl8s8v6gak6yl';
+const TWITCH_TOKEN = '4eep42xahpyaye3kq8qx1odj0va7xx';
+
 const app = express();
 const path = require('path');
 app.use(express.static(path.join(__dirname)));
@@ -178,5 +183,67 @@ app.get('/grandline', async (req, res) => {
 </body>
 </html>`);
 });
+
+// EventSub webhook pour les points de chaîne
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
+
+app.post('/eventsub', async (req, res) => {
+  const messageType = req.headers['twitch-eventsub-message-type'];
+  
+  if (messageType === 'webhook_callback_verification') {
+    return res.send(req.body.challenge);
+  }
+  
+  if (messageType === 'notification') {
+    const event = req.body.event;
+    if (event.reward.id === REWARD_ID) {
+      const username = event.user_login.toLowerCase();
+      console.log(`Rachat 1-SUB détecté pour ${username}`);
+      
+      const { data: compteurData } = await supabase.from('compteur').select('subs').eq('username', username).single();
+      const newSubs = compteurData ? compteurData.subs + 1 : 1;
+      await supabase.from('compteur').upsert({ username, subs: newSubs });
+      
+      const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+      const newBerrys = primeData ? primeData.berrys + 5000 : 5000;
+      await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+      
+      console.log(`${username} a maintenant ${newSubs} sub(s) et ${newBerrys} Berrys !`);
+    }
+  }
+  
+  res.sendStatus(200);
+});
+
+async function enregistrerEventSub() {
+  try {
+    const tokenRes = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: TWITCH_CLIENT_ID,
+        client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq',
+        grant_type: 'client_credentials'
+      }
+    });
+    const appToken = tokenRes.data.access_token;
+    
+    await axios.post('https://api.twitch.tv/helix/eventsub/subscriptions', {
+      type: 'channel.channel_points_custom_reward_redemption.add',
+      version: '1',
+      condition: { broadcaster_user_id: BROADCASTER_ID, reward_id: REWARD_ID },
+      transport: { method: 'webhook', callback: 'https://joyboybot-web.onrender.com/eventsub', secret: 'joyboybotsecret123' }
+    }, {
+      headers: {
+        'Client-ID': TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${appToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    console.log('EventSub enregistré !');
+  } catch (err) {
+    console.log('EventSub erreur:', err.response?.data || err.message);
+  }
+}
+
+enregistrerEventSub();
 
 app.listen(3000, () => console.log('Serveur online démarré !'));
