@@ -544,8 +544,24 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   // Emojis par rareté
   const emojis = { 'Mythique': '🔱', 'Légendaire': '⭐', 'Épique': '💜', 'Rare': '💙', 'Commun': '🟢' };
 
+// Animation OBS fruit
+try {
+  await obs.call('SetInputSettings', {
+    inputName: 'fruit_animation',
+    inputSettings: { url: `http://localhost:3000/animation?fruit=${encodeURIComponent(fruit)}&rarete=${encodeURIComponent(rarete)}` }
+  });
+  const itemId = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
+  await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: itemId, sceneItemEnabled: true });
+  setTimeout(async () => {
+    const id = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
+    await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: id, sceneItemEnabled: false });
+  }, 5000);
+} catch (err) {
+  console.log('Erreur OBS fruit:', err.message);
+}
+
   const chances = { 'Mythique': '2%', 'Légendaire': '8%', 'Épique': '20%', 'Rare': '30%', 'Commun': '40%' };
-client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} (${chances[rarete]} de chance) ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`); ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
+client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} (${chances[rarete]} de chance) ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
   return;
 }
  
