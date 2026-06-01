@@ -10,6 +10,7 @@ const TWITCH_TOKEN = '4eep42xahpyaye3kq8qx1odj0va7xx';
 const app = express();
 const path = require('path');
 app.use(express.static(path.join(__dirname)));
+app.use('/fruits', express.static(path.join(__dirname, 'fruits')));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://usbsivjrputwwrohezwk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs';
@@ -275,6 +276,7 @@ app.get('/collection/:username', async (req, res) => {
     return `
       <div class="fruit-card" style="border-color: ${config.couleur}; background: ${config.bg}; box-shadow: 0 0 15px ${config.glow};">
         <div class="fruit-rarete" style="color: ${config.couleur};">${config.emoji} ${f.rarete}</div>
+<img src="/fruits/${f.fruit}.png" alt="${f.fruit}" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
         <div class="fruit-nom">${f.fruit}</div>
         <div class="fruit-nom-complet" style="color: ${config.couleur};">${f.fruit} no Mi</div>
         <div class="fruit-date">Obtenu le ${date}</div>
