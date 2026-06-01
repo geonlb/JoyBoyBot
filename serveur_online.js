@@ -356,7 +356,6 @@ const fruitsCards = Object.values(fruitsGroupes).map(f => {
 app.get('/animation', (req, res) => {
   const fruit = req.query.fruit || '';
   const rarete = req.query.rarete || 'Commun';
-  
   const couleurs = {
     'Mythique': '#ff00ff',
     'Légendaire': '#ffd700',
@@ -364,106 +363,27 @@ app.get('/animation', (req, res) => {
     'Rare': '#3498db',
     'Commun': '#2ecc71'
   };
-  
   const couleur = couleurs[rarete] || '#2ecc71';
-  
-  res.send(`<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: transparent;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 500px;
-      height: 400px;
-      font-family: 'Arial Black', sans-serif;
-      overflow: hidden;
-    }
-    .machine {
-      background: linear-gradient(145deg, #1a1a2e, #16213e);
-      border: 4px solid ${couleur};
-      border-radius: 20px;
-      padding: 30px;
-      text-align: center;
-      box-shadow: 0 0 40px ${couleur}88;
-      width: 460px;
-      opacity: 0;
-      animation: fadeIn 0.3s forwards;
-    }
+    body { background: transparent; display: flex; justify-content: center; align-items: center; width: 500px; height: 400px; font-family: Arial Black, sans-serif; overflow: hidden; }
+    .machine { background: linear-gradient(145deg, #1a1a2e, #16213e); border: 4px solid COULEUR; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 40px COULEUR88; width: 460px; opacity: 0; animation: fadeIn 0.3s forwards; }
     @keyframes fadeIn { to { opacity: 1; } }
-    .title {
-      color: ${couleur};
-      font-size: 18px;
-      letter-spacing: 4px;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-    }
-    .slots {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      height: 100px;
-      overflow: hidden;
-    }
-    .slot {
-      background: #0a0a1a;
-      border: 2px solid ${couleur}66;
-      border-radius: 10px;
-      width: 100px;
-      height: 100px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      position: relative;
-      overflow: hidden;
-    }
-    .slot-inner {
-      animation: spin 0.1s linear infinite;
-    }
-    .slot.stopped .slot-inner {
-      animation: none;
-    }
-    @keyframes spin {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-100%); }
-    }
-    .fruit-name {
-      color: white;
-      font-size: 22px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin-bottom: 10px;
-      opacity: 0;
-      animation: showName 0.5s 2.5s forwards;
-    }
+    .title { color: COULEUR; font-size: 18px; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase; }
+    .slots { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; height: 100px; overflow: hidden; }
+    .slot { background: #0a0a1a; border: 2px solid COULEUR; border-radius: 10px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .slot-inner { animation: spin 0.1s linear infinite; }
+    .slot.stopped .slot-inner { animation: none; }
+    @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
+    .fruit-name { color: white; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; animation: showName 0.5s 2.5s forwards; }
     @keyframes showName { to { opacity: 1; } }
-    .rarete-badge {
-      display: inline-block;
-      background: ${couleur}22;
-      border: 2px solid ${couleur};
-      color: ${couleur};
-      padding: 5px 20px;
-      border-radius: 20px;
-      font-size: 16px;
-      font-weight: bold;
-      letter-spacing: 3px;
-      opacity: 0;
-      animation: showBadge 0.5s 3s forwards;
-    }
+    .rarete-badge { display: inline-block; background: COULEUR22; border: 2px solid COULEUR; color: COULEUR; padding: 5px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; letter-spacing: 3px; opacity: 0; animation: showBadge 0.5s 3s forwards; }
     @keyframes showBadge { to { opacity: 1; } }
-    .fruit-img {
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-      opacity: 0;
-      animation: showImg 0.5s 2.8s forwards;
-    }
+    .fruit-img { width: 60px; height: 60px; object-fit: contain; opacity: 0; animation: showImg 0.5s 2.8s forwards; }
     @keyframes showImg { to { opacity: 1; } }
   </style>
 </head>
@@ -475,21 +395,19 @@ app.get('/animation', (req, res) => {
       <div class="slot" id="s2"><div class="slot-inner">🍊🍋🍇🍓🍑🍒🥭🍍🥥🍎</div></div>
       <div class="slot" id="s3"><div class="slot-inner">🍋🍇🍓🍑🍒🥭🍍🥥🍎🍊</div></div>
     </div>
-    <img class="fruit-img" src="/fruits/${fruit}.png" alt="${fruit}">
-    <div class="fruit-name">${fruit} no Mi</div>
-    <div class="rarete-badge">${rarete}</div>
+    <img class="fruit-img" src="/fruits/FRUIT.png" alt="FRUIT">
+    <div class="fruit-name">FRUIT no Mi</div>
+    <div class="rarete-badge">RARETE</div>
   </div>
   <script>
     setTimeout(() => document.getElementById('s1').classList.add('stopped'), 800);
     setTimeout(() => document.getElementById('s2').classList.add('stopped'), 1400);
     setTimeout(() => document.getElementById('s3').classList.add('stopped'), 2000);
-    setTimeout(() => {
-      document.querySelector('.slot-inner') && null;
-      document.querySelectorAll('.slot-inner').forEach(s => s.textContent = '🍎');
-    }, 2000);
+    setTimeout(() => { document.querySelectorAll('.slot-inner').forEach(s => s.textContent = '🍎'); }, 2000);
   </script>
 </body>
-</html>`);
+</html>`;
+  res.send(html.replace(/COULEUR/g, couleur).replace(/FRUIT/g, fruit).replace(/RARETE/g, rarete));
 });
 
 app.listen(3000, () => console.log('Serveur online démarré !'));

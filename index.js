@@ -548,7 +548,7 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
 try {
   await obs.call('SetInputSettings', {
     inputName: 'fruit_animation',
-    inputSettings: { url: `http://localhost:3000/animation?fruit=${encodeURIComponent(fruit)}&rarete=${encodeURIComponent(rarete)}` }
+    inputSettings: { url: `https://joyboybot-web.onrender.com/animation?fruit=${encodeURIComponent(fruit)}&rarete=${encodeURIComponent(rarete)}` }
   });
   const itemId = await obs.call('GetSceneItemId', { sceneName: 'Alertes', sourceName: 'fruit_animation' }).then(r => r.sceneItemId);
   await obs.call('SetSceneItemEnabled', { sceneName: 'Alertes', sceneItemId: itemId, sceneItemEnabled: true });
