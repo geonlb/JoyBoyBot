@@ -275,21 +275,22 @@ client.on('message', async (channel, tags, message, self) => {
     return;
   }
  
-  // !messubs
-  if (msg === '!messubs') {
-    const row = db.prepare('SELECT * FROM compteur WHERE username = ?').get(username.toLowerCase());
-    if (!row || row.subs === 0) {
-      client.say(channel, `${username} tu n'as pas encore de subs !`);
+// !messubs
+if (msg === '!messubs') {
+  const { data: rowSupabase } = await supabase.from('compteur').select('subs').eq('username', username.toLowerCase()).single();
+  const subs = rowSupabase ? rowSupabase.subs : 0;
+  if (subs === 0) {
+    client.say(channel, `${username} tu n'as pas encore de subs !`);
+  } else {
+    const prochainPalier = [10, 25, 50, 80].find(p => p > subs);
+    if (prochainPalier) {
+      client.say(channel, `⚔️ ${username} tu as ${subs} sub(s) ! Il te manque ${prochainPalier - subs} sub(s) pour atteindre le palier ${prochainPalier} !`);
     } else {
-      const prochainPalier = [10, 25, 50, 80].find(p => p > row.subs);
-      if (prochainPalier) {
-        client.say(channel, `⚔️ ${username} tu as ${row.subs} sub(s) ! Il te manque ${prochainPalier - row.subs} sub(s) pour atteindre le palier ${prochainPalier} !`);
-      } else {
-        client.say(channel, `👑 ${username} tu as ${row.subs} sub(s) ! Tu es au niveau maximum !`);
-      }
+      client.say(channel, `👑 ${username} tu as ${subs} sub(s) ! Tu es au niveau maximum !`);
     }
-    return;
   }
+  return;
+}
  
   // !maprime
   if (msg === '!maprime') {
