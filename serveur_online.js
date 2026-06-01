@@ -399,7 +399,10 @@ app.get('/animation', (req, res) => {
     <div class="fruit-name">FRUIT no Mi</div>
     <div class="rarete-badge">RARETE</div>
   </div>
-  <script>
+  <audio id="spinSound" src="/spin.mp3" preload="auto"></audio>
+<script>
+<script>
+  document.getElementById('spinSound').play();
   const slots = [
     document.getElementById('s1'),
     document.getElementById('s2'),
