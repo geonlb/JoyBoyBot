@@ -377,7 +377,7 @@ app.get('/animation', (req, res) => {
     .slots { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; height: 100px; overflow: hidden; }
     .slot { background: #0a0a1a; border: 2px solid COULEUR; border-radius: 10px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     .slot-inner { animation: spin 0.1s linear infinite; }
-    .slot.stopped .slot-inner { animation: none; }
+    .slot.stopped .slot-inner { animation: none !important; transform: translateY(0); }
     @keyframes spin { 0% { transform: translateY(0); } 100% { transform: translateY(-100%); } }
     .fruit-name { color: white; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; animation: showName 0.5s 4s forwards; }
     @keyframes showName { to { opacity: 1; } }
