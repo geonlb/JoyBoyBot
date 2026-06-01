@@ -544,7 +544,8 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   // Emojis par rareté
   const emojis = { 'Mythique': '🔱', 'Légendaire': '⭐', 'Épique': '💜', 'Rare': '💙', 'Commun': '🟢' };
 
-  client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
+  const chances = { 'Mythique': '2%', 'Légendaire': '8%', 'Épique': '20%', 'Rare': '30%', 'Commun': '40%' };
+client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} (${chances[rarete]} de chance) ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`); ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
   return;
 }
  
