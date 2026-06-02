@@ -256,7 +256,7 @@ app.get('/collection/:username', async (req, res) => {
     return `
     <div class="shelf-section">
       <div class="shelf-header" style="border-left: 5px solid ${config.couleur}; background: ${config.bg};">
-        <span class="shelf-title" style="color: ${config.couleur};">${rareteLabels[rarete]}</span>
+        <span class="shelf-title" style="color: ${config.couleur};">${rarete}</span>
         <span class="shelf-count">${fruitsDeRarete.length} fruit(s)</span>
       </div>
       <div class="shelf">
