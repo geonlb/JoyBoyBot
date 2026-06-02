@@ -217,11 +217,11 @@ app.get('/collection/:username', async (req, res) => {
   const berrys = primeData ? primeData.berrys : 0;
 
   const rareteConfig = {
-    'Mythique': { emoji: 'ðŸ”±', couleur: '#ff00ff', bg: '#2a0a2a', glow: 'rgba(255,0,255,0.5)' },
-    'Légendaire': { emoji: 'â­', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
-    'Épique': { emoji: 'ðŸ’œ', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
-    'Rare': { emoji: 'ðŸ’™', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
-    'Commun': { emoji: 'ðŸŸ¢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
+    'Mythique': { emoji: '🔱', couleur: '#ff00ff', bg: '#2a0a2a', glow: 'rgba(255,0,255,0.5)' },
+    'Légendaire': { emoji: '⭐', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
+    'Épique': { emoji: '💜', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
+    'Rare': { emoji: '💙', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
+    'Commun': { emoji: '🟢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
   };
 
   const fruitsGroupes = {};
@@ -314,8 +314,7 @@ app.get('/collection/:username', async (req, res) => {
     <div class="stats">
       ${Object.entries(rareteConfig).map(([r, c]) => stats[r] ? `<span class="stat-badge" style="background: ${c.bg}; color: ${c.couleur}; border: 1px solid ${c.couleur};">${c.emoji} ${r}: ${stats[r]}</span>` : '').join('')}
     </div>
-    <div class="collection-title">ðŸŽ COLLECTION DE FRUITS DU DEMON ðŸŽ</div>
-  </div>
+    <div class="collection-title">🍎 COLLECTION DE FRUITS DU DÉMON 🍎</div>
   ${etageres}
   <div class="footer"><p>NeyLaBrise â€” Grand Line</p></div>
 </body>
