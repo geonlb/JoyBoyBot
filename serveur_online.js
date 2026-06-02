@@ -11,6 +11,7 @@ const app = express();
 const path = require('path');
 app.use(express.static(path.join(__dirname)));
 app.use('/fruits', express.static(path.join(__dirname, 'fruits')));
+app.use('/persos', express.static(path.join(__dirname, 'persos')));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://usbsivjrputwwrohezwk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs';
@@ -77,7 +78,7 @@ app.get('/prime/:username', async (req, res) => {
       <div class="bounty-label">Prime</div>
       <div class="bounty">${berrys.toLocaleString()}</div>
       <div class="bounty-unit">BERRYS</div>
-      <div class="footer">NeyLaBrise â€” Grand Line</div>
+      <div class="footer">NeyLaBrise - Grand Line</div>
     </div>
   </div>
 </body>
@@ -149,10 +150,10 @@ app.get('/grandline', async (req, res) => {
   <div class="header">
     <h1>GRAND LINE</h1>
     <div class="divider"></div>
-    <p>CARTE DES EQUIPAGES â€” NEYLABRISE</p>
+    <p>CARTE DES EQUIPAGES - NEYLABRISE</p>
   </div>
   <div class="factions-grid">${factionCards}</div>
-  <div class="footer"><p>NeyLaBrise â€” Mis a jour en temps reel</p></div>
+  <div class="footer"><p>NeyLaBrise - Mis a jour en temps reel</p></div>
 </body>
 </html>`);
 });
@@ -248,6 +249,17 @@ app.get('/collection/:username', async (req, res) => {
     'Commun':     ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku']
   };
 
+  const fruitPerso = {
+    'Gum-Gum': 'luffy', 'Mochi-Mochi': 'katakuri', 'Goro-Goro': 'enel', 'Ope-Ope': 'law',
+    'Yami-Yami': 'barbenoire', 'Uo-Uo': 'kaido', 'Soru-Soru': 'bigmom', 'Neko-Neko': 'roblucci', 'Inu-Inu': 'yamato',
+    'Mera-Mera': 'ace', 'Magu-Magu': 'akainu', 'Hie-Hie': 'aokiji', 'Pika-Pika': 'kizaru',
+    'Gura-Gura': 'barbeblanche', 'Nikyu-Nikyu': 'kuma', 'Mero-Mero': 'hancock', 'Jiki-Jiki': 'kidd', 'Toshi-Toshi': 'bonney',
+    'Suna-Suna': 'crocodile', 'Hana-Hana': 'robin', 'Ito-Ito': 'doflamingo', 'Moku-Moku': 'smoker',
+    'Uta-Uta': 'uta', 'Tsuchi-Tsuchi': 'moria', 'Ushi-Ushi': 'dalton',
+    'Yomi-Yomi': 'brook', 'Hobi-Hobi': 'sugar', 'Bara-Bara': 'baggy', 'Horo-Horo': 'perona',
+    'Doru-Doru': 'galdino', 'Clank-Clank': 'douglasbullet', 'Hito-Hito': 'chopper',
+    'Bomu-Bomu': 'ganzui', 'Seiryu': 'momonosuke', 'Sube-Sube': 'alvida', 'Baku-Baku': 'wapol'
+  };
   const fruitsObtenus = new Set(Object.keys(fruitsGroupes));
 
   const etageres = rareteOrder.map(rarete => {
@@ -260,7 +272,16 @@ app.get('/collection/:username', async (req, res) => {
         <div class="fruit-item ${obtenu ? 'obtenu' : 'non-obtenu'}">
           ${count > 1 ? `<div class="fruit-count">${count}x</div>` : ''}
           <img src="/fruits/${fruit}.png" alt="${fruit}" style="${obtenu ? `filter: drop-shadow(0 8px 16px ${config.glow});` : 'filter: grayscale(100%) brightness(0.3);'}">
+          <div class="tooltip" style="border-color: ${config.couleur}; color: ${config.couleur};">
+  <img src="/perso/PERSO_FRUIT.png" alt="PERSO_FRUIT">
+  <p>PERSO_FRUIT</p>
+</div>
           <div class="fruit-label" style="color: ${obtenu ? config.couleur : '#333'};">${fruit}</div>
+          ${fruitPerso[fruit] ? `
+          <div class="tooltip" style="border-color: ${config.couleur};">
+            <img src="/persos/${fruitPerso[fruit]}.png" alt="${fruitPerso[fruit]}">
+            <p style="color: ${config.couleur};">${fruitPerso[fruit]}</p>
+          </div>` : ''}
         </div>
       `;
     }).join('');
@@ -312,7 +333,29 @@ app.get('/collection/:username', async (req, res) => {
     .fruit-item:hover { transform: translateY(-12px); }
     .fruit-item img { width: 90px; height: 90px; object-fit: contain; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6)); }
     .fruit-label { font-size: 11px; text-align: center; max-width: 90px; color: #ccc; }
+    .tooltip {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,10,26,0.95);
+  border: 2px solid currentColor;
+  border-radius: 10px;
+  padding: 8px;
+  width: 120px;
+  text-align: center;
+  display: none;
+  z-index: 100;
+  pointer-events: none;
+}
+.tooltip img { width: 80px; height: 80px; object-fit: contain; }
+.tooltip p { font-size: 11px; margin-top: 4px; }
+.fruit-item:hover .tooltip { display: block; }
     .fruit-count { position: absolute; top: -8px; right: -8px; background: #f39c12; color: #000; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+    .tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: rgba(5,5,20,0.97); border: 2px solid; border-radius: 10px; padding: 8px; width: 120px; text-align: center; display: none; z-index: 100; pointer-events: none; }
+    .tooltip img { width: 90px; height: 90px; object-fit: contain; border-radius: 8px; }
+    .tooltip p { font-size: 11px; margin-top: 5px; font-weight: bold; text-transform: capitalize; }
+    .fruit-item:hover .tooltip { display: block; }
     .empty-shelf { font-size: 13px; color: #333; font-style: italic; padding: 40px; text-align: center; width: 100%; }
     .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; letter-spacing: 3px; }
   </style>
