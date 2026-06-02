@@ -279,20 +279,6 @@ app.get('/collection/:username', async (req, res) => {
         <div class="shelf-board" style="background: ${config.couleur};"></div>
       </div>
     </div>`;
-  }).join(''); : `<div class="empty-shelf">Aucun fruit ${rarete}...</div>`;
-
-    return `
-    <div class="shelf-section">
-      <div class="shelf-header" style="border-left: 5px solid ${config.couleur}; background: ${config.bg};">
-        <span class="shelf-emoji">${config.emoji}</span>
-        <span class="shelf-title" style="color: ${config.couleur};">${rarete}</span>
-        <span class="shelf-count">${fruitsDeRarete.length} fruit(s)</span>
-      </div>
-      <div class="shelf">
-        <div class="shelf-fruits">${fruitsHTML}</div>
-        <div class="shelf-board" style="background: ${config.couleur};"></div>
-      </div>
-    </div>`;
   }).join('');
 
   res.send(`<!DOCTYPE html>
