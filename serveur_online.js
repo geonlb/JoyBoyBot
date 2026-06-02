@@ -397,7 +397,7 @@ app.get('/animation', (req, res) => {
       background: linear-gradient(to bottom, #050510, transparent);
       z-index: 2;
     }
-    .slot-inner { display: flex; flex-direction: column; }
+    .slot-inner { display: flex; flex-direction: column; align-items: center; width: 100%; }
     .fruit-reveal {
       display: flex;
       flex-direction: column;
