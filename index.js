@@ -531,7 +531,7 @@ dernierFruitGlobal = Date.now();
 
   // Vérifier si déjà utilisé ce stream
   const dernierFruit = db.prepare('SELECT fruit, timestamp FROM fruits_stream WHERE username = ?').get(username.toLowerCase());
-if (dernierFruit && Date.now() - dernierFruit.timestamp < 0) {
+if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   const restant = Math.ceil((300000 - (Date.now() - dernierFruit.timestamp)) / 60000);
   client.say(channel, `⏳ ${username} attends encore ${restant} minute(s) avant de retenter ta chance ! 🍎`);
   return;
