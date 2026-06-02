@@ -241,8 +241,7 @@ app.get('/collection/:username', async (req, res) => {
   Object.values(fruitsGroupes).forEach(f => { stats[f.rarete] = (stats[f.rarete] || 0) + f.count; });
 
   const rareteOrder = ['Mythique', 'Légendaire', 'Épique', 'Rare', 'Commun'];
-  const rareteLabels = { 'Mythique': 'Mythique', 'Legendaire': 'Legendaire', 'Epique': 'Epique', 'Rare': 'Rare', 'Commun': 'Commun' };
-
+  
   const etageres = rareteOrder.map(rarete => {
     const config = rareteConfig[rarete];
     const fruitsDeRarete = Object.values(fruitsGroupes).filter(f => f.rarete === rarete);
