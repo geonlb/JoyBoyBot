@@ -332,7 +332,7 @@ app.get('/collection/:username', async (req, res) => {
     </div>
     <div class="collection-title">🍎 COLLECTION DE FRUITS DU DÉMON 🍎</div>
   ${etageres}
-  <div class="footer"><p>NeyLaBrise â€” Grand Line</p></div>
+  <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
 </body>
 </html>`);
 });
