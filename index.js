@@ -237,7 +237,11 @@ client.on('message', async (channel, tags, message, self) => {
  
   // Gagner des Berrys en chattant
   const now = Date.now();
-  const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+  db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
+const userPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
+  if (!userPrime) {
+    db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(username.toLowerCase());
+  }
   if (now - userPrime.dernierMessage > COOLDOWN_MESSAGE_BERRY && !exempts.includes(username.toLowerCase())) {
     db.prepare('UPDATE primes SET berrys = berrys + 50, dernierMessage = ? WHERE username = ?').run(now, username.toLowerCase());
     const updatedPrime = db.prepare('SELECT * FROM primes WHERE username = ?').get(username.toLowerCase());
