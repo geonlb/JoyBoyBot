@@ -240,16 +240,46 @@ app.get('/collection/:username', async (req, res) => {
 
   const rareteOrder = ['Mythique', 'Légendaire', 'Épique', 'Rare', 'Commun'];
 
+  const tousLesFruits = {
+    'Mythique':   ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'],
+    'Légendaire': ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'],
+    'Épique':     ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Hito-Hito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'],
+    'Rare':       ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank'],
+    'Commun':     ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku']
+  };
+
+  const fruitsObtenus = new Set(Object.keys(fruitsGroupes));
+
   const etageres = rareteOrder.map(rarete => {
     const config = rareteConfig[rarete];
-    const fruitsDeRarete = Object.values(fruitsGroupes).filter(f => f.rarete === rarete);
-    const fruitsHTML = fruitsDeRarete.length > 0 ? fruitsDeRarete.map(f => `
-      <div class="fruit-item">
-        ${f.count > 1 ? `<div class="fruit-count">${f.count}x</div>` : ''}
-        <img src="/fruits/${f.fruit}.png" alt="${f.fruit}" onerror="this.style.opacity=0.3">
-        <div class="fruit-label">${f.fruit}</div>
+    const tousLesFruitsRarete = tousLesFruits[rarete] || [];
+    const fruitsHTML = tousLesFruitsRarete.map(fruit => {
+      const obtenu = fruitsObtenus.has(fruit);
+      const count = fruitsGroupes[fruit] ? fruitsGroupes[fruit].count : 0;
+      return `
+        <div class="fruit-item ${obtenu ? 'obtenu' : 'non-obtenu'}">
+          ${count > 1 ? `<div class="fruit-count">${count}x</div>` : ''}
+          <img src="/fruits/${fruit}.png" alt="${fruit}" style="${obtenu ? `filter: drop-shadow(0 8px 16px ${config.glow});` : 'filter: grayscale(100%) brightness(0.3);'}">
+          <div class="fruit-label" style="color: ${obtenu ? config.couleur : '#333'};">${fruit}</div>
+        </div>
+      `;
+    }).join('');
+
+    const nbObtenus = tousLesFruitsRarete.filter(f => fruitsObtenus.has(f)).length;
+
+    return `
+    <div class="shelf-section">
+      <div class="shelf-header" style="border-left: 5px solid ${config.couleur}; background: ${config.bg};">
+        <span class="shelf-emoji">${config.emoji}</span>
+        <span class="shelf-title" style="color: ${config.couleur};">${rarete}</span>
+        <span class="shelf-count">${nbObtenus}/${tousLesFruitsRarete.length} fruit(s)</span>
       </div>
-    `).join('') : `<div class="empty-shelf">Aucun fruit ${rarete}...</div>`;
+      <div class="shelf">
+        <div class="shelf-fruits">${fruitsHTML}</div>
+        <div class="shelf-board" style="background: ${config.couleur};"></div>
+      </div>
+    </div>`;
+  }).join(''); : `<div class="empty-shelf">Aucun fruit ${rarete}...</div>`;
 
     return `
     <div class="shelf-section">
