@@ -338,32 +338,128 @@ app.get('/animation', (req, res) => {
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: transparent; display: flex; justify-content: center; align-items: center; width: 500px; height: 400px; font-family: Arial Black, sans-serif; overflow: hidden; }
-    .machine { background: linear-gradient(145deg, #1a1a2e, #16213e); border: 4px solid COULEUR; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 40px COULEUR88; width: 460px; opacity: 0; animation: fadeIn 0.3s forwards; }
-    @keyframes fadeIn { to { opacity: 1; } }
-    .title { color: COULEUR; font-size: 18px; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase; }
-    .slots { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; height: 100px; overflow: hidden; }
-    .slot { background: #0a0a1a; border: 2px solid COULEUR; border-radius: 10px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; }
+    body { background: transparent; display: flex; justify-content: center; align-items: center; width: 500px; height: 400px; overflow: hidden; }
+    .machine {
+      background: linear-gradient(145deg, #0d0d1a, #1a1a3e, #0d0d1a);
+      border: 3px solid COULEUR;
+      border-radius: 24px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 0 60px COULEUR66, inset 0 0 40px rgba(0,0,0,0.8);
+      width: 460px;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+      position: relative;
+      overflow: hidden;
+    }
+    .machine::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at center, COULEUR11 0%, transparent 60%);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    .title {
+      color: COULEUR;
+      font-family: Arial Black, sans-serif;
+      font-size: 16px;
+      letter-spacing: 6px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px COULEUR;
+      position: relative;
+    }
+    .slots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .slot {
+      background: linear-gradient(180deg, #050510, #0a0a20);
+      border: 2px solid COULEUR;
+      border-radius: 14px;
+      width: 110px;
+      height: 110px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 20px COULEUR44, inset 0 0 15px rgba(0,0,0,0.9);
+    }
+    .slot::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 30px;
+      background: linear-gradient(to bottom, #050510, transparent);
+      z-index: 2;
+    }
     .slot-inner { display: flex; flex-direction: column; }
-    .fruit-name { color: white; font-size: 22px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; opacity: 0; animation: showName 0.5s 4s forwards; }
-    @keyframes showName { to { opacity: 1; } }
-    .rarete-badge { display: inline-block; background: COULEUR22; border: 2px solid COULEUR; color: COULEUR; padding: 5px 20px; border-radius: 20px; font-size: 16px; font-weight: bold; letter-spacing: 3px; opacity: 0; animation: showBadge 0.5s 4.5s forwards; }
-    @keyframes showBadge { to { opacity: 1; } }
-    .fruit-img { width: 60px; height: 60px; object-fit: contain; opacity: 0; animation: showImg 0.5s 4s forwards; }
-    @keyframes showImg { to { opacity: 1; } }
+    .fruit-reveal {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      animation: revealFruit 0.6s 4s forwards;
+      position: relative;
+    }
+    @keyframes revealFruit {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fruit-img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 15px COULEUR) drop-shadow(0 0 30px COULEUR66);
+    }
+    .fruit-name {
+      color: white;
+      font-family: Arial Black, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px white;
+    }
+    .rarete-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, COULEUR33, COULEUR11);
+      border: 2px solid COULEUR;
+      color: COULEUR;
+      padding: 6px 24px;
+      border-radius: 25px;
+      font-family: Arial Black, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      text-shadow: 0 0 10px COULEUR;
+      box-shadow: 0 0 15px COULEUR44;
+      opacity: 0;
+      animation: revealBadge 0.6s 4.5s forwards;
+    }
+    @keyframes revealBadge {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
   </style>
 </head>
 <body>
   <div class="machine">
-    <div class="title">Fruit du Demon</div>
+    <div class="title">&#x1F3B0; Fruit du Demon &#x1F3B0;</div>
     <div class="slots">
-      <div class="slot" id="s1"><div class="slot-inner"><img src="/fruits/Mera-Mera.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Gum-Gum.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Yami-Yami.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Hie-Hie.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Ope-Ope.png" style="width:70px;height:70px;object-fit:contain"></div></div>
-      <div class="slot" id="s2"><div class="slot-inner"><img src="/fruits/Goro-Goro.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Pika-Pika.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Suna-Suna.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Ito-Ito.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Magu-Magu.png" style="width:70px;height:70px;object-fit:contain"></div></div>
-      <div class="slot" id="s3"><div class="slot-inner"><img src="/fruits/Hana-Hana.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Mochi-Mochi.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Bara-Bara.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Sube-Sube.png" style="width:70px;height:70px;object-fit:contain"><img src="/fruits/Bomu-Bomu.png" style="width:70px;height:70px;object-fit:contain"></div></div>
+      <div class="slot" id="s1"><div class="slot-inner"><img src="/fruits/Mera-Mera.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Gum-Gum.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Yami-Yami.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Hie-Hie.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Ope-Ope.png" style="width:90px;height:90px;object-fit:contain"></div></div>
+      <div class="slot" id="s2"><div class="slot-inner"><img src="/fruits/Goro-Goro.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Pika-Pika.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Suna-Suna.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Ito-Ito.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Magu-Magu.png" style="width:90px;height:90px;object-fit:contain"></div></div>
+      <div class="slot" id="s3"><div class="slot-inner"><img src="/fruits/Hana-Hana.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Mochi-Mochi.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Bara-Bara.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Sube-Sube.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Bomu-Bomu.png" style="width:90px;height:90px;object-fit:contain"></div></div>
     </div>
-    <img class="fruit-img" src="/fruits/FRUIT.png" alt="FRUIT">
-    <div class="fruit-name">FRUIT no Mi</div>
-    <div class="rarete-badge">RARETE</div>
+    <div class="fruit-reveal">
+      <img class="fruit-img" src="/fruits/FRUIT.png" alt="FRUIT">
+      <div class="fruit-name">FRUIT no Mi</div>
+      <div class="rarete-badge">RARETE</div>
+    </div>
   </div>
   <audio id="spinSound" src="/spin.mp3" preload="auto"></audio>
   <script>
@@ -373,13 +469,12 @@ app.get('/animation', (req, res) => {
     slots.forEach((slot, i) => {
       let pos = 0;
       const interval = setInterval(() => {
-        pos -= 10;
-        slot.querySelector('.slot-inner').style.transform = 'translateY(' + (pos % 350) + 'px)';
-      }, 30);
+        pos -= 12;
+        slot.querySelector('.slot-inner').style.transform = 'translateY(' + (pos % 450) + 'px)';
+      }, 25);
       setTimeout(() => {
         clearInterval(interval);
         slot.querySelector('.slot-inner').style.transform = 'translateY(0)';
-        slot.querySelector('.slot-inner').style.animation = 'none';
       }, stopTimes[i]);
     });
   </script>
