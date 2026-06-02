@@ -325,7 +325,7 @@ app.get('/animation', (req, res) => {
   const fruit = req.query.fruit || '';
   const rarete = req.query.rarete || 'Commun';
   const couleurs = {
-    'Mythique': '#ff00ff',
+    'Mythique': '#cc0000',
     'Légendaire': '#ffd700',
     'Épique': '#9b59b6',
     'Rare': '#3498db',
