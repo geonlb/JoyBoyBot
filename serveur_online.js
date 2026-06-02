@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -65,19 +65,19 @@ app.get('/prime/:username', async (req, res) => {
 <body>
   <div class="wanted">
     <div class="texture"></div>
-    <span class="corner tl">⚓</span><span class="corner tr">⚓</span>
-    <span class="corner bl">⚓</span><span class="corner br">⚓</span>
+    <span class="corner tl">âš“</span><span class="corner tr">âš“</span>
+    <span class="corner bl">âš“</span><span class="corner br">âš“</span>
     <div class="content">
       <div class="title">WANTED</div>
       <div class="subtitle">DEAD OR ALIVE</div>
       <img class="avatar" src="${avatar}" alt="${username}">
       <div class="username">${username}</div>
-      <div class="personnage">${personnage} • ${subs} sub(s)</div>
+      <div class="personnage">${personnage} â€¢ ${subs} sub(s)</div>
       <hr class="divider">
       <div class="bounty-label">Prime</div>
       <div class="bounty">${berrys.toLocaleString()}</div>
       <div class="bounty-unit">BERRYS</div>
-      <div class="footer">NeyLaBrise — Grand Line</div>
+      <div class="footer">NeyLaBrise â€” Grand Line</div>
     </div>
   </div>
 </body>
@@ -113,7 +113,7 @@ app.get('/grandline', async (req, res) => {
       const prime = (primes || []).find(p => p.username === m.username);
       const berrys = prime ? prime.berrys.toLocaleString() : '0';
       const avatar = avatars[m.username] || '';
-      return `<div class="member-card"><img src="${avatar}" alt="${m.username}" class="member-avatar"><div class="member-info"><div class="member-name">${m.username}</div><div class="member-perso">${m.personnage}</div><div class="member-prime">💰 ${berrys} Berrys</div></div></div>`;
+      return `<div class="member-card"><img src="${avatar}" alt="${m.username}" class="member-avatar"><div class="member-info"><div class="member-name">${m.username}</div><div class="member-perso">${m.personnage}</div><div class="member-prime">ðŸ’° ${berrys} Berrys</div></div></div>`;
     }).join('');
     return `<div class="faction-card" style="border-color: ${f.couleur}; background: ${f.bg};"><div class="faction-title" style="color: ${f.couleur};">${f.nom}</div><div class="faction-count">${factionMembres.length} membre(s)</div><div class="members-grid">${cards || '<div class="empty">Aucun membre</div>'}</div></div>`;
   }).join('');
@@ -149,10 +149,10 @@ app.get('/grandline', async (req, res) => {
   <div class="header">
     <h1>GRAND LINE</h1>
     <div class="divider"></div>
-    <p>CARTE DES EQUIPAGES — NEYLABRISE</p>
+    <p>CARTE DES EQUIPAGES â€” NEYLABRISE</p>
   </div>
   <div class="factions-grid">${factionCards}</div>
-  <div class="footer"><p>NeyLaBrise — Mis a jour en temps reel</p></div>
+  <div class="footer"><p>NeyLaBrise â€” Mis a jour en temps reel</p></div>
 </body>
 </html>`);
 });
@@ -217,11 +217,11 @@ app.get('/collection/:username', async (req, res) => {
   const berrys = primeData ? primeData.berrys : 0;
 
   const rareteConfig = {
-    'Mythique': { emoji: '🔱', couleur: '#ff00ff', bg: '#2a0a2a', glow: 'rgba(255,0,255,0.5)' },
-    'Legendaire': { emoji: '⭐', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
-    'Epique': { emoji: '💜', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
-    'Rare': { emoji: '💙', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
-    'Commun': { emoji: '🟢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
+    'Mythique': { emoji: 'ðŸ”±', couleur: '#ff00ff', bg: '#2a0a2a', glow: 'rgba(255,0,255,0.5)' },
+    'Légendaire': { emoji: 'â­', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
+    'Épique': { emoji: 'ðŸ’œ', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
+    'Rare': { emoji: 'ðŸ’™', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
+    'Commun': { emoji: 'ðŸŸ¢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
   };
 
   const fruitsGroupes = {};
@@ -238,7 +238,7 @@ app.get('/collection/:username', async (req, res) => {
   const stats = {};
   (fruits || []).forEach(f => { stats[f.rarete] = (stats[f.rarete] || 0) + 1; });
 
-  const rareteOrder = ['Mythique', 'Legendaire', 'Epique', 'Rare', 'Commun'];
+  const rareteOrder = ['Mythique', 'Légendaire', 'Épique', 'Rare', 'Commun'];
 
   const etageres = rareteOrder.map(rarete => {
     const config = rareteConfig[rarete];
@@ -307,17 +307,17 @@ app.get('/collection/:username', async (req, res) => {
       <img src="${avatar}" alt="${username}">
       <div class="profile-info">
         <h1>${username}</h1>
-        <p class="berrys">💰 ${berrys.toLocaleString()} Berrys</p>
+        <p class="berrys">ðŸ’° ${berrys.toLocaleString()} Berrys</p>
       </div>
     </div>
     <div class="divider"></div>
     <div class="stats">
       ${Object.entries(rareteConfig).map(([r, c]) => stats[r] ? `<span class="stat-badge" style="background: ${c.bg}; color: ${c.couleur}; border: 1px solid ${c.couleur};">${c.emoji} ${r}: ${stats[r]}</span>` : '').join('')}
     </div>
-    <div class="collection-title">🍎 COLLECTION DE FRUITS DU DEMON 🍎</div>
+    <div class="collection-title">ðŸŽ COLLECTION DE FRUITS DU DEMON ðŸŽ</div>
   </div>
   ${etageres}
-  <div class="footer"><p>NeyLaBrise — Grand Line</p></div>
+  <div class="footer"><p>NeyLaBrise â€” Grand Line</p></div>
 </body>
 </html>`);
 });
@@ -327,8 +327,8 @@ app.get('/animation', (req, res) => {
   const rarete = req.query.rarete || 'Commun';
   const couleurs = {
     'Mythique': '#ff00ff',
-    'Legendaire': '#ffd700',
-    'Epique': '#9b59b6',
+    'Légendaire': '#ffd700',
+    'Épique': '#9b59b6',
     'Rare': '#3498db',
     'Commun': '#2ecc71'
   };
@@ -390,3 +390,4 @@ app.get('/animation', (req, res) => {
 });
 
 app.listen(3000, () => console.log('Serveur online demarre !'));
+
