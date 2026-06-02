@@ -307,7 +307,7 @@ app.get('/collection/:username', async (req, res) => {
       <img src="${avatar}" alt="${username}">
       <div class="profile-info">
         <h1>${username}</h1>
-        <p class="berrys">ðŸ’° ${berrys.toLocaleString()} Berrys</p>
+        <p class="berrys">&#x1F4B0; ${berrys.toLocaleString()} Berrys</p>
       </div>
     </div>
     <div class="divider"></div>
