@@ -95,6 +95,8 @@ let dernierTopPrime = 0;
 const COOLDOWN_TOPPRIME = 120000;
 let dernierFruitGlobal = 0;
 const COOLDOWN_FRUIT_GLOBAL = 10000; // 10 secondes
+let dernierDispo = 0;
+const COOLDOWN_DISPO = 300000; // 5 minutes
  
 // Vidéos
 const videos = {
@@ -252,6 +254,12 @@ client.on('message', async (channel, tags, message, self) => {
  
   // !dispo
   if (msg === '!dispo') {
+if (Date.now() - dernierDispo < COOLDOWN_DISPO) {
+  const restant = Math.ceil((COOLDOWN_DISPO - (Date.now() - dernierDispo)) / 60000);
+  client.say(channel, `⏳ Attends encore ${restant} minute(s) avant de revoir les personnages disponibles !`);
+  return;
+}
+dernierDispo = Date.now();
     const pris = db.prepare('SELECT personnage FROM membres').all().map(r => r.personnage);
     let rep = '🏴‍☠️ Personnages disponibles | ';
     for (const [niveau, factions] of Object.entries(personnages)) {
