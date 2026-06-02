@@ -397,7 +397,7 @@ app.get('/animation', (req, res) => {
       background: linear-gradient(to bottom, #050510, transparent);
       z-index: 2;
     }
-    .slot-inner { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .slot-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
     .fruit-reveal {
       display: flex;
       flex-direction: column;
@@ -451,9 +451,9 @@ app.get('/animation', (req, res) => {
   <div class="machine">
     <div class="title">&#x1F3B0; Fruit du Demon &#x1F3B0;</div>
     <div class="slots">
-      <div class="slot" id="s1"><div class="slot-inner"><img src="/fruits/Mera-Mera.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Gum-Gum.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Yami-Yami.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Hie-Hie.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Ope-Ope.png" style="width:90px;height:90px;object-fit:contain"></div></div>
-      <div class="slot" id="s2"><div class="slot-inner"><img src="/fruits/Goro-Goro.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Pika-Pika.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Suna-Suna.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Ito-Ito.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Magu-Magu.png" style="width:90px;height:90px;object-fit:contain"></div></div>
-      <div class="slot" id="s3"><div class="slot-inner"><img src="/fruits/Hana-Hana.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Mochi-Mochi.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Bara-Bara.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Sube-Sube.png" style="width:90px;height:90px;object-fit:contain"><img src="/fruits/Bomu-Bomu.png" style="width:90px;height:90px;object-fit:contain"></div></div>
+      <div class="slot" id="s1"><div class="slot-inner"><img src="/fruits/Mera-Mera.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Gum-Gum.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Yami-Yami.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Hie-Hie.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Ope-Ope.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"></div></div>
+      <div class="slot" id="s2"><div class="slot-inner"><img src="/fruits/Goro-Goro.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Pika-Pika.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Suna-Suna.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Ito-Ito.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Magu-Magu.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"></div></div>
+      <div class="slot" id="s3"><div class="slot-inner"><img src="/fruits/Hana-Hana.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Mochi-Mochi.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Bara-Bara.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Sube-Sube.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"><img src="/fruits/Bomu-Bomu.png" style="width:100px;height:100px;object-fit:contain;display:block;margin:5px auto;"></div></div>
     </div>
     <div class="fruit-reveal">
       <img class="fruit-img" src="/fruits/FRUIT.png" alt="FRUIT">
