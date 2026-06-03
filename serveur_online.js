@@ -248,7 +248,8 @@ app.post('/coffre', async (req, res) => {
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'Manque username' });
 
-  const { data: coffreData } = await supabase.from('codes_temp').select('expire').eq('username', username + '_coffre').single();
+  const { data: coffreRows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_coffre');
+  const coffreData = coffreRows && coffreRows.length > 0 ? coffreRows[0] : null;
   if (coffreData && Date.now() < coffreData.expire) {
     const restant = Math.ceil((coffreData.expire - Date.now()) / 60000);
     return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) avant d\'ouvrir un nouveau coffre !' });
