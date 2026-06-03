@@ -280,6 +280,7 @@ app.get('/collection/:username', async (req, res) => {
   <p>PERSO_FRUIT</p>
 </div>
           <div class="fruit-label" style="color: ${obtenu ? config.couleur : '#333'};">${fruit}</div>
+          ${count > 1 ? `<button class="sell-btn" onclick="vendre('${username}', '${fruit}', '${rarete}')">Vendre 1</button>` : ''}
           ${fruitPerso[fruit] ? `
           <div class="tooltip" style="border-color: ${config.couleur};">
             <img src="/persos/${fruitPerso[fruit]}.png" alt="${fruitPerso[fruit]}">
@@ -359,11 +360,22 @@ app.get('/collection/:username', async (req, res) => {
     .tooltip img { width: 90px; height: 90px; object-fit: contain; border-radius: 8px; }
     .tooltip p { font-size: 11px; margin-top: 5px; font-weight: bold; text-transform: capitalize; }
     .fruit-item:hover .tooltip { display: block; }
+    .sell-btn { margin-top: 5px; background: rgba(243,156,18,0.2); border: 1px solid #f39c12; color: #f39c12; padding: 3px 10px; border-radius: 12px; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+.sell-btn:hover { background: #f39c12; color: #000; }
+.berrys-bag { position: fixed; top: 20px; right: 20px; background: rgba(10,10,26,0.95); border: 2px solid #f39c12; border-radius: 15px; padding: 12px 20px; text-align: center; z-index: 999; box-shadow: 0 0 20px rgba(243,156,18,0.3); }
+.berrys-bag .bag-icon { font-size: 28px; }
+.berrys-bag .bag-amount { font-family: 'Oswald', sans-serif; font-size: 18px; color: #f39c12; margin-top: 3px; }
+.berrys-bag .bag-label { font-size: 10px; color: #888; letter-spacing: 2px; }
     .empty-shelf { font-size: 13px; color: #333; font-style: italic; padding: 40px; text-align: center; width: 100%; }
     .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; letter-spacing: 3px; }
   </style>
 </head>
 <body>
+  <div class="berrys-bag">
+    <div class="bag-icon">&#x1F4B0;</div>
+    <div class="bag-amount" id="bag-amount">${berrys.toLocaleString()}</div>
+    <div class="bag-label">BERRYS</div>
+  </div>
   <div class="header">
     <div class="profile">
       <img src="${avatar}" alt="${username}">
@@ -379,8 +391,54 @@ app.get('/collection/:username', async (req, res) => {
     <div class="collection-title">🍎 COLLECTION DE FRUITS DU DÉMON 🍎</div>
   ${etageres}
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
+  <script>
+async function vendre(username, fruit, rarete) {
+  if (!confirm('Vendre 1x ' + fruit + ' ?')) return;
+  const res = await fetch('/vendre', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, fruit, rarete })
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('bag-amount').textContent = data.berrys.toLocaleString();
+    alert('Vendu ! +' + data.valeur + ' Berrys !');
+    location.reload();
+  } else {
+    alert(data.error);
+  }
+}
+</script>
 </body>
 </html>`);
+});
+
+app.post('/vendre', async (req, res) => {
+  const { username, fruit, rarete } = req.body;
+  if (!username || !fruit || !rarete) return res.status(400).json({ error: 'Manque des paramètres' });
+
+  const prix = {
+    'Commun': 50, 'Rare': 100, 'Épique': 150,
+    'Légendaire': 500, 'Mythique': 1000, 'Ultime': 10000
+  };
+
+  const valeur = prix[rarete] || 50;
+
+  // Vérifier qu'il a bien un doublon
+  const { data: fruitsUser } = await supabase.from('collection').select('id').eq('username', username).eq('fruit', fruit);
+  if (!fruitsUser || fruitsUser.length < 2) {
+    return res.status(400).json({ error: 'Pas de doublon à vendre !' });
+  }
+
+  // Supprimer un exemplaire
+  await supabase.from('collection').delete().eq('id', fruitsUser[0].id);
+
+  // Ajouter les Berrys
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  const newBerrys = (primeData ? primeData.berrys : 0) + valeur;
+  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+
+  res.json({ success: true, berrys: newBerrys, valeur });
 });
 
 app.get('/animation', (req, res) => {
