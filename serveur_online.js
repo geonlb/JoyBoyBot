@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 .header { text-align: center; margin-bottom: 60px; }
 .logo { width: 200px; height: 200px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(138,43,226,0.8)); }
 .title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 30px rgba(138,43,226,0.8); line-height: 1.2; }
-.subtitle { font-size: 14px; color: #87ceeb; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; }
+.subtitle { font-family: 'Cinzel Decorative', serif; font-size: 14px; color: #87ceeb; letter-spacing: 5px;
 .divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #8a2be2, #87ceeb, #8a2be2, transparent); margin: 20px auto; }
 .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 50px; }
 .search-input { background: rgba(0,0,0,0.7); border: 1px solid #8a2be2; color: white; padding: 12px 20px; border-radius: 25px; font-size: 14px; width: 280px; outline: none; font-family: 'Exo 2', sans-serif; backdrop-filter: blur(10px); }
@@ -48,7 +48,7 @@ app.get('/', (req, res) => {
 .card { background: rgba(0,0,0,0.75); border: 1px solid rgba(138,43,226,0.4); border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: white; display: block; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
 .card:hover { transform: translateY(-8px); border-color: #8a2be2; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 25px rgba(138,43,226,0.4); }
 .card-icon { font-size: 50px; margin-bottom: 15px; }
-.card-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 3px; margin-bottom: 10px; color: #87ceeb; }
+.card-title { font-family: 'Cinzel Decorative', serif; font-size: 18px; letter-spacing: 3px; margin-bottom: 10px; color: #87ceeb; text-shadow: 0 0 10px rgba(135,206,235,0.5), 2px 2px 4px rgba(0,0,0,0.8); }
 .card-desc { font-size: 13px; color: #aaa; line-height: 1.6; }
 .card-badge { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; letter-spacing: 1px; }
 .footer { text-align: center; font-size: 12px; color: #87ceeb; letter-spacing: 3px; margin-top: 40px; opacity: 0.6; }
@@ -408,7 +408,7 @@ app.get('/collection/:username', async (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Collection de ${username}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{background:#0a0a1a;min-height:100vh;padding:60px 20px 30px;font-family:'Roboto',sans-serif;color:white;}
