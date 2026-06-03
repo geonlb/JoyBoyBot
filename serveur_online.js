@@ -673,9 +673,13 @@ app.get('/minijeux', (req, res) => {
         <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
         <div class="soon-badge">BIENTOT</div>
       </div>
-      <div class="card card-soon">
+      <a href="/blackjack" class="card">
         <div class="card-icon">&#x1F0CF;</div>
         <div class="card-title">BLACKJACK PIRATE</div>
+        <div class="card-desc">21 style One Piece, double ta mise ou perds tout !</div>
+        <div class="card-gain">&#x1F4B0; Mise variable</div>
+        <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
+      </a>
         <div class="card-desc">21 style One Piece, double ta mise ou perds tout !</div>
         <div class="card-gain">&#x1F4B0; Mise variable</div>
         <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
