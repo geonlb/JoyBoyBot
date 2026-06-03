@@ -236,7 +236,8 @@ app.get('/collection/:username', async (req, res) => {
     const r = await axios.get('https://api.twitch.tv/helix/users?login=' + username, { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + ACCESS_TOKEN } });
     if (r.data.data.length > 0) avatar = r.data.data[0].profile_image_url;
   } catch (e) {}
-  const { data: fruits } = await supabase.from('collection').select('*')const { data: achievementsData } = await supabase.from('achievements').select('*').eq('username', username);.eq('username', username).order('obtenu_le', { ascending: false });
+  const { data: fruits } = await supabase.from('collection').select('*').eq('username', username).order('obtenu_le', { ascending: false });
+  const { data: achievementsData } = await supabase.from('achievements').select('*').eq('username', username);
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   const berrys = primeData ? primeData.berrys : 0;
 
