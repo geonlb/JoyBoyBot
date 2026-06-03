@@ -397,6 +397,9 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     <div class="bag-label">BERRYS</div>
   </div>
   <div class="header">
+  <div style="text-align:center;margin-bottom:15px;">
+  <img src="/persos/teamnlb.png" style="width:150px;height:150px;object-fit:contain;">
+</div>
     <div class="profile">
       <img src="${avatar}" alt="${username}">
       <div class="profile-info">
