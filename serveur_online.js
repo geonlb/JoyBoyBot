@@ -407,16 +407,10 @@ app.get('/collection/:username', async (req, res) => {
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
     <div class="achievements-section">
-      <div class="livre-fermé" onclick="toggleLivre()">
-        <div class="livre-cover">
-          <div class="livre-spine"></div>
-          <div>
-            <img src="/fruits/coffresucces.png" style="width:60px;height:60px;object-fit:contain;">
-            <div class="livre-title">SUCCES</div>
-            <div class="livre-subtitle">Clique pour ouvrir</div>
-          </div>
-        </div>
-      </div>
+      <div onclick="toggleLivre()" style="display:inline-block;cursor:pointer;text-align:center;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+  <img src="/fruits/coffresucces.png" style="width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 0 15px rgba(243,156,18,0.5));">
+  <div style="font-family:'Oswald',sans-serif;font-size:16px;color:#f39c12;letter-spacing:3px;margin-top:8px;">SUCCES</div>
+</div>
       <div class="achievements-grid" id="achievements-grid">
         ${[
           { id: 'premier_pas', emoji: '&#x1F34E;', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
