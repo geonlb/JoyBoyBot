@@ -751,7 +751,7 @@ app.get('/roulette', (req, res) => {
       <span id="berrys-amount">0</span> Berrys
     </div>
     <div class="wheel-wrapper">
-      <div class="pointer" style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:50px;color:#f39c12;text-shadow:0 0 15px rgba(243,156,18,0.8);">&#x25B2;</div>
+      <div class="pointer" style="position:absolute;top:-20px;left:50%;transform:translateX(-50%) rotate(0deg);font-size:50px;color:#f39c12;text-shadow:0 0 15px rgba(243,156,18,0.8);">▼</div>
       <canvas id="wheel" class="wheel" width="400" height="400"></canvas>
     </div>
     <button class="spin-btn" id="spin-btn" onclick="tourner()" disabled>&#x1F3B0; TOURNER !</button>
