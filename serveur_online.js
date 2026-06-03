@@ -986,7 +986,7 @@ app.get('/blackjack', (req, res) => {
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a2a0a; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/blackjackfond.png');
+    body { background: #0a2a0a; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/blackjackfond.png'); background-size: cover; background-position: center; background-repeat: no-repeat;
     body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,20,0,0.85); pointer-events: none; }
     .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
     .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
@@ -1005,7 +1005,7 @@ app.get('/blackjack', (req, res) => {
     .game-section { display: none; }
     .game-section.active { display: block; }
     .berrys-display { background: rgba(0,0,0,0.7); border: 2px solid #ffd700; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 18px; color: #ffd700; }
-    .table { background: radial-gradient(ellipse, #1a5c1a, #0a2a0a); border: 4px solid #8B4513; border-radius: 20px; padding: 30px; margin: 20px 0; box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.4); }
+    .table { background: url('/persos/fondtable.png') center/cover; border: 4px solid #8B4513; border-radius: 20px; padding: 30px; margin: 20px 0; box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.4); }
     .zone-label { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
     .cards-zone { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 120px; align-items: center; margin-bottom: 20px; }
     .card { width: 75px; height: 105px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 2px solid rgba(255,255,255,0.3); position: relative; animation: cardFlip 0.3s ease; box-shadow: 3px 3px 10px rgba(0,0,0,0.5); }
