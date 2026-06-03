@@ -354,16 +354,22 @@ app.get('/collection/:username', async (req, res) => {
     .fruit-item:hover .tooltip{display:block;}
     .sell-btn{margin-top:5px;background:rgba(243,156,18,.2);border:1px solid #f39c12;color:#f39c12;padding:3px 10px;border-radius:12px;font-size:10px;cursor:pointer;transition:all .2s;}
     .sell-btn:hover{background:#f39c12;color:#000;}
-    .achievements-section { margin-bottom: 40px; }
-    .achievements-title { font-family: 'Oswald', sans-serif; font-size: 22px; letter-spacing: 4px; color: #f39c12; text-align: center; margin-bottom: 20px; }
-    .achievements-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-bottom: 30px; }
+    .achievements-section { margin-bottom: 40px; text-align: center; }
+    .livre-fermé { display: inline-block; cursor: pointer; transition: transform 0.3s; }
+    .livre-fermé:hover { transform: scale(1.05); }
+    .livre-cover { background: linear-gradient(135deg, #8B4513, #A0522D, #6B3410); border: 3px solid #f39c12; border-radius: 8px 20px 20px 8px; padding: 20px 30px; display: inline-flex; align-items: center; gap: 15px; box-shadow: -5px 5px 15px rgba(0,0,0,0.5), inset -3px 0 10px rgba(0,0,0,0.3); }
+    .livre-spine { width: 8px; background: linear-gradient(135deg, #6B3410, #8B4513); border-radius: 4px; height: 60px; }
+    .livre-title { font-family: 'Oswald', sans-serif; font-size: 20px; color: #f39c12; letter-spacing: 3px; text-shadow: 0 0 10px rgba(243,156,18,0.5); }
+    .livre-icon { font-size: 28px; }
+    .livre-subtitle { font-size: 11px; color: #c8a96e; letter-spacing: 2px; margin-top: 4px; }
+    .achievements-grid { display: none; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 25px; padding: 25px; background: rgba(139,69,19,0.1); border: 1px solid rgba(243,156,18,0.2); border-radius: 12px; }
+    .achievements-grid.ouvert { display: flex; }
     .achievement-item { width: 140px; padding: 15px 10px; border-radius: 12px; text-align: center; transition: transform 0.2s; }
     .achievement-item.obtenu { background: rgba(243,156,18,0.15); border: 2px solid #f39c12; }
     .achievement-item.obtenu:hover { transform: translateY(-5px); }
     .achievement-item.locked { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); filter: grayscale(100%); opacity: 0.4; }
     .achievement-emoji { font-size: 30px; margin-bottom: 8px; }
     .achievement-nom { font-family: 'Oswald', sans-serif; font-size: 13px; color: #f39c12; letter-spacing: 1px; margin-bottom: 5px; }
-    .achievement-locked .achievement-nom { color: #555; }
     .achievement-desc { font-size: 10px; color: #888; }
     .coffre-btn { background: linear-gradient(135deg, #1a0a2a, #2a1a3a); border: 2px solid #9b59b6; color: #9b59b6; padding: 12px 30px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 20px rgba(155,89,182,0.3); }
     .coffre-btn:hover { background: #9b59b6; color: white; box-shadow: 0 0 30px rgba(155,89,182,0.6); }
@@ -401,8 +407,17 @@ app.get('/collection/:username', async (req, res) => {
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
     <div class="achievements-section">
-      <div class="achievements-title">&#x1F3C6; SUCCES</div>
-      <div class="achievements-grid">
+      <div class="livre-fermé" onclick="toggleLivre()">
+        <div class="livre-cover">
+          <div class="livre-spine"></div>
+          <div>
+            <div class="livre-icon">&#x1F4D6;</div>
+            <div class="livre-title">SUCCES</div>
+            <div class="livre-subtitle">Clique pour ouvrir</div>
+          </div>
+        </div>
+      </div>
+      <div class="achievements-grid" id="achievements-grid">
         ${[
           { id: 'premier_pas', emoji: '&#x1F34E;', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
           { id: 'chanceux', emoji: '&#x1F531;', nom: 'Chanceux', desc: 'Obtenir un fruit Mythique' },
@@ -434,6 +449,10 @@ app.get('/collection/:username', async (req, res) => {
   ${etageres}
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
   <script>
+  function toggleLivre() {
+  const grid = document.getElementById('achievements-grid');
+  grid.classList.toggle('ouvert');
+}
 async function vendre(username, fruit, rarete) {
   if (!confirm('Vendre 1x ' + fruit + ' ?')) return;
   const res = await fetch('/vendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, fruit, rarete }) });
