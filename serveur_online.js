@@ -157,9 +157,9 @@ app.post('/coffre', async (req, res) => {
 
   // Vérifier cooldown coffre
   const { data: coffreData } = await supabase.from('codes_temp').select('expire').eq('username', username + '_coffre').single();
-  if (coffreData && Date.now() < coffreData.expire) {
-    const restant = Math.ceil((coffreData.expire - Date.now()) / 60000);
-    return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) avant d\'ouvrir un nouveau coffre !' });
+  //if (coffreData && Date.now() < coffreData.expire) {
+ // const restant = Math.ceil((coffreData.expire - Date.now()) / 60000);
+  //  return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) avant d\'ouvrir un nouveau coffre !' });
   }
 
   // Vérifier les Berrys
