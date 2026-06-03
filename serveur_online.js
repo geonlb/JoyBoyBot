@@ -515,6 +515,103 @@ function fermerCoffre() {
 </html>`);
 });
 
+app.get('/leaderboard', async (req, res) => {
+  const { data: collections } = await supabase.from('collection').select('username, rarete');
+  const { data: membres } = await supabase.from('membres').select('username, personnage');
+
+  const points = { 'Ultime': 100, 'Mythique': 50, 'Legendaire': 20, 'Epique': 10, 'Rare': 5, 'Commun': 1 };
+  
+  const scores = {};
+  (collections || []).forEach(f => {
+    const rarete = (f.rarete || 'Commun').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!scores[f.username]) scores[f.username] = { username: f.username, score: 0, fruits: 0 };
+    scores[f.username].score += points[rarete] || 1;
+    scores[f.username].fruits += 1;
+  });
+
+  const classement = Object.values(scores).sort((a, b) => b.score - a.score).slice(0, 20);
+
+  const avatars = {};
+  for (const s of classement) {
+    try {
+      const r = await axios.get('https://api.twitch.tv/helix/users?login=' + s.username, { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + ACCESS_TOKEN } });
+      if (r.data.data.length > 0) avatars[s.username] = r.data.data[0].profile_image_url;
+    } catch (e) { avatars[s.username] = 'https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-300x300.png'; }
+  }
+
+  const medals = ['&#x1F947;', '&#x1F948;', '&#x1F949;'];
+
+  const rows = classement.map((s, i) => {
+    const avatar = avatars[s.username] || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-300x300.png';
+    const membre = (membres || []).find(m => m.username === s.username);
+    const perso = membre ? membre.personnage : '';
+    const medal = i < 3 ? medals[i] : (i + 1) + '.';
+    const isTop3 = i < 3;
+    return '<div class="player-row ' + (isTop3 ? 'top3' : '') + '" style="' + (isTop3 ? 'border-color:' + ['#ffd700','#c0c0c0','#cd7f32'][i] + ';' : '') + '">' +
+      '<div class="rank">' + medal + '</div>' +
+      '<img src="' + avatar + '" class="player-avatar">' +
+      '<div class="player-info">' +
+        '<div class="player-name">' + s.username + '</div>' +
+        (perso ? '<div class="player-perso">' + perso + '</div>' : '') +
+      '</div>' +
+      '<div class="player-stats">' +
+        '<div class="player-score">' + s.score.toLocaleString() + ' pts</div>' +
+        '<div class="player-fruits">' + s.fruits + ' fruits</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classement - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a1a; min-height: 100vh; padding: 30px 20px; font-family: 'Roboto', sans-serif; color: white; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { font-family: 'Oswald', sans-serif; font-size: 42px; letter-spacing: 6px; color: #f39c12; text-shadow: 0 0 30px rgba(243,156,18,0.5); }
+    .divider { width: 200px; height: 2px; background: linear-gradient(to right, transparent, #f39c12, transparent); margin: 15px auto; }
+    .subtitle { font-size: 13px; color: #888; letter-spacing: 3px; }
+    .leaderboard { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .player-row { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 20px; transition: transform 0.2s; }
+    .player-row:hover { transform: translateX(5px); }
+    .player-row.top3 { border: 2px solid; background: rgba(255,255,255,0.06); }
+    .rank { font-family: 'Oswald', sans-serif; font-size: 22px; width: 40px; text-align: center; }
+    .player-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); object-fit: cover; }
+    .player-info { flex: 1; }
+    .player-name { font-family: 'Oswald', sans-serif; font-size: 18px; letter-spacing: 1px; }
+    .player-perso { font-size: 12px; color: #f39c12; font-style: italic; }
+    .player-stats { text-align: right; }
+    .player-score { font-family: 'Oswald', sans-serif; font-size: 20px; color: #f39c12; }
+    .player-fruits { font-size: 11px; color: #888; }
+    .points-legend { max-width: 700px; margin: 30px auto 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .legend-item { font-size: 12px; color: #888; }
+    .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; letter-spacing: 3px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>&#x1F3C6; CLASSEMENT &#x1F3C6;</h1>
+    <div class="divider"></div>
+    <p class="subtitle">TOP COLLECTIONNEURS - NEYLABRISE</p>
+  </div>
+  <div class="leaderboard">${rows}</div>
+  <div class="points-legend">
+    <span class="legend-item">&#x1F451; Ultime = 100pts</span>
+    <span class="legend-item">&#x1F531; Mythique = 50pts</span>
+    <span class="legend-item">&#x2B50; Legendaire = 20pts</span>
+    <span class="legend-item">&#x1F49C; Epique = 10pts</span>
+    <span class="legend-item">&#x1F499; Rare = 5pts</span>
+    <span class="legend-item">&#x1F7E2; Commun = 1pt</span>
+  </div>
+  <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
+</body>
+</html>`);
+});
+
 app.get('/animation', (req, res) => {
   const fruit = req.query.fruit || '';
   const rarete = req.query.rarete || 'Commun';
