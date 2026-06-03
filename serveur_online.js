@@ -404,7 +404,7 @@ app.get('/collection/:username', async (req, res) => {
         sellBtn + '</div>';
     }).join('');
     const nbObtenus = liste.filter(f => fruitsObtenus.has(f)).length;
-    return '<div class="shelf-section"><div class="shelf-header" style="border-left:5px solid ' + config.couleur + ';background:' + config.bg + ';"><span class="shelf-emoji">' + config.emoji + '</span><span class="shelf-title" style="color:' + config.couleur + ';">' + rarete + '</span><span class="shelf-count">' + nbObtenus + '/' + liste.length + ' fruit(s)</span></div><div class="shelf"><div class="shelf-fruits">' + fruitsHTML + '</div><div class="shelf-board" style="background:' + config.couleur + ';"></div></div></div>';
+    return '<div class="shelf-section"><div class="shelf-header" style="border-left:5px solid ' + config.couleur + ';background:' + config.bg + ';"><span class="shelf-emoji">' + config.emoji + '</span><span class="shelf-title" style="color:' + config.couleur + ';">' + rarete + '</span><span class="shelf-count">' + nbObtenus + '/' + liste.length + ' fruit(s)</span></div><div class="shelf" style="background:linear-gradient(180deg, color-mix(in srgb, ' + config.couleur + ' 12%, transparent), color-mix(in srgb, ' + config.couleur + ' 3%, transparent));"><div class="shelf-fruits">' + fruitsHTML + '</div><div class="shelf-board" style="background:' + config.couleur + ';"></div></div></div>';
   }).join('');
 
   const statsHTML = Object.entries(rareteConfig).map(([r, c]) => stats[r] ? '<span class="stat-badge" style="background:' + c.bg + ';color:' + c.couleur + ';border:1px solid ' + c.couleur + ';">' + c.emoji + ' ' + r + ': ' + stats[r] + '</span>' : '').join('');
