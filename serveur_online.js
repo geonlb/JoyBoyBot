@@ -417,20 +417,22 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
 </div>
       <div class="achievements-grid" id="achievements-grid">
         ${[
-          { id: 'premier_pas', img: '/badges/premier_pas.png' },
-          { id: 'chanceux', img: '/badges/chanceux.png' },
-          { id: 'elu', img: '/badges/elu.png' },
-          { id: 'collection_commun', img: '/badges/collection_commun.png' },
-          { id: 'chasseur_rare', img: '/badges/chasseur_rare.png' },
-          { id: 'maitre_epique', img: '/badges/maitre_epique.png' },
-          { id: 'legende', img: '/badges/legende.png' },
-          { id: 'mythique_complet', img: '/badges/mythique_complet.png' },
-          { id: 'vrai_roi', img: '/badges/vrai_roi.png' },
-          { id: 'chasseur_tresor', img: '/badges/chasseur_tresor.png' },
+          { id: 'premier_pas', img: '/badges/premier_pas.png', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
+{ id: 'chanceux', img: '/badges/chanceux.png', nom: 'Chanceux', desc: 'Obtenir un fruit Mythique' },
+{ id: 'elu', img: '/badges/elu.png', nom: 'Elu', desc: 'Obtenir un fruit Ultime' },
+{ id: 'collection_commun', img: '/badges/collection_commun.png', nom: 'Collection Commun', desc: 'Avoir tous les fruits Commun' },
+{ id: 'chasseur_rare', img: '/badges/chasseur_rare.png', nom: 'Chasseur Rare', desc: 'Avoir tous les fruits Rare' },
+{ id: 'maitre_epique', img: '/badges/maitre_epique.png', nom: 'Maitre Epique', desc: 'Avoir tous les fruits Epique' },
+{ id: 'legende', img: '/badges/legende.png', nom: 'Legende', desc: 'Avoir tous les fruits Legendaire' },
+{ id: 'mythique_complet', img: '/badges/mythique_complet.png', nom: 'Mythique Complet', desc: 'Avoir tous les fruits Mythique' },
+{ id: 'vrai_roi', img: '/badges/vrai_roi.png', nom: 'Le Vrai Roi des Pirates', desc: 'Avoir tous les fruits Ultime' },
+{ id: 'chasseur_tresor', img: '/badges/chasseur_tresor.png', nom: 'Chasseur de Tresor', desc: 'Ouvrir son premier coffre' },
         ].map(a => {
           const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
           return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
             '<img src="' + a.img + '" style="width:200px;height:95px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
+            '<div style="font-family:Oswald,sans-serif;font-size:12px;color:' + (obtenu ? '#fff' : '#555') + ';margin-top:6px;letter-spacing:1px;">' + a.nom + '</div>' +
+            '<div style="font-size:10px;color:' + (obtenu ? '#aaa' : '#333') + ';margin-top:3px;">' + a.desc + '</div>' +
             '</div>';
         }).join('')}
       </div>
