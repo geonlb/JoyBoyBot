@@ -166,8 +166,7 @@ app.post('/coffre', async (req, res) => {
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData || primeData.berrys < 2000) {
     return res.status(400).json({ error: 'Pas assez de Berrys ! Il faut 2000 Berrys pour ouvrir un coffre !' });
-  }
-
+// }
   // Tirer 3 fruits
   const fruits = {
     'Ultime':     { chance: 0.5, liste: ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'] },
