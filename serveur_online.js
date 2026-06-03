@@ -445,7 +445,10 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     </div>` : ''}
   </div>
   ${etageres}
-  <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
+  <div class="footer">
+  <a href="/leaderboard" style="color:#f39c12;text-decoration:none;letter-spacing:3px;font-size:13px;">&#x1F3C6; Voir le classement</a>
+  <p style="margin-top:10px;">NeyLaBrise - Grand Line</p>
+</div>
   <script>
   function toggleLivre() {
   const grid = document.getElementById('achievements-grid');
