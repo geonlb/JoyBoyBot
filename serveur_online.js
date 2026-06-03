@@ -113,8 +113,8 @@ app.get('/grandline', async (req, res) => {
     const cards = factionMembres.map(m => {
       const prime = (primes || []).find(p => p.username === m.username);
       const berrys = prime ? prime.berrys.toLocaleString() : '0';
-      return `<div class="member-card"><img src="${avatar}" alt="${m.username}" class="member-avatar"><div class="member-info"><div class="member-name">${m.username}</div><div class="member-perso">${m.personnage}</div><div class="member-prime">&#x1F4B0; ${berrys} Berrys</div></div></div>`;avatars[m.username] || '';
-      
+      const avatar = avatars[m.username] || '';
+      return `<div class="member-card"><img src="${avatar}" alt="${m.username}" class="member-avatar"><div class="member-info"><div class="member-name">${m.username}</div><div class="member-perso">${m.personnage}</div><div class="member-prime">&#x1F4B0; ${berrys} Berrys</div></div></div>`;
     }).join('');
     return `<div class="faction-card" style="border-color: ${f.couleur}; background: ${f.bg};"><div class="faction-title" style="color: ${f.couleur};">${f.nom}</div><div class="faction-count">${factionMembres.length} membre(s)</div><div class="members-grid">${cards || '<div class="empty">Aucun membre</div>'}</div></div>`;
   }).join('');
