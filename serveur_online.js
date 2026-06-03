@@ -284,7 +284,8 @@ app.post('/coffre', async (req, res) => {
   const loot = [tirerFruit(), tirerFruit(), tirerFruit()];
   const newBerrys = primeData.berrys - 2000;
 
-  await supabase.from('codes_temp').upsert({ username: username + '_coffre', code: 'coffre', expire: Date.now() + 1200000 }, { onConflict: 'username' });
+  await supabase.from('codes_temp').delete().eq('username', username + '_coffre');
+await supabase.from('codes_temp').insert({ username: username + '_coffre', code: 'coffre', expire: Date.now() + 1200000 });
   await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
   for (const { fruit, rarete } of loot) {
     await supabase.from('collection').insert({ username, fruit, rarete });
