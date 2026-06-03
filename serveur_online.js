@@ -112,6 +112,45 @@ app.get('/auth/callback', async (req, res) => {
   } catch (err) { res.redirect('/collection/' + state + '?error=auth'); }
 });
 
+async function verifierAchievements(username, collection, fruitsGroupes) {
+  const { data: existing } = await supabase.from('achievements').select('achievement').eq('username', username);
+  const dejaobtenu = new Set((existing || []).map(a => a.achievement));
+  const nouveaux = [];
+
+  const tousLesFruits = {
+    'Ultime':     ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'],
+    'Mythique':   ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'],
+    'Legendaire': ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'],
+    'Epique':     ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'],
+    'Rare':       ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'],
+    'Commun':     ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku']
+  };
+
+  const fruitsObtenus = new Set(Object.keys(fruitsGroupes));
+  const totalFruits = collection.length;
+
+  const checks = [
+    { id: 'premier_pas', condition: totalFruits >= 1, emoji: '🍎', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
+    { id: 'chanceux', condition: Object.values(fruitsGroupes).some(f => f.rarete === 'Mythique'), emoji: '🔱', nom: 'Chanceux', desc: 'Obtenir un fruit Mythique' },
+    { id: 'elu', condition: Object.values(fruitsGroupes).some(f => f.rarete === 'Ultime'), emoji: '👑', nom: 'Elu', desc: 'Obtenir un fruit Ultime' },
+    { id: 'collection_commun', condition: tousLesFruits['Commun'].every(f => fruitsObtenus.has(f)), emoji: '💚', nom: 'Collection Commun', desc: 'Avoir tous les fruits Commun' },
+    { id: 'chasseur_rare', condition: tousLesFruits['Rare'].every(f => fruitsObtenus.has(f)), emoji: '💙', nom: 'Chasseur Rare', desc: 'Avoir tous les fruits Rare' },
+    { id: 'maitre_epique', condition: tousLesFruits['Epique'].every(f => fruitsObtenus.has(f)), emoji: '💜', nom: 'Maitre Epique', desc: 'Avoir tous les fruits Epique' },
+    { id: 'legende', condition: tousLesFruits['Legendaire'].every(f => fruitsObtenus.has(f)), emoji: '⭐', nom: 'Legende', desc: 'Avoir tous les fruits Legendaire' },
+    { id: 'mythique_complet', condition: tousLesFruits['Mythique'].every(f => fruitsObtenus.has(f)), emoji: '🔱', nom: 'Mythique Complet', desc: 'Avoir tous les fruits Mythique' },
+    { id: 'vrai_roi', condition: tousLesFruits['Ultime'].every(f => fruitsObtenus.has(f)), emoji: '👑', nom: 'Le Vrai Roi des Pirates', desc: 'Avoir tous les fruits Ultime' },
+  ];
+
+  for (const check of checks) {
+    if (check.condition && !dejaobtenu.has(check.id)) {
+      await supabase.from('achievements').insert({ username, achievement: check.id });
+      nouveaux.push(check);
+    }
+  }
+
+  return nouveaux;
+}
+
 app.post('/coffre', async (req, res) => {
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'Manque username' });
@@ -165,7 +204,15 @@ app.post('/coffre', async (req, res) => {
     await supabase.from('collection').insert({ username, fruit, rarete });
   }
 
-  res.json({ success: true, loot, berrys: newBerrys });
+  const { data: allFruits } = await supabase.from('collection').select('*').eq('username', username);
+  const fruitsG = {};
+  (allFruits || []).forEach(f => {
+    let r = (f.rarete || 'Commun').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (fruitsG[f.fruit]) fruitsG[f.fruit].count += 1;
+    else fruitsG[f.fruit] = { ...f, rarete: r, count: 1 };
+  });
+  const nouveauxAchievements = await verifierAchievements(username, allFruits || [], fruitsG);
+  res.json({ success: true, loot, berrys: newBerrys, achievements: nouveauxAchievements });
 });
 
 app.post('/vendre', async (req, res) => {
@@ -382,6 +429,14 @@ async function ouvrirCoffre(username) {
   }).join('');
 
   overlay.classList.add('active');
+  if (data.achievements && data.achievements.length > 0) {
+    setTimeout(() => {
+      const achieveHTML = data.achievements.map(a => 
+        '<div style="background:rgba(243,156,18,0.2);border:1px solid #f39c12;border-radius:10px;padding:8px 15px;margin:5px;display:inline-block;color:#f39c12;font-size:13px;">' + a.emoji + ' ' + a.nom + ' - ' + a.desc + '</div>'
+      ).join('');
+      document.getElementById('achievements-nouveaux').innerHTML = '<div style="margin-top:20px;"><div style="color:#f39c12;font-size:14px;letter-spacing:2px;margin-bottom:10px;">SUCCES DEBLOQUE !</div>' + achieveHTML + '</div>';
+    }, 2000);
+  }
   document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
 
   setTimeout(() => {
@@ -400,6 +455,7 @@ function fermerCoffre() {
   <div class="coffre-box">
     <div class="coffre-title">&#x1F4E6; COFFRE MYSTERE &#x1F4E6;</div>
     <div class="loot-grid" id="loot-grid"></div>
+    <div id="achievements-nouveaux"></div>
     <button class="coffre-close" onclick="fermerCoffre()">Fermer</button>
   </div>
 </div>
