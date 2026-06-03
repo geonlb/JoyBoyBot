@@ -410,7 +410,7 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     <div class="divider"></div>
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
-    <div style="text-align:center;margin-bottom:20px;">
+    <div style="text-align:center;margin-bottom:30px;margin-top:15px;">
       <a href="/leaderboard" style="color:#f39c12;text-decoration:none;background:rgba(243,156,18,0.1);border:1px solid #f39c12;padding:6px 20px;border-radius:20px;font-size:13px;letter-spacing:2px;">&#x1F3C6; Voir le classement</a>
     </div>
     <div class="achievements-section">
