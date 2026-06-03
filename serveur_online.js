@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
         <div class="card-desc">Explore les factions et les équipages de NeyLaBrise !</div>
       </a>
       <a href="#" onclick="goWanted()" class="card" style="--color:#d4b896;--glow:rgba(212,184,150,0.3);">
-        <div class="card-icon">&#x1F3F4;</div>
+        <img src="/persos/wantednlb.png" style="width:80px;height:80px;object-fit:contain;margin-bottom:15px;">
         <div class="card-title">WANTED</div>
         <div class="card-desc">Consulte ton avis de recherche et ta prime en Berrys !</div>
       </a>
