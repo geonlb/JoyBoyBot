@@ -363,12 +363,12 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     .livre-title { font-family: 'Oswald', sans-serif; font-size: 20px; color: #f39c12; letter-spacing: 3px; text-shadow: 0 0 10px rgba(243,156,18,0.5); }
     .livre-icon { font-size: 28px; }
     .livre-subtitle { font-size: 11px; color: #c8a96e; letter-spacing: 2px; margin-top: 4px; }
-    .achievements-grid { display: none; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 25px; padding: 25px; background: rgba(139,69,19,0.1); border: 1px solid rgba(243,156,18,0.2); border-radius: 12px; }
-    .achievements-grid.ouvert { display: flex; }
-    .achievement-item { width: 140px; padding: 15px 10px; border-radius: 12px; text-align: center; transition: transform 0.2s; }
-    .achievement-item.obtenu { background: rgba(243,156,18,0.15); border: 2px solid #f39c12; }
-    .achievement-item.obtenu:hover { transform: translateY(-5px); }
-    .achievement-item.locked { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); filter: grayscale(100%); opacity: 0.4; }
+    .achievements-grid { display: none; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 25px; padding: 25px; background: #000000; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
+.achievements-grid.ouvert { display: flex; }
+.achievement-item { width: 210px; padding: 10px; border-radius: 12px; text-align: center; transition: transform 0.2s; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); }
+.achievement-item.obtenu { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.6); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+.achievement-item.obtenu:hover { transform: translateY(-5px); }
+.achievement-item.locked { opacity: 0.3; }
     .achievement-emoji { font-size: 30px; margin-bottom: 8px; }
     .achievement-nom { font-family: 'Oswald', sans-serif; font-size: 13px; color: #f39c12; letter-spacing: 1px; margin-bottom: 5px; }
     .achievement-desc { font-size: 10px; color: #888; }
@@ -430,7 +430,7 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
         ].map(a => {
           const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
           return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
-            '<img src="' + a.img + '" style="width:205px;height:100px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
+            '<img src="' + a.img + '" style="width:200px;height:95px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
             '</div>';
         }).join('')}
       </div>
