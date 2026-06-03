@@ -411,7 +411,7 @@ app.get('/collection/:username', async (req, res) => {
         <div class="livre-cover">
           <div class="livre-spine"></div>
           <div>
-            <div class="livre-icon">&#x1F4D6;</div>
+            <img src="/fruits/coffresucces.png" style="width:60px;height:60px;object-fit:contain;">
             <div class="livre-title">SUCCES</div>
             <div class="livre-subtitle">Clique pour ouvrir</div>
           </div>
