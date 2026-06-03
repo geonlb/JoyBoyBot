@@ -83,6 +83,11 @@ app.get('/', (req, res) => {
         <div class="card-title">WANTED</div>
         <div class="card-desc">Consulte ton avis de recherche et ta prime en Berrys !</div>
       </a>
+      <a href="/minijeux" class="card">
+        <div class="card-icon">&#x1F3AE;</div>
+        <div class="card-title">MINI JEUX</div>
+        <div class="card-desc">Joue et gagne des Berrys hors live !</div>
+      </a>
     </div>
     <div class="footer"><p>&#x1F3F4; NeyLaBrise — Mis a jour en temps reel &#x1F3F4;</p></div>
   </div>
@@ -608,6 +613,362 @@ app.get('/leaderboard', async (req, res) => {
   }).join('');
 
   res.send('<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Classement - NeyLaBrise</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a1a url(/persos/classementfond.png) center/cover fixed;min-height:100vh;padding:30px 20px;font-family:\'Roboto\',sans-serif;color:white;}.header{text-align:center;margin-bottom:40px;position:relative;z-index:1;}.factions-grid{position:relative;z-index:1;}.header h1{font-family:\'Oswald\',sans-serif;font-size:42px;letter-spacing:6px;color:#ffffff;text-shadow:0 0 10px #8a2be2,0 0 20px #8a2be2,0 0 40px #8a2be2;}.divider{width:200px;height:2px;background:linear-gradient(to right,transparent,#f39c12,transparent);margin:15px auto;}.subtitle{font-size:13px;color:#888;letter-spacing:3px;}.leaderboard{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}.player-row{display:flex;align-items:center;gap:15px;background:rgba(0,0,0,.85);border:3px solid #ffffff;border-radius:12px;padding:12px 20px;transition:transform .2s;}.player-row:hover{transform:translateX(5px);}.player-row.top3{border:3px solid;}.rank{font-family:\'Oswald\',sans-serif;font-size:22px;width:40px;text-align:center;}.player-avatar{width:45px;height:45px;border-radius:50%;border:2px solid rgba(255,255,255,.2);object-fit:cover;}.player-info{flex:1;}.player-name{font-family:\'Oswald\',sans-serif;font-size:18px;letter-spacing:1px;}.player-perso{font-size:12px;color:#f39c12;font-style:italic;}.player-stats{text-align:right;}.player-score{font-family:\'Oswald\',sans-serif;font-size:20px;color:#f39c12;}.player-fruits{font-size:11px;color:#888;}.points-legend{max-width:700px;margin:30px auto 0;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:25px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;}.legend-item{font-size:15px;font-weight:bold;padding:6px 14px;border-radius:20px;}.footer{text-align:center;margin-top:40px;font-size:12px;color:#555;letter-spacing:3px;}</style></head><body><div class="header"><h1>&#x1F3C6; CLASSEMENT &#x1F3C6;</h1><div class="divider"></div><p class="subtitle"> - NEYLABRISE</p></div><div class="leaderboard">' + rows + '</div><div class="points-legend"><span class="legend-item" style="background:rgba(255,255,255,0.1);color:#ffffff;border:1px solid #ffffff;">&#x1F451; Ultime = 100pts</span><span class="legend-item" style="background:rgba(204,0,0,0.2);color:#cc0000;border:1px solid #cc0000;">&#x1F531; Mythique = 50pts</span><span class="legend-item" style="background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid #ffd700;">&#x2B50; Legendaire = 20pts</span><span class="legend-item" style="background:rgba(155,89,182,0.2);color:#9b59b6;border:1px solid #9b59b6;">&#x1F49C; Epique = 10pts</span><span class="legend-item" style="background:rgba(52,152,219,0.2);color:#3498db;border:1px solid #3498db;">&#x1F499; Rare = 5pts</span><span class="legend-item" style="background:rgba(46,204,113,0.2);color:#2ecc71;border:1px solid #2ecc71;">&#x1F7E2; Commun = 1pt</span></div><div class="footer"><p>NeyLaBrise - Grand Line</p></div></body></html>');
+});
+
+// ==================== MINI JEUX ====================
+app.get('/minijeux', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Jeux - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/fond_site.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.8); pointer-events: none; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; position: relative; z-index: 1; }
+    .header { text-align: center; margin-bottom: 60px; }
+    .title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 30px rgba(138,43,226,0.8); }
+    .subtitle { font-size: 14px; color: #87ceeb; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 15px rgba(135,206,235,0.6); }
+    .divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #8a2be2, #87ceeb, #8a2be2, transparent); margin: 20px auto; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+    .card { background: rgba(0,0,0,0.75); border: 1px solid rgba(138,43,226,0.4); border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: white; display: block; backdrop-filter: blur(10px); }
+    .card:hover { transform: translateY(-8px); border-color: #8a2be2; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 25px rgba(138,43,226,0.4); }
+    .card-icon { font-size: 60px; margin-bottom: 15px; }
+    .card-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 3px; margin-bottom: 10px; color: #87ceeb; }
+    .card-desc { font-size: 13px; color: #aaa; line-height: 1.6; margin-bottom: 10px; }
+    .card-gain { font-size: 12px; color: #f39c12; font-weight: bold; letter-spacing: 1px; }
+    .card-cooldown { font-size: 11px; color: #888; margin-top: 5px; }
+    .card-soon { opacity: 0.5; cursor: not-allowed; }
+    .card-soon:hover { transform: none; box-shadow: none; border-color: rgba(138,43,226,0.4); }
+    .soon-badge { background: rgba(138,43,226,0.3); border: 1px solid #8a2be2; color: #8a2be2; font-size: 11px; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 8px; }
+    .back-btn { display: inline-block; margin-bottom: 30px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
+    .back-btn:hover { color: #8a2be2; }
+    .footer { text-align: center; font-size: 12px; color: #87ceeb; letter-spacing: 3px; margin-top: 40px; opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-btn">&#x2190; Retour</a>
+    <div class="header">
+      <div class="title">MINI JEUX</div>
+      <div class="subtitle">Gagne des Berrys hors live !</div>
+      <div class="divider"></div>
+    </div>
+    <div class="cards-grid">
+      <a href="/roulette" class="card">
+        <div class="card-icon">&#x1F3A1;</div>
+        <div class="card-title">ROULETTE DES MERS</div>
+        <div class="card-desc">Tourne la roue et tente ta chance sur les mers du Grand Line !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 500 Berrys + Fruits !</div>
+        <div class="card-cooldown">&#x23F0; Cooldown : 10 minutes</div>
+      </a>
+      <div class="card card-soon">
+        <div class="card-icon">&#x2694;&#xFE0F;</div>
+        <div class="card-title">COMBAT DE PIRATES</div>
+        <div class="card-desc">Affronte des ennemis légendaires et remporte des Berrys !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys</div>
+        <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
+        <div class="soon-badge">BIENTOT</div>
+      </div>
+      <div class="card card-soon">
+        <div class="card-icon">&#x1F0CF;</div>
+        <div class="card-title">BLACKJACK PIRATE</div>
+        <div class="card-desc">21 style One Piece, double ta mise ou perds tout !</div>
+        <div class="card-gain">&#x1F4B0; Mise variable</div>
+        <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
+        <div class="soon-badge">BIENTOT</div>
+      </div>
+      <div class="card card-soon">
+        <div class="card-icon">&#x1F3F4;</div>
+        <div class="card-title">COURSE VERS ONE PIECE</div>
+        <div class="card-desc">Resous les enigmes des mers pour trouver le tresor !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 2000 Berrys</div>
+        <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
+        <div class="soon-badge">BIENTOT</div>
+      </div>
+    </div>
+    <div class="footer"><p>&#x1F3F4; NeyLaBrise — Grand Line &#x1F3F4;</p></div>
+  </div>
+</body>
+</html>`);
+});
+
+// ==================== ROULETTE ====================
+app.get('/roulette', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roulette des Mers - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/fondroulette.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.7); pointer-events: none; }
+    .container { max-width: 800px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
+    .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
+    .back-btn:hover { color: #8a2be2; }
+    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 30px rgba(138,43,226,0.8); margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #87ceeb; letter-spacing: 4px; margin-bottom: 10px; }
+    .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
+    .pseudo-input { background: rgba(0,0,0,0.7); border: 1px solid #8a2be2; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; width: 250px; outline: none; font-family: 'Exo 2', sans-serif; }
+    .pseudo-input::placeholder { color: #666; }
+    .valider-btn { background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; border: none; padding: 10px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Exo 2', sans-serif; transition: all 0.3s; }
+    .valider-btn:hover { box-shadow: 0 0 25px rgba(138,43,226,0.6); }
+    .wheel-container { position: relative; display: inline-block; margin: 20px auto; }
+    .wheel-wrapper { position: relative; display: inline-block; }
+    .wheel { border-radius: 50%; box-shadow: 0 0 40px rgba(138,43,226,0.5), 0 0 80px rgba(138,43,226,0.3); transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
+    .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 40px; filter: drop-shadow(0 0 10px rgba(243,156,18,0.8)); z-index: 10; }
+    .spin-btn { margin-top: 25px; background: linear-gradient(135deg, #f39c12, #e67e22); color: #000; border: none; padding: 15px 50px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 3px; transition: all 0.3s; box-shadow: 0 0 20px rgba(243,156,18,0.4); display: block; margin-left: auto; margin-right: auto; }
+    .spin-btn:hover { box-shadow: 0 0 40px rgba(243,156,18,0.8); transform: scale(1.05); }
+    .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .result-box { margin-top: 25px; padding: 20px 30px; border-radius: 15px; display: none; }
+    .result-box.show { display: block; animation: fadeIn 0.5s forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .result-title { font-family: 'Cinzel', serif; font-size: 22px; margin-bottom: 8px; }
+    .result-berrys { font-size: 28px; font-weight: bold; color: #f39c12; }
+    .cooldown-msg { margin-top: 15px; font-size: 13px; color: #888; }
+    .berrys-display { background: rgba(0,0,0,0.7); border: 2px solid #f39c12; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; }
+    .berrys-display span { font-family: 'Cinzel', serif; font-size: 18px; color: #f39c12; }
+    .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+    .legend-item { background: rgba(0,0,0,0.6); border-radius: 20px; padding: 5px 15px; font-size: 12px; border: 1px solid rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
+    <div class="title">&#x1F3A1; ROULETTE DES MERS</div>
+    <div class="subtitle">Tente ta chance sur le Grand Line !</div>
+    <div class="search-bar">
+      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
+      <button class="valider-btn" onclick="charger()">Valider</button>
+    </div>
+    <div id="berrys-display" class="berrys-display" style="display:none;">
+      <span id="berrys-amount">0</span> Berrys
+    </div>
+    <div class="wheel-wrapper">
+      <div class="pointer">&#x1F4CD;</div>
+      <canvas id="wheel" class="wheel" width="400" height="400"></canvas>
+    </div>
+    <button class="spin-btn" id="spin-btn" onclick="tourner()" disabled>&#x1F3B0; TOURNER !</button>
+    <div class="result-box" id="result-box">
+      <div class="result-title" id="result-title"></div>
+      <div class="result-berrys" id="result-berrys"></div>
+      <div class="cooldown-msg" id="cooldown-msg"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <script>
+    const segments = [
+      { label: '+50 Berrys', berrys: 50, couleur: '#2ecc71', prob: 30 },
+      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 20 },
+      { label: '+100 Berrys', berrys: 100, couleur: '#3498db', prob: 20 },
+      { label: '+50 Berrys', berrys: 50, couleur: '#2ecc71', prob: 0 },
+      { label: '+200 Berrys', berrys: 200, couleur: '#9b59b6', prob: 15 },
+      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 0 },
+      { label: '+500 Berrys', berrys: 500, couleur: '#f39c12', prob: 10 },
+      { label: '+100 Berrys', berrys: 100, couleur: '#3498db', prob: 0 },
+      { label: '&#x1F34E; Fruit !', berrys: -1, couleur: '#ffffff', prob: 5 },
+      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 0 },
+    ];
+
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const nb = segments.length;
+    const arc = (2 * Math.PI) / nb;
+    let currentAngle = 0;
+    let pseudo = '';
+    let berrys = 0;
+    let spinning = false;
+
+    function dessinerRoue() {
+      ctx.clearRect(0, 0, 400, 400);
+      segments.forEach((seg, i) => {
+        const start = currentAngle + i * arc;
+        ctx.beginPath();
+        ctx.moveTo(200, 200);
+        ctx.arc(200, 200, 195, start, start + arc);
+        ctx.closePath();
+        ctx.fillStyle = seg.couleur;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(200, 200);
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = seg.berrys === 0 ? 'white' : (seg.berrys === -1 ? '#000' : 'white');
+        ctx.font = 'bold 13px Exo 2, sans-serif';
+        ctx.fillText(seg.label, 180, 5);
+        ctx.restore();
+      });
+      ctx.beginPath();
+      ctx.arc(200, 200, 25, 0, 2 * Math.PI);
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fill();
+      ctx.strokeStyle = '#f39c12';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = '#f39c12';
+      ctx.font = 'bold 14px Cinzel, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('NLB', 200, 205);
+    }
+
+    function charger() {
+      pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
+      if (!pseudo) { alert('Entre ton pseudo Twitch !'); return; }
+      fetch('/roulette/infos?username=' + pseudo)
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) { alert(data.error); return; }
+          berrys = data.berrys;
+          document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
+          document.getElementById('berrys-display').style.display = 'inline-block';
+          if (data.cooldown) {
+            document.getElementById('spin-btn').disabled = true;
+            document.getElementById('spin-btn').textContent = '⏰ ' + data.restant + ' min restantes';
+          } else {
+            document.getElementById('spin-btn').disabled = false;
+            document.getElementById('spin-btn').textContent = '🎰 TOURNER !';
+          }
+          const legendDiv = document.getElementById('legend');
+          legendDiv.innerHTML = segments.filter((s,i,a) => a.findIndex(x=>x.label===s.label) === i).map(s =>
+            '<div class="legend-item" style="border-color:' + s.couleur + ';color:' + s.couleur + ';">' + s.label + '</div>'
+          ).join('');
+        });
+    }
+
+    function getResultat() {
+      const rand = Math.random() * 100;
+      let cumul = 0;
+      const probs = [30, 20, 20, 0, 15, 0, 10, 0, 5, 0];
+      for (let i = 0; i < probs.length; i++) {
+        cumul += probs[i];
+        if (rand < cumul) return i;
+      }
+      return 0;
+    }
+
+    function tourner() {
+      if (spinning || !pseudo) return;
+      spinning = true;
+      document.getElementById('spin-btn').disabled = true;
+      document.getElementById('result-box').classList.remove('show');
+
+      const indexResultat = getResultat();
+      const targetAngle = -(currentAngle + indexResultat * arc + arc / 2 - Math.PI / 2) + (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+      const totalRotation = targetAngle + (5 * 2 * Math.PI);
+      let start = null;
+      const duration = 4000;
+
+      function animate(ts) {
+        if (!start) start = ts;
+        const elapsed = ts - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const angle = totalRotation * ease;
+        currentAngle = angle % (2 * Math.PI);
+        dessinerRoue();
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          spinning = false;
+          afficherResultat(indexResultat);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    async function afficherResultat(index) {
+      const seg = segments[index];
+      const res = await fetch('/roulette/jouer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudo, index })
+      });
+      const data = await res.json();
+      if (!data.success) { alert(data.error); document.getElementById('spin-btn').disabled = false; spinning = false; return; }
+
+      const box = document.getElementById('result-box');
+      box.style.background = 'rgba(0,0,0,0.85)';
+      box.style.border = '2px solid ' + seg.couleur;
+      box.style.boxShadow = '0 0 30px ' + seg.couleur + '44';
+
+      if (seg.berrys === 0) {
+        document.getElementById('result-title').textContent = '🚔 La Marine t\\'a arrêté !';
+        document.getElementById('result-berrys').textContent = '+0 Berrys';
+        document.getElementById('result-berrys').style.color = '#e74c3c';
+      } else if (seg.berrys === -1) {
+        document.getElementById('result-title').textContent = '🍎 Fruit du Démon !';
+        document.getElementById('result-berrys').textContent = data.fruit + ' no Mi !';
+        document.getElementById('result-berrys').style.color = '#ffffff';
+      } else {
+        document.getElementById('result-title').textContent = '🏴‍☠️ Butin récupéré !';
+        document.getElementById('result-berrys').textContent = '+' + seg.berrys + ' Berrys !';
+        document.getElementById('result-berrys').style.color = seg.couleur;
+      }
+
+      document.getElementById('cooldown-msg').textContent = '⏰ Prochain tour dans 10 minutes !';
+      document.getElementById('berrys-amount').textContent = data.berrys.toLocaleString();
+      berrys = data.berrys;
+      box.classList.add('show');
+      document.getElementById('spin-btn').textContent = '⏰ Reviens dans 10 min !';
+    }
+
+    dessinerRoue();
+  </script>
+</body>
+</html>`);
+});
+
+app.get('/roulette/infos', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable ! Tu dois etre enregistre sur le stream.' });
+  const { data: rouletteRows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_roulette');
+  const rouletteData = rouletteRows && rouletteRows.length > 0 ? rouletteRows[0] : null;
+  const cooldown = rouletteData && Date.now() < parseInt(rouletteData.expire);
+  const restant = cooldown ? Math.ceil((parseInt(rouletteData.expire) - Date.now()) / 60000) : 0;
+  res.json({ berrys: primeData.berrys, cooldown, restant });
+});
+
+app.post('/roulette/jouer', async (req, res) => {
+  const { username, index } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: rouletteRows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_roulette');
+  const rouletteData = rouletteRows && rouletteRows.length > 0 ? rouletteRows[0] : null;
+  if (rouletteData && Date.now() < parseInt(rouletteData.expire)) {
+    const restant = Math.ceil((parseInt(rouletteData.expire) - Date.now()) / 60000);
+    return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) !' });
+  }
+  const segments = [
+    { berrys: 50 }, { berrys: 0 }, { berrys: 100 }, { berrys: 50 },
+    { berrys: 200 }, { berrys: 0 }, { berrys: 500 }, { berrys: 100 },
+    { berrys: -1 }, { berrys: 0 }
+  ];
+  const seg = segments[index];
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable !' });
+  let newBerrys = primeData.berrys;
+  let fruit = null;
+  if (seg.berrys === -1) {
+    const fruitsListe = ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku', 'Yomi-Yomi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru'];
+    fruit = fruitsListe[Math.floor(Math.random() * fruitsListe.length)];
+    await supabase.from('collection').insert({ username, fruit, rarete: 'Commun' });
+  } else {
+    newBerrys += seg.berrys;
+    await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  }
+  await supabase.from('codes_temp').delete().eq('username', username + '_roulette');
+  await supabase.from('codes_temp').insert({ username: username + '_roulette', code: 'roulette', expire: Date.now() + 600000 });
+  res.json({ success: true, berrys: newBerrys, fruit });
 });
 
 // ==================== ANIMATION OBS ====================
