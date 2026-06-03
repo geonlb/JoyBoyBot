@@ -218,7 +218,7 @@ app.get('/collection/:username', async (req, res) => {
   const berrys = primeData ? primeData.berrys : 0;
 
   const rareteConfig = {
-    'Ultime':     { emoji: '&#x1F451;', couleur: '#ffffff', bg: '#fffff', glow: 'rgba(255,255,255,0.6)' },
+    'Ultime':     { emoji: '&#x1F451;', couleur: '#ffffff', bg: '#0d0d0d', glow: 'rgba(255,255,255,0.6)' },
     'Mythique':   { emoji: '&#x1F531;', couleur: '#cc0000', bg: '#1a0000', glow: 'rgba(200,0,0,0.5)' },
     'Légendaire': { emoji: '&#x2B50;',  couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
     'Épique':     { emoji: '&#x1F49C;', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
