@@ -66,14 +66,14 @@ app.get('/prime/:username', async (req, res) => {
 <body>
   <div class="wanted">
     <div class="texture"></div>
-    <span class="corner tl">âš“</span><span class="corner tr">âš“</span>
-    <span class="corner bl">âš“</span><span class="corner br">âš“</span>
+    <span class="corner tl">&#9875;</span><span class="corner tr">&#9875;</span>
+    <span class="corner bl">&#9875;</span><span class="corner br">&#9875;</span>
     <div class="content">
       <div class="title">WANTED</div>
       <div class="subtitle">DEAD OR ALIVE</div>
       <img class="avatar" src="${avatar}" alt="${username}">
       <div class="username">${username}</div>
-      <div class="personnage">${personnage} â€¢ ${subs} sub(s)</div>
+      <div class="personnage">${personnage} - ${subs} sub(s)</div>
       <hr class="divider">
       <div class="bounty-label">Prime</div>
       <div class="bounty">${berrys.toLocaleString()}</div>
