@@ -536,7 +536,7 @@ dernierFruitGlobal = Date.now();
 
   // Vérifier si déjà utilisé ce stream
   const dernierFruit = db.prepare('SELECT fruit, timestamp FROM fruits_stream WHERE username = ?').get(username.toLowerCase());
-if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
+if (dernierFruit && Date.now() - dernierFruit.timestamp < 0) {
   const restant = Math.ceil((300000 - (Date.now() - dernierFruit.timestamp)) / 60000);
   client.say(channel, `⏳ ${username} attends encore ${restant} minute(s) avant de retenter ta chance ! 🍎`);
   return;
@@ -545,11 +545,11 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   // Tirer la rareté
   const rand = Math.random() * 100;
   let rarete = 'Commun';
-  if (rand < 1) rarete = 'Ultime';
-  else if (rand < 3) rarete = 'Mythique';
-  else if (rand < 8) rarete = 'Légendaire';
-  else if (rand < 18) rarete = 'Épique';
-  else if (rand < 45) rarete = 'Rare';
+  if (rand < 0.5) rarete = 'Ultime';
+  else if (rand < 2) rarete = 'Mythique';
+  else if (rand < 7) rarete = 'Légendaire';
+  else if (rand < 17) rarete = 'Épique';
+  else if (rand < 40) rarete = 'Rare'; 
 
   // Tirer le fruit
   const liste = fruits[rarete].liste;
@@ -597,7 +597,7 @@ try {
   console.log('Erreur OBS fruit:', err.message);
 }
 
-  const chances = { 'Ultime': '1%', 'Mythique': '2%', 'Légendaire': '8%', 'Épique': '20%', 'Rare': '30%', 'Commun': '40%' };
+  const chances = { 'Ultime': '0.5%', 'Mythique': '1.5%', 'Légendaire': '5%', 'Épique': '10%', 'Rare': '23%', 'Commun': '60%' };
 client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} (${chances[rarete]} de chance) ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
   return;
 }
