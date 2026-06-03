@@ -20,6 +20,99 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const CLIENT_ID = process.env.CLIENT_ID || '4wl3wc4mnurd77ctzhl8s8v6gak6yl';
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '9w76c932djulze7uhrqdwjbk4d5fnn';
 
+app.get('/', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JoyBoy Bot - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at 20% 20%, rgba(255,0,0,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,215,0,0.04) 0%, transparent 50%); pointer-events: none; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; position: relative; z-index: 1; }
+    .header { text-align: center; margin-bottom: 60px; }
+    .logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(243,156,18,0.5)); }
+    .title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #f39c12; letter-spacing: 6px; text-shadow: 0 0 30px rgba(243,156,18,0.5); line-height: 1.2; }
+    .subtitle { font-size: 14px; color: #888; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; }
+    .divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #f39c12, transparent); margin: 20px auto; }
+    .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 50px; }
+    .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(243,156,18,0.3); color: white; padding: 12px 20px; border-radius: 25px; font-size: 14px; width: 280px; outline: none; font-family: 'Exo 2', sans-serif; }
+    .search-input::placeholder { color: #555; }
+    .search-input:focus { border-color: #f39c12; }
+    .search-btn { background: #f39c12; color: #000; border: none; padding: 12px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Exo 2', sans-serif; letter-spacing: 1px; transition: all 0.3s; }
+    .search-btn:hover { background: #e67e22; box-shadow: 0 0 20px rgba(243,156,18,0.4); }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: white; display: block; position: relative; overflow: hidden; }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 0.3s; }
+    .card:hover { transform: translateY(-8px); border-color: var(--color); box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 20px var(--glow); }
+    .card:hover::before { opacity: 1; }
+    .card-icon { font-size: 50px; margin-bottom: 15px; }
+    .card-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 3px; margin-bottom: 10px; color: var(--color); }
+    .card-desc { font-size: 13px; color: #888; line-height: 1.6; }
+    .card-badge { position: absolute; top: 15px; right: 15px; background: var(--color); color: #000; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; letter-spacing: 1px; }
+    .footer { text-align: center; font-size: 12px; color: #333; letter-spacing: 3px; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="/persos/teamnlb.png" class="logo" alt="NLB">
+      <div class="title">JOYBOY BOT</div>
+      <div class="subtitle">NeyLaBrise — Grand Line</div>
+      <div class="divider"></div>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="search-input" id="pseudo" placeholder="Entre ton pseudo Twitch...">
+      <button class="search-btn" onclick="goCollection()">&#x1F50D; Ma Collection</button>
+    </div>
+
+    <div class="cards-grid">
+      <a href="/leaderboard" class="card" style="--color:#f39c12;--glow:rgba(243,156,18,0.3);">
+        <div class="card-badge">TOP 20</div>
+        <div class="card-icon">&#x1F3C6;</div>
+        <div class="card-title">CLASSEMENT</div>
+        <div class="card-desc">Découvre les meilleurs collectionneurs de la Grand Line !</div>
+      </a>
+      <a href="/grandline" class="card" style="--color:#e74c3c;--glow:rgba(231,76,60,0.3);">
+        <div class="card-icon">&#x1F5FA;</div>
+        <div class="card-title">GRAND LINE</div>
+        <div class="card-desc">Explore les factions et les équipages de NeyLaBrise !</div>
+      </a>
+      <a href="#" onclick="goWanted()" class="card" style="--color:#d4b896;--glow:rgba(212,184,150,0.3);">
+        <div class="card-icon">&#x1F3F4;</div>
+        <div class="card-title">WANTED</div>
+        <div class="card-desc">Consulte ton avis de recherche et ta prime en Berrys !</div>
+      </a>
+    </div>
+
+    <div class="footer">
+      <p>&#x1F3F4; NeyLaBrise — Mis a jour en temps reel &#x1F3F4;</p>
+    </div>
+  </div>
+
+  <script>
+    function goCollection() {
+      const pseudo = document.getElementById('pseudo').value.trim();
+      if (!pseudo) { alert('Entre ton pseudo Twitch !'); return; }
+      window.location = '/collection/' + pseudo;
+    }
+    function goWanted() {
+      const pseudo = document.getElementById('pseudo').value.trim();
+      if (!pseudo) { alert('Entre ton pseudo Twitch !'); return; }
+      window.location = '/prime/' + pseudo;
+    }
+    document.getElementById('pseudo').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') goCollection();
+    });
+  </script>
+</body>
+</html>`);
+});
+
 app.get('/prime/:username', async (req, res) => {
   const username = req.params.username.toLowerCase();
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
