@@ -112,6 +112,62 @@ app.get('/auth/callback', async (req, res) => {
   } catch (err) { res.redirect('/collection/' + state + '?error=auth'); }
 });
 
+app.post('/coffre', async (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+
+  // Vérifier cooldown coffre
+  const { data: coffreData } = await supabase.from('codes_temp').select('expire').eq('username', username + '_coffre').single();
+  if (coffreData && Date.now() < coffreData.expire) {
+    const restant = Math.ceil((coffreData.expire - Date.now()) / 60000);
+    return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) avant d\'ouvrir un nouveau coffre !' });
+  }
+
+  // Vérifier les Berrys
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData || primeData.berrys < 2000) {
+    return res.status(400).json({ error: 'Pas assez de Berrys ! Il faut 2000 Berrys pour ouvrir un coffre !' });
+  }
+
+  // Tirer 3 fruits
+  const fruits = {
+    'Ultime':     { chance: 0.5, liste: ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'] },
+    'Mythique':   { chance: 1.5, liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
+    'Legendaire': { chance: 5,   liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
+    'Epique':     { chance: 10,  liste: ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'] },
+    'Rare':       { chance: 23,  liste: ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'] },
+    'Commun':     { chance: 60,  liste: ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku'] }
+  };
+
+  const tirerFruit = () => {
+    const rand = Math.random() * 100;
+    let rarete = 'Commun';
+    if (rand < 0.5) rarete = 'Ultime';
+    else if (rand < 2) rarete = 'Mythique';
+    else if (rand < 7) rarete = 'Legendaire';
+    else if (rand < 17) rarete = 'Epique';
+    else if (rand < 40) rarete = 'Rare';
+    const liste = fruits[rarete].liste;
+    const fruit = liste[Math.floor(Math.random() * liste.length)];
+    return { fruit, rarete };
+  };
+
+  const loot = [tirerFruit(), tirerFruit(), tirerFruit()];
+
+  // Déduire les Berrys
+  const newBerrys = primeData.berrys - 2000;
+  // Sauvegarder le cooldown coffre
+  await supabase.from('codes_temp').upsert({ username: username + '_coffre', code: 'coffre', expire: Date.now() + 1200000 });
+  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+
+  // Sauvegarder les fruits
+  for (const { fruit, rarete } of loot) {
+    await supabase.from('collection').insert({ username, fruit, rarete });
+  }
+
+  res.json({ success: true, loot, berrys: newBerrys });
+});
+
 app.post('/vendre', async (req, res) => {
   const { username, fruit, rarete } = req.body;
   if (!username || !fruit || !rarete) return res.status(400).json({ error: 'Manque des parametres' });
@@ -251,6 +307,19 @@ app.get('/collection/:username', async (req, res) => {
     .fruit-item:hover .tooltip{display:block;}
     .sell-btn{margin-top:5px;background:rgba(243,156,18,.2);border:1px solid #f39c12;color:#f39c12;padding:3px 10px;border-radius:12px;font-size:10px;cursor:pointer;transition:all .2s;}
     .sell-btn:hover{background:#f39c12;color:#000;}
+    .coffre-btn { background: linear-gradient(135deg, #1a0a2a, #2a1a3a); border: 2px solid #9b59b6; color: #9b59b6; padding: 12px 30px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 20px rgba(155,89,182,0.3); }
+    .coffre-btn:hover { background: #9b59b6; color: white; box-shadow: 0 0 30px rgba(155,89,182,0.6); }
+    .coffre-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+    .coffre-overlay.active { display: flex; }
+    .coffre-box { background: linear-gradient(145deg, #1a0a2a, #0d0d1a); border: 3px solid #9b59b6; border-radius: 20px; padding: 40px; text-align: center; max-width: 600px; width: 90%; box-shadow: 0 0 60px rgba(155,89,182,0.5); }
+    .coffre-title { font-family: 'Oswald', sans-serif; font-size: 28px; color: #9b59b6; letter-spacing: 4px; margin-bottom: 30px; }
+    .loot-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+    .loot-item { display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; transform: translateY(30px); transition: all 0.5s; }
+    .loot-item.visible { opacity: 1; transform: translateY(0); }
+    .loot-item img { width: 100px; height: 100px; object-fit: contain; }
+    .loot-item .loot-name { font-size: 13px; font-weight: bold; }
+    .loot-item .loot-rarete { font-size: 11px; opacity: 0.8; }
+    .coffre-close { background: #9b59b6; color: white; border: none; padding: 10px 30px; border-radius: 20px; font-size: 14px; cursor: pointer; letter-spacing: 2px; }
     .footer{text-align:center;margin-top:40px;font-size:12px;color:#555;letter-spacing:3px;}
   </style>
 </head>
@@ -273,21 +342,66 @@ app.get('/collection/:username', async (req, res) => {
     <div class="divider"></div>
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
+    ${isOwner ? `
+    <div style="text-align:center;margin-bottom:30px;">
+      <button onclick="ouvrirCoffre('${username}')" class="coffre-btn">
+        &#x1F4E6; Ouvrir un Coffre Mystere (2000 Berrys)
+      </button>
+    </div>` : ''}
   </div>
   ${etageres}
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
   <script>
-    async function vendre(username, fruit, rarete) {
-      if (!confirm('Vendre 1x ' + fruit + ' ?')) return;
-      const res = await fetch('/vendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, fruit, rarete }) });
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
-        alert('Vendu ! +' + data.valeur + ' Berrys !');
-        location.reload();
-      } else { alert(data.error); }
-    }
-  </script>
+async function vendre(username, fruit, rarete) {
+  if (!confirm('Vendre 1x ' + fruit + ' ?')) return;
+  const res = await fetch('/vendre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, fruit, rarete }) });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
+    alert('Vendu ! +' + data.valeur + ' Berrys !');
+    location.reload();
+  } else { alert(data.error); }
+}
+
+async function ouvrirCoffre(username) {
+  const res = await fetch('/coffre', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+  const data = await res.json();
+  if (!data.success) { alert(data.error); return; }
+
+  const couleurs = { 'Ultime': '#ffffff', 'Mythique': '#cc0000', 'Legendaire': '#ffd700', 'Epique': '#9b59b6', 'Rare': '#3498db', 'Commun': '#2ecc71' };
+
+  const overlay = document.getElementById('coffre-overlay');
+  const lootGrid = document.getElementById('loot-grid');
+  lootGrid.innerHTML = data.loot.map(l => `
+    <div class="loot-item" style="border: 2px solid ${couleurs[l.rarete] || '#2ecc71'}; border-radius: 15px; padding: 15px; background: rgba(0,0,0,0.5);">
+      <img src="/fruits/${l.fruit}.png" alt="${l.fruit}" style="filter: drop-shadow(0 0 15px ${couleurs[l.rarete] || '#2ecc71'});">
+      <div class="loot-name" style="color: ${couleurs[l.rarete] || '#2ecc71'};">${l.fruit} no Mi</div>
+      <div class="loot-rarete" style="color: ${couleurs[l.rarete] || '#2ecc71'};">${l.rarete}</div>
+    </div>
+  `).join('');
+
+  overlay.classList.add('active');
+  document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
+
+  setTimeout(() => {
+    document.querySelectorAll('.loot-item').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 400);
+    });
+  }, 300);
+}
+
+function fermerCoffre() {
+  document.getElementById('coffre-overlay').classList.remove('active');
+  location.reload();
+}
+</script>
+<div class="coffre-overlay" id="coffre-overlay">
+  <div class="coffre-box">
+    <div class="coffre-title">&#x1F4E6; COFFRE MYSTERE &#x1F4E6;</div>
+    <div class="loot-grid" id="loot-grid"></div>
+    <button class="coffre-close" onclick="fermerCoffre()">Fermer</button>
+  </div>
+</div>
 </body>
 </html>`);
 });
