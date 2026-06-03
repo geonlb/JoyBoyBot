@@ -706,13 +706,22 @@ app.get('/leaderboard', async (req, res) => {
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
   <script>
 function toggleFaction(card) {
-  card.classList.toggle('ouvert');
-  const grid = card.querySelector('.members-grid');
-  grid.style.display = grid.style.display === 'none' ? 'flex' : 'none';
+  const grid = card.querySelector(".members-grid");
+  const arrow = card.querySelector(".faction-arrow");
+  if (grid.style.display === "none" || grid.style.display === "") {
+    grid.style.display = "flex";
+    grid.style.flexDirection = "column";
+    grid.style.gap = "10px";
+    grid.style.marginTop = "15px";
+    if (arrow) arrow.style.transform = "rotate(180deg)";
+  } else {
+    grid.style.display = "none";
+    if (arrow) arrow.style.transform = "rotate(0deg)";
+  }
 }
 </script>
 </body>
-</html>`);
+</html>\`);
 });
 
 app.get('/animation', (req, res) => {
