@@ -593,8 +593,8 @@ app.get('/leaderboard', async (req, res) => {
     .player-stats { text-align: right; }
     .player-score { font-family: 'Oswald', sans-serif; font-size: 20px; color: #f39c12; }
     .player-fruits { font-size: 11px; color: #888; }
-    .points-legend { max-width: 700px; margin: 30px auto 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-    .legend-item { font-size: 12px; color: #888; }
+    .points-legend { max-width: 700px; margin: 30px auto 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.legend-item { font-size: 15px; font-weight: bold; padding: 6px 14px; border-radius: 20px; }
     .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; letter-spacing: 3px; }
   </style>
 </head>
@@ -606,12 +606,12 @@ app.get('/leaderboard', async (req, res) => {
   </div>
   <div class="leaderboard">${rows}</div>
   <div class="points-legend">
-    <span class="legend-item">&#x1F451; Ultime = 100pts</span>
-    <span class="legend-item">&#x1F531; Mythique = 50pts</span>
-    <span class="legend-item">&#x2B50; Legendaire = 20pts</span>
-    <span class="legend-item">&#x1F49C; Epique = 10pts</span>
-    <span class="legend-item">&#x1F499; Rare = 5pts</span>
-    <span class="legend-item">&#x1F7E2; Commun = 1pt</span>
+    <span class="legend-item" style="background:rgba(255,255,255,0.1);color:#ffffff;border:1px solid #ffffff;">&#x1F451; Ultime = 100pts</span>
+    <span class="legend-item" style="background:rgba(204,0,0,0.2);color:#cc0000;border:1px solid #cc0000;">&#x1F531; Mythique = 50pts</span>
+    <span class="legend-item" style="background:rgba(255,215,0,0.15);color:#ffd700;border:1px solid #ffd700;">&#x2B50; Legendaire = 20pts</span>
+    <span class="legend-item" style="background:rgba(155,89,182,0.2);color:#9b59b6;border:1px solid #9b59b6;">&#x1F49C; Epique = 10pts</span>
+    <span class="legend-item" style="background:rgba(52,152,219,0.2);color:#3498db;border:1px solid #3498db;">&#x1F499; Rare = 5pts</span>
+    <span class="legend-item" style="background:rgba(46,204,113,0.2);color:#2ecc71;border:1px solid #2ecc71;">&#x1F7E2; Commun = 1pt</span>
   </div>
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
 </body>
