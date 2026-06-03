@@ -92,6 +92,7 @@ const COOLDOWN_VIDEO = 60000;
 const COOLDOWN_MESSAGE_BERRY = 30000;
 const COOLDOWN_MAPRIME = 600000;
 let dernierTopPrime = 0;
+const codesTemp = {};
 const COOLDOWN_TOPPRIME = 120000;
 let dernierFruitGlobal = 0;
 const COOLDOWN_FRUIT_GLOBAL = 10000; // 10 secondes
@@ -327,6 +328,19 @@ if (msg === '!messubs') {
     return;
   }
  
+// !moncode
+if (msg === '!moncode') {
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  codesTemp[username.toLowerCase()] = { code, expire: Date.now() + 300000 };
+  try {
+    await client.whisper(username, `🔑 Ton code secret JoyBoy : ${code} (valable 5 minutes) ! Entre le sur le site pour vendre tes doublons !`);
+    client.say(channel, `🔑 ${username} ton code secret t'a été envoyé en message privé !`);
+  } catch (err) {
+    client.say(channel, `🔑 ${username} ton code : ${code} (valable 5 minutes) !`);
+  }
+  return;
+}
+
   // !topprime
   if (msg === '!topprime') {
     const now3 = Date.now();
