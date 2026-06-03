@@ -991,7 +991,7 @@ app.get('/blackjack', (req, res) => {
     .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
     .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
     .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ffd700; letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,215,0,0.6); margin-bottom: 5px; }
-    .subtitle { font-size: 13px; color: #aaa; letter-spacing: 4px; margin-bottom: 20px; }
+    .subtitle { font-size: 13px; color: #000000; font-weight: 900; letter-spacing: 4px; margin-bottom: 20px; text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff; }
     .setup-section { background: rgba(0,0,0,0.7); border: 2px solid #ffd700; border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
     .pseudo-input, .mise-input { background: rgba(0,0,0,0.7); border: 1px solid #ffd700; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 200px; }
     .pseudo-input::placeholder, .mise-input::placeholder { color: #666; }
