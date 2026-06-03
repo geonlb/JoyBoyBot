@@ -518,12 +518,13 @@ if (Date.now() - dernierFruitGlobal < COOLDOWN_FRUIT_GLOBAL) {
   return;
 }
 dernierFruitGlobal = Date.now();
-  const fruits = {
-    'Mythique': { chance: 2, liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
-    'Légendaire': { chance: 8, liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
-    'Épique': { chance: 20, liste: ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Hito-Hito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'] },
-    'Rare': { chance: 30, liste: ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'] },
-    'Commun': { chance: 40, liste: ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku'] }
+    const fruits = {
+    'Ultime':     { chance: 1,  liste: ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'] },
+    'Mythique':   { chance: 2,  liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
+    'Légendaire': { chance: 5,  liste: ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'] },
+    'Épique':     { chance: 10, liste: ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Hito-Hito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'] },
+    'Rare':       { chance: 27, liste: ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'] },
+    'Commun':     { chance: 55, liste: ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku'] }
   };
 
   // Vérifier si assez de Berrys
@@ -544,10 +545,11 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   // Tirer la rareté
   const rand = Math.random() * 100;
   let rarete = 'Commun';
-  if (rand < 2) rarete = 'Mythique';
-  else if (rand < 10) rarete = 'Légendaire';
-  else if (rand < 30) rarete = 'Épique';
-  else if (rand < 60) rarete = 'Rare';
+  if (rand < 1) rarete = 'Ultime';
+  else if (rand < 3) rarete = 'Mythique';
+  else if (rand < 8) rarete = 'Légendaire';
+  else if (rand < 18) rarete = 'Épique';
+  else if (rand < 45) rarete = 'Rare';
 
   // Tirer le fruit
   const liste = fruits[rarete].liste;
@@ -563,7 +565,7 @@ if (dernierFruit && Date.now() - dernierFruit.timestamp < 300000) {
   supabase.from('collection').insert({ username: username.toLowerCase(), fruit, rarete }).then();
 
   // Emojis par rareté
-  const emojis = { 'Mythique': '🔱', 'Légendaire': '⭐', 'Épique': '💜', 'Rare': '💙', 'Commun': '🟢' };
+  const emojis = { 'Ultime': '👑', 'Mythique': '🔱', 'Légendaire': '⭐', 'Épique': '💜', 'Rare': '💙', 'Commun': '🟢' };
 
 // Animation OBS fruit
 try {
@@ -595,7 +597,7 @@ try {
   console.log('Erreur OBS fruit:', err.message);
 }
 
-  const chances = { 'Mythique': '2%', 'Légendaire': '8%', 'Épique': '20%', 'Rare': '30%', 'Commun': '40%' };
+  const chances = { 'Ultime': '1%', 'Mythique': '2%', 'Légendaire': '8%', 'Épique': '20%', 'Rare': '30%', 'Commun': '40%' };
 client.say(channel, `🍎 ${username} croque dans un fruit mystérieux... ${emojis[rarete]} ${fruit} no Mi ! Rareté : ${rarete} (${chances[rarete]} de chance) ! Il reste ${newPrime.berrys.toLocaleString()} Berrys dans ta poche ! 🏴‍☠️`);
   return;
 }

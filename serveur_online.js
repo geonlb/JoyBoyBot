@@ -218,11 +218,12 @@ app.get('/collection/:username', async (req, res) => {
   const berrys = primeData ? primeData.berrys : 0;
 
   const rareteConfig = {
-    'Mythique': { emoji: '🔱', couleur: '#cc0000', bg: '#1a0000', glow: 'rgba(200,0,0,0.5)' },
-    'Légendaire': { emoji: '⭐', couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
-    'Épique': { emoji: '💜', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
-    'Rare': { emoji: '💙', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
-    'Commun': { emoji: '🟢', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
+    'Ultime':     { emoji: '&#x1F451;', couleur: '#ffffff', bg: '#000000', glow: 'rgba(255,255,255,0.8)' },
+    'Mythique':   { emoji: '&#x1F531;', couleur: '#cc0000', bg: '#1a0000', glow: 'rgba(200,0,0,0.5)' },
+    'Légendaire': { emoji: '&#x2B50;',  couleur: '#ffd700', bg: '#2a2000', glow: 'rgba(255,215,0,0.5)' },
+    'Épique':     { emoji: '&#x1F49C;', couleur: '#9b59b6', bg: '#1a0a2a', glow: 'rgba(155,89,182,0.5)' },
+    'Rare':       { emoji: '&#x1F499;', couleur: '#3498db', bg: '#0a1a2a', glow: 'rgba(52,152,219,0.5)' },
+    'Commun':     { emoji: '&#x1F7E2;', couleur: '#2ecc71', bg: '#0a2a0a', glow: 'rgba(46,204,113,0.3)' }
   };
 
   const fruitsGroupes = {};
@@ -239,9 +240,10 @@ app.get('/collection/:username', async (req, res) => {
   const stats = {};
   (fruits || []).forEach(f => { stats[f.rarete] = (stats[f.rarete] || 0) + 1; });
 
-  const rareteOrder = ['Mythique', 'Légendaire', 'Épique', 'Rare', 'Commun'];
+  const rareteOrder = ['Ultime', 'Mythique', 'Légendaire', 'Épique', 'Rare', 'Commun'];
 
   const tousLesFruits = {
+    'Ultime': ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'],
     'Mythique':   ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'],
     'Légendaire': ['Mera-Mera', 'Toshi-Toshi', 'Mero-Mero', 'Jiki-Jiki', 'Magu-Magu', 'Hie-Hie', 'Pika-Pika', 'Gura-Gura', 'Nikyu-Nikyu'],
     'Épique':     ['Moku-Moku', 'Uta-Uta', 'Suna-Suna', 'Hana-Hana', 'Ito-Ito', 'Tsuchi-Tsuchi', 'Ushi-Ushi'],
@@ -250,6 +252,7 @@ app.get('/collection/:username', async (req, res) => {
   };
 
   const fruitPerso = {
+    'Nika-Nika': 'luffy', 'Oni-Oni': 'zoro', 'Roger-Roger': 'goldroger', 'Aka-Aka': 'shanks',
     'Gum-Gum': 'luffy', 'Mochi-Mochi': 'katakuri', 'Goro-Goro': 'enel', 'Ope-Ope': 'law',
     'Yami-Yami': 'barbenoire', 'Uo-Uo': 'kaido', 'Soru-Soru': 'bigmom', 'Neko-Neko': 'roblucci', 'Inu-Inu': 'yamato',
     'Mera-Mera': 'ace', 'Magu-Magu': 'akainu', 'Hie-Hie': 'aokiji', 'Pika-Pika': 'kizaru',
