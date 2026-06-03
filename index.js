@@ -1,4 +1,7 @@
 const tmi = require('tmi.js');
+const { Client: DiscordClient, GatewayIntentBits } = require('discord.js');
+const discord = new DiscordClient({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages] });
+discord.login('MTUxMTU1OTA2NDgyNjY3NTI2Mg.Gnpm1x.PnTnwEYj4AT0V4Af1b6eZACnHqUn0f1i8YtSK8');
 const Database = require('better-sqlite3');
 const OBSWebSocket = require('obs-websocket-js').default;
 const obs = new OBSWebSocket();
@@ -328,15 +331,40 @@ if (msg === '!messubs') {
     return;
   }
  
+// !lierdiscord
+if (msg.startsWith('!lierdiscord')) {
+  const discordId = msg.split(' ')[1];
+  if (!discordId) {
+    client.say(channel, `${username} tape !lierdiscord [ton_id_discord] ! Pour trouver ton ID : Discord → Paramètres → Avancés → Mode développeur → Clic droit sur ton pseudo → Copier l'identifiant !`);
+    return;
+  }
+  await supabase.from('discord_links').upsert({ username: username.toLowerCase(), discord_id: discordId });
+  client.say(channel, `✅ ${username} ton compte Discord est lié ! Tape maintenant !moncode pour recevoir ton code en DM Discord !`);
+  return;
+}
+
 // !moncode
 if (msg === '!moncode') {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  codesTemp[username.toLowerCase()] = { code, expire: Date.now() + 300000 };
+  const expire = Date.now() + 300000;
+  await supabase.from('codes_temp').upsert({ username: username.toLowerCase(), code, expire });
+  
+  let envoyeDiscord = false;
   try {
-    await client.whisper(username, `🔑 Ton code secret JoyBoy : ${code} (valable 5 minutes) ! Entre le sur le site pour vendre tes doublons !`);
-    client.say(channel, `🔑 ${username} ton code secret t'a été envoyé en message privé !`);
+    const { data: linkData } = await supabase.from('discord_links').select('discord_id').eq('username', username.toLowerCase()).single();
+    if (linkData) {
+      const discordUser = await discord.users.fetch(linkData.discord_id);
+      await discordUser.send(`🔑 Ton code secret JoyBoy : **${code}** (valable 5 minutes) ! Entre le sur le site pour vendre tes doublons !`);
+      envoyeDiscord = true;
+    }
   } catch (err) {
-    client.say(channel, `🔑 ${username} ton code : ${code} (valable 5 minutes) !`);
+    console.log('Erreur Discord DM:', err.message);
+  }
+
+  if (envoyeDiscord) {
+    client.say(channel, `🔑 ${username} ton code secret t'a été envoyé en DM Discord !`);
+  } else {
+    client.say(channel, `🔑 ${username} tape d'abord !lierdiscord [ton_id_discord] pour lier ton compte Discord !`);
   }
   return;
 }

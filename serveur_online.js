@@ -203,6 +203,35 @@ async function enregistrerEventSub() {
 }
 enregistrerEventSub();
 
+app.get('/auth/twitch', (req, res) => {
+  const username = req.query.username;
+  const url = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=https://joyboybot-web.onrender.com/auth/callback&response_type=code&scope=user:read:email&state=${username}`;
+  res.redirect(url);
+});
+
+app.get('/auth/callback', async (req, res) => {
+  const { code, state } = req.query;
+  try {
+    const tokenRes = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: CLIENT_ID,
+        client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq',
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: 'https://joyboybot-web.onrender.com/auth/callback'
+      }
+    });
+    const accessToken = tokenRes.data.access_token;
+    const userRes = await axios.get('https://api.twitch.tv/helix/users', {
+      headers: { 'Client-ID': CLIENT_ID, 'Authorization': `Bearer ${accessToken}` }
+    });
+    const twitchUsername = userRes.data.data[0].login;
+    res.redirect(`/collection/${twitchUsername}?verified=true&owner=${twitchUsername}`);
+  } catch (err) {
+    res.redirect(`/collection/${state}?error=auth`);
+  }
+});
+
 app.get('/collection/:username', async (req, res) => {
   const username = req.params.username.toLowerCase();
   let avatar = 'https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-300x300.png';
@@ -280,7 +309,7 @@ app.get('/collection/:username', async (req, res) => {
   <p>PERSO_FRUIT</p>
 </div>
           <div class="fruit-label" style="color: ${obtenu ? config.couleur : '#333'};">${fruit}</div>
-          ${count > 1 ? `<button class="sell-btn" onclick="vendre('${username}', '${fruit}', '${rarete}')">Vendre 1</button>` : ''}
+          ${count > 1 && req.query.verified === 'true' && req.query.owner === username ? `<button class="sell-btn" onclick="vendre('${username}', '${fruit}', '${rarete}')">Vendre 1</button>` : count > 1 ? `<button class="sell-btn" style="opacity:0.4;cursor:not-allowed;" onclick="window.location='/auth/twitch?username=${username}'">🔒 Vendre</button>` : ''}
           ${fruitPerso[fruit] ? `
           <div class="tooltip" style="border-color: ${config.couleur};">
             <img src="/persos/${fruitPerso[fruit]}.png" alt="${fruitPerso[fruit]}">
@@ -371,6 +400,14 @@ app.get('/collection/:username', async (req, res) => {
   </style>
 </head>
 <body>
+  ${req.query.verified === 'true' && req.query.owner === username ? `
+  <div class="auth-banner" style="position:fixed;top:0;left:0;right:0;background:#9146ff;color:white;text-align:center;padding:8px;font-size:13px;z-index:1000;">
+    ✅ Connecté en tant que ${username} - Tu peux vendre tes doublons !
+  </div>` : `
+  <div class="auth-banner" style="position:fixed;top:0;left:0;right:0;background:#1a1a2e;border-bottom:1px solid #9146ff;color:white;text-align:center;padding:8px;font-size:13px;z-index:1000;">
+    <a href="/auth/twitch?username=${username}" style="background:#9146ff;color:white;padding:5px 15px;border-radius:15px;text-decoration:none;font-weight:bold;">Se connecter avec Twitch pour vendre tes doublons</a>
+  </div>`}
+  <div style="margin-top:40px;"></div>
   <div class="berrys-bag">
     <div class="bag-icon">&#x1F4B0;</div>
     <div class="bag-amount" id="bag-amount">${berrys.toLocaleString()}</div>
@@ -393,11 +430,12 @@ app.get('/collection/:username', async (req, res) => {
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
   <script>
 async function vendre(username, fruit, rarete) {
-  if (!confirm('Vendre 1x ' + fruit + ' ?')) return;
+  const code = prompt('Entre ton code secret (tape !moncode dans le chat Twitch) :');
+  if (!code) return;
   const res = await fetch('/vendre', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, fruit, rarete })
+    body: JSON.stringify({ username, fruit, rarete, code: code.toUpperCase() })
   });
   const data = await res.json();
   if (data.success) {
@@ -414,8 +452,14 @@ async function vendre(username, fruit, rarete) {
 });
 
 app.post('/vendre', async (req, res) => {
-  const { username, fruit, rarete } = req.body;
-  if (!username || !fruit || !rarete) return res.status(400).json({ error: 'Manque des paramètres' });
+  const { username, fruit, rarete, code } = req.body;
+if (!username || !fruit || !rarete || !code) return res.status(400).json({ error: 'Manque des paramètres' });
+
+const { data: codeData } = await supabase.from('codes_temp').select('*').eq('username', username).single();
+if (!codeData || codeData.code !== code.toUpperCase() || Date.now() > codeData.expire) {
+  return res.status(401).json({ error: 'Code invalide ou expiré ! Tape !moncode dans le chat.' });
+}
+await supabase.from('codes_temp').delete().eq('username', username);
 
   const prix = {
     'Commun': 50, 'Rare': 100, 'Épique': 150,
