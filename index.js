@@ -1,7 +1,8 @@
+require('dotenv').config();
 const tmi = require('tmi.js');
 const { Client: DiscordClient, GatewayIntentBits } = require('discord.js');
 const discord = new DiscordClient({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.DirectMessages] });
-discord.login('MTUxMTU1OTA2NDgyNjY3NTI2Mg.Gnpm1x.PnTnwEYj4AT0V4Af1b6eZACnHqUn0f1i8YtSK8');
+discord.login(process.env.DISCORD_TOKEN);
 const Database = require('better-sqlite3');
 const OBSWebSocket = require('obs-websocket-js').default;
 const obs = new OBSWebSocket();
