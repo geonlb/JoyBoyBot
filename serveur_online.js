@@ -431,8 +431,8 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
           const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
           return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
             '<img src="' + a.img + '" style="width:200px;height:95px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
-            '<div style="font-family:Oswald,sans-serif;font-size:12px;color:' + (obtenu ? '#fff' : '#555') + ';margin-top:6px;letter-spacing:1px;">' + a.nom + '</div>' +
-            '<div style="font-size:10px;color:' + (obtenu ? '#aaa' : '#333') + ';margin-top:3px;">' + a.desc + '</div>' +
+            '<div style="font-family:Oswald,sans-serif;font-size:12px;color:' + (obtenu ? '#fff' : '#888') + ';margin-top:6px;letter-spacing:1px;">' + a.nom + '</div>' +
+            '<div style="font-size:10px;color:' + (obtenu ? '#aaa' : '#666') + ';margin-top:3px;">' + a.desc + '</div>' +
             '</div>';
         }).join('')}
       </div>
