@@ -410,6 +410,9 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     <div class="divider"></div>
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <a href="/leaderboard" style="color:#f39c12;text-decoration:none;background:rgba(243,156,18,0.1);border:1px solid #f39c12;padding:6px 20px;border-radius:20px;font-size:13px;letter-spacing:2px;">&#x1F3C6; Voir le classement</a>
+    </div>
     <div class="achievements-section">
       <div onclick="toggleLivre()" style="display:inline-block;cursor:pointer;text-align:center;transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
   <img src="/fruits/coffresucces.png" style="width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 0 15px rgba(243,156,18,0.5));">
