@@ -322,7 +322,7 @@ app.get('/collection/:username', async (req, res) => {
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{background:#0a0a1a;min-height:100vh;padding:60px 20px 30px;font-family:'Roboto',sans-serif;color:white;}
-    .team-logo img{width:40px;height:40px;object-fit:contain;max-width:40px;max-height:40px;}.auth-banner{position:fixed;top:0;left:0;right:0;.team-logo{position:fixed;top:5px;left:15px;z-index:1001;width:40px;height:40px;overflow:hidden;}
+    .auth-banner{position:fixed;top:0;left:0;right:0;
 padding:8px;text-align:center;font-size:13px;z-index:1000;}
     .berrys-bag{position:fixed;top:50px;right:20px;background:rgba(10,10,26,.95);border:2px solid #f39c12;border-radius:15px;padding:12px 20px;text-align:center;z-index:999;box-shadow:0 0 20px rgba(243,156,18,.3);}
     .bag-amount{font-family:'Oswald',sans-serif;font-size:18px;color:#f39c12;}
@@ -389,9 +389,6 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
   </style>
 </head>
 <body>
-<div class="team-logo">
-  <img src="/persos/teamnlb.png" alt="Team NLB">
-</div>
   <div class="auth-banner" style="background:${isOwner ? '#9146ff' : '#1a1a2e'};border-bottom:${isOwner ? 'none' : '1px solid #9146ff'};color:white;">
     ${isOwner ? '&#x2705; Connecte en tant que ' + username + ' - Tu peux vendre tes doublons !' : '<a href="/auth/twitch?username=' + username + '" style="background:#9146ff;color:white;padding:5px 15px;border-radius:15px;text-decoration:none;font-weight:bold;">Se connecter avec Twitch pour vendre tes doublons</a>'}
   </div>
