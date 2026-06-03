@@ -237,7 +237,7 @@ app.get('/collection/:username', async (req, res) => {
     const r = await axios.get('https://api.twitch.tv/helix/users?login=' + username, { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + ACCESS_TOKEN } });
     if (r.data.data.length > 0) avatar = r.data.data[0].profile_image_url;
   } catch (e) {}
-  const { data: fruits } = await supabase.from('collection').select('*').eq('username', username).order('obtenu_le', { ascending: false });
+  const { data: fruits } = await supabase.from('collection').select('*')const { data: achievementsData } = await supabase.from('achievements').select('*').eq('username', username);.eq('username', username).order('obtenu_le', { ascending: false });
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   const berrys = primeData ? primeData.berrys : 0;
 
@@ -354,6 +354,17 @@ app.get('/collection/:username', async (req, res) => {
     .fruit-item:hover .tooltip{display:block;}
     .sell-btn{margin-top:5px;background:rgba(243,156,18,.2);border:1px solid #f39c12;color:#f39c12;padding:3px 10px;border-radius:12px;font-size:10px;cursor:pointer;transition:all .2s;}
     .sell-btn:hover{background:#f39c12;color:#000;}
+    .achievements-section { margin-bottom: 40px; }
+    .achievements-title { font-family: 'Oswald', sans-serif; font-size: 22px; letter-spacing: 4px; color: #f39c12; text-align: center; margin-bottom: 20px; }
+    .achievements-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-bottom: 30px; }
+    .achievement-item { width: 140px; padding: 15px 10px; border-radius: 12px; text-align: center; transition: transform 0.2s; }
+    .achievement-item.obtenu { background: rgba(243,156,18,0.15); border: 2px solid #f39c12; }
+    .achievement-item.obtenu:hover { transform: translateY(-5px); }
+    .achievement-item.locked { background: rgba(255,255,255,0.03); border: 2px solid rgba(255,255,255,0.1); filter: grayscale(100%); opacity: 0.4; }
+    .achievement-emoji { font-size: 30px; margin-bottom: 8px; }
+    .achievement-nom { font-family: 'Oswald', sans-serif; font-size: 13px; color: #f39c12; letter-spacing: 1px; margin-bottom: 5px; }
+    .achievement-locked .achievement-nom { color: #555; }
+    .achievement-desc { font-size: 10px; color: #888; }
     .coffre-btn { background: linear-gradient(135deg, #1a0a2a, #2a1a3a); border: 2px solid #9b59b6; color: #9b59b6; padding: 12px 30px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; letter-spacing: 2px; transition: all 0.3s; box-shadow: 0 0 20px rgba(155,89,182,0.3); }
     .coffre-btn:hover { background: #9b59b6; color: white; box-shadow: 0 0 30px rgba(155,89,182,0.6); }
     .coffre-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
@@ -389,6 +400,30 @@ app.get('/collection/:username', async (req, res) => {
     <div class="divider"></div>
     <div class="stats">${statsHTML}</div>
     <div class="collection-title">COLLECTION DE FRUITS DU DEMON</div>
+    <div class="achievements-section">
+      <div class="achievements-title">&#x1F3C6; SUCCES</div>
+      <div class="achievements-grid">
+        ${[
+          { id: 'premier_pas', emoji: '&#x1F34E;', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
+          { id: 'chanceux', emoji: '&#x1F531;', nom: 'Chanceux', desc: 'Obtenir un fruit Mythique' },
+          { id: 'elu', emoji: '&#x1F451;', nom: 'Elu', desc: 'Obtenir un fruit Ultime' },
+          { id: 'collection_commun', emoji: '&#x1F7E2;', nom: 'Collection Commun', desc: 'Avoir tous les fruits Commun' },
+          { id: 'chasseur_rare', emoji: '&#x1F499;', nom: 'Chasseur Rare', desc: 'Avoir tous les fruits Rare' },
+          { id: 'maitre_epique', emoji: '&#x1F49C;', nom: 'Maitre Epique', desc: 'Avoir tous les fruits Epique' },
+          { id: 'legende', emoji: '&#x2B50;', nom: 'Legende', desc: 'Avoir tous les fruits Legendaire' },
+          { id: 'mythique_complet', emoji: '&#x1F531;', nom: 'Mythique Complet', desc: 'Avoir tous les fruits Mythique' },
+          { id: 'vrai_roi', emoji: '&#x1F451;', nom: 'Le Vrai Roi des Pirates', desc: 'Avoir tous les fruits Ultime' },
+          { id: 'chasseur_tresor', emoji: '&#x1F4E6;', nom: 'Chasseur de Tresor', desc: 'Ouvrir son premier coffre' },
+        ].map(a => {
+          const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
+          return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
+            '<div class="achievement-emoji">' + a.emoji + '</div>' +
+            '<div class="achievement-nom">' + a.nom + '</div>' +
+            '<div class="achievement-desc">' + a.desc + '</div>' +
+            '</div>';
+        }).join('')}
+      </div>
+    </div>
     ${isOwner ? `
     <div style="text-align:center;margin-bottom:30px;">
       <button onclick="ouvrirCoffre('${username}')" class="coffre-btn">
