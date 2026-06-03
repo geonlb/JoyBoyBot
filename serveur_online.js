@@ -751,7 +751,7 @@ app.get('/roulette', (req, res) => {
       <span id="berrys-amount">0</span> Berrys
     </div>
     <div class="wheel-wrapper">
-      <div class="pointer">&#x1F4CD;</div>
+      <div class="pointer" style="font-size:50px;color:#f39c12;text-shadow:0 0 15px rgba(243,156,18,0.8);">&#x25BC;</div>
       <canvas id="wheel" class="wheel" width="400" height="400"></canvas>
     </div>
     <button class="spin-btn" id="spin-btn" onclick="tourner()" disabled>&#x1F3B0; TOURNER !</button>
@@ -764,16 +764,16 @@ app.get('/roulette', (req, res) => {
   </div>
   <script>
     const segments = [
-      { label: '+50 Berrys', berrys: 50, couleur: '#2ecc71', prob: 30 },
-      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 20 },
-      { label: '+100 Berrys', berrys: 100, couleur: '#3498db', prob: 20 },
-      { label: '+50 Berrys', berrys: 50, couleur: '#2ecc71', prob: 0 },
-      { label: '+200 Berrys', berrys: 200, couleur: '#9b59b6', prob: 15 },
-      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 0 },
-      { label: '+500 Berrys', berrys: 500, couleur: '#f39c12', prob: 10 },
-      { label: '+100 Berrys', berrys: 100, couleur: '#3498db', prob: 0 },
-      { label: '&#x1F34E; Fruit !', berrys: -1, couleur: '#ffffff', prob: 5 },
-      { label: 'Marine !', berrys: 0, couleur: '#e74c3c', prob: 0 },
+      { label: '+50 Berrys', berrys: 50, couleur: '#87ceeb', prob: 30 },
+      { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 20 },
+      { label: '+100 Berrys', berrys: 100, couleur: '#8a2be2', prob: 20 },
+      { label: '+50 Berrys', berrys: 50, couleur: '#87ceeb', prob: 0 },
+      { label: '+200 Berrys', berrys: 200, couleur: '#ff69b4', prob: 15 },
+      { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 0 },
+      { label: '+500 Berrys', berrys: 500, couleur: '#ff0000', prob: 10 },
+      { label: '+100 Berrys', berrys: 100, couleur: '#8a2be2', prob: 0 },
+      { label: 'Fruit !', berrys: -1, couleur: '#ffffff', prob: 5 },
+      { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 0 },
     ];
 
     const canvas = document.getElementById('wheel');
@@ -803,7 +803,7 @@ app.get('/roulette', (req, res) => {
         ctx.rotate(start + arc / 2);
         ctx.textAlign = 'right';
         ctx.fillStyle = seg.berrys === 0 ? 'white' : (seg.berrys === -1 ? '#000' : 'white');
-        ctx.font = 'bold 13px Exo 2, sans-serif';
+        ctx.font = 'bold 15px Arial Black, sans-serif';
         ctx.fillText(seg.label, 180, 5);
         ctx.restore();
       });
