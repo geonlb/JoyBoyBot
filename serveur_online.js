@@ -33,27 +33,25 @@ app.get('/', (req, res) => {
     body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; overflow-x: hidden; background-image: url('/persos/fond_site.png'); background-size: cover; background-position: center; background-attachment: fixed; }
     body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.75); pointer-events: none; }
     .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; position: relative; z-index: 1; }
-    .header { text-align: center; margin-bottom: 60px; }
-    .logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(243,156,18,0.5)); }
-    .title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #f39c12; letter-spacing: 6px; text-shadow: 0 0 30px rgba(243,156,18,0.5); line-height: 1.2; }
-    .subtitle { font-size: 14px; color: #888; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; }
-    .divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #f39c12, transparent); margin: 20px auto; }
-    .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 50px; }
-    .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(243,156,18,0.3); color: white; padding: 12px 20px; border-radius: 25px; font-size: 14px; width: 280px; outline: none; font-family: 'Exo 2', sans-serif; }
-    .search-input::placeholder { color: #555; }
-    .search-input:focus { border-color: #f39c12; }
-    .search-btn { background: #f39c12; color: #000; border: none; padding: 12px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Exo 2', sans-serif; letter-spacing: 1px; transition: all 0.3s; }
-    .search-btn:hover { background: #e67e22; box-shadow: 0 0 20px rgba(243,156,18,0.4); }
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
-    .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: white; display: block; position: relative; overflow: hidden; }
-    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0; transition: opacity 0.3s; }
-    .card:hover { transform: translateY(-8px); border-color: var(--color); box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 20px var(--glow); }
-    .card:hover::before { opacity: 1; }
-    .card-icon { font-size: 50px; margin-bottom: 15px; }
-    .card-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 3px; margin-bottom: 10px; color: var(--color); }
-    .card-desc { font-size: 13px; color: #888; line-height: 1.6; }
-    .card-badge { position: absolute; top: 15px; right: 15px; background: var(--color); color: #000; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; letter-spacing: 1px; }
-    .footer { text-align: center; font-size: 12px; color: #333; letter-spacing: 3px; margin-top: 40px; }
+.header { text-align: center; margin-bottom: 60px; }
+.logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(138,43,226,0.8)); }
+.title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 30px rgba(138,43,226,0.8); line-height: 1.2; }
+.subtitle { font-size: 14px; color: #87ceeb; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; }
+.divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #8a2be2, #87ceeb, #8a2be2, transparent); margin: 20px auto; }
+.search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 50px; }
+.search-input { background: rgba(0,0,0,0.7); border: 1px solid #8a2be2; color: white; padding: 12px 20px; border-radius: 25px; font-size: 14px; width: 280px; outline: none; font-family: 'Exo 2', sans-serif; backdrop-filter: blur(10px); }
+.search-input::placeholder { color: #666; }
+.search-input:focus { border-color: #87ceeb; box-shadow: 0 0 15px rgba(135,206,235,0.3); }
+.search-btn { background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Exo 2', sans-serif; letter-spacing: 1px; transition: all 0.3s; }
+.search-btn:hover { box-shadow: 0 0 25px rgba(138,43,226,0.6); transform: scale(1.05); }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+.card { background: rgba(0,0,0,0.75); border: 1px solid rgba(138,43,226,0.4); border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; color: white; display: block; position: relative; overflow: hidden; backdrop-filter: blur(10px); }
+.card:hover { transform: translateY(-8px); border-color: #8a2be2; box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 25px rgba(138,43,226,0.4); }
+.card-icon { font-size: 50px; margin-bottom: 15px; }
+.card-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 3px; margin-bottom: 10px; color: #87ceeb; }
+.card-desc { font-size: 13px; color: #aaa; line-height: 1.6; }
+.card-badge { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; font-size: 10px; font-weight: bold; padding: 3px 8px; border-radius: 10px; letter-spacing: 1px; }
+.footer { text-align: center; font-size: 12px; color: #87ceeb; letter-spacing: 3px; margin-top: 40px; opacity: 0.6; }
   </style>
 </head>
 <body>
