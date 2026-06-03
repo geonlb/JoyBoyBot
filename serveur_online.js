@@ -440,7 +440,7 @@ app.get('/collection/:username', async (req, res) => {
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:#0a0a1a;/persos/onepiecegrandline.png) center/cover fixed;min-height:100vh;padding:30px 20px;font-family:\'Roboto\',sans-serif;color:white;}
+    body{background:#0a0a1a url(/persos/grandlinefond.png) center/cover fixed;min-height:100vh;padding:30px 20px;font-family:\'Roboto\',sans-serif;color:white;}
     .auth-banner{position:fixed;top:0;left:0;right:0;padding:8px;text-align:center;font-size:13px;z-index:1000;}
     .berrys-bag{position:fixed;top:50px;right:20px;background:rgba(10,10,26,.95);border:2px solid #f39c12;border-radius:15px;padding:12px 20px;text-align:center;z-index:999;box-shadow:0 0 20px rgba(243,156,18,.3);}
     .bag-amount{font-family:'Oswald',sans-serif;font-size:18px;color:#f39c12;}
