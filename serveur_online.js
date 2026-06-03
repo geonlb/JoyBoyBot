@@ -34,9 +34,9 @@ app.get('/', (req, res) => {
     body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.75); pointer-events: none; }
     .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; position: relative; z-index: 1; }
 .header { text-align: center; margin-bottom: 60px; }
-.logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(138,43,226,0.8)); }
+.logo { width: 200px; height: 200px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(138,43,226,0.8)); }
 .title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; color: #ffffff; letter-spacing: 6px; text-shadow: 0 0 30px rgba(138,43,226,0.8); line-height: 1.2; }
-.subtitle { font-size: 14px; color: #87ceeb; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; }
+.subtitle { font-size: 16px; color: #ffffff; letter-spacing: 5px; margin-top: 10px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 15px rgba(138,43,226,0.9), 0 0 30px rgba(135,206,235,0.6); }
 .divider { width: 300px; height: 1px; background: linear-gradient(to right, transparent, #8a2be2, #87ceeb, #8a2be2, transparent); margin: 20px auto; }
 .search-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 50px; }
 .search-input { background: rgba(0,0,0,0.7); border: 1px solid #8a2be2; color: white; padding: 12px 20px; border-radius: 25px; font-size: 14px; width: 280px; outline: none; font-family: 'Exo 2', sans-serif; backdrop-filter: blur(10px); }
@@ -58,8 +58,7 @@ app.get('/', (req, res) => {
   <div class="container">
     <div class="header">
       <img src="/persos/teamnlb.png" class="logo" alt="NLB">
-      <div class="title">JOYBOY BOT</div>
-      <div class="subtitle">NeyLaBrise — Grand Line</div>
+      <div class="subtitle">Team NLB — Grand Line</div>
       <div class="divider"></div>
     </div>
 
