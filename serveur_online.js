@@ -160,7 +160,7 @@ app.post('/coffre', async (req, res) => {
   //if (coffreData && Date.now() < coffreData.expire) {
  // const restant = Math.ceil((coffreData.expire - Date.now()) / 60000);
   //  return res.status(400).json({ error: 'Attends encore ' + restant + ' minute(s) avant d\'ouvrir un nouveau coffre !' });
-  }
+  // }
 
   // Vérifier les Berrys
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
