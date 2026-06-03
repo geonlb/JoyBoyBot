@@ -862,7 +862,7 @@ app.get('/roulette', (req, res) => {
       document.getElementById('result-box').classList.remove('show');
 
       const indexResultat = getResultat();
-      const targetAngle = -(currentAngle + indexResultat * arc + arc / 2 - Math.PI / 2) + (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+      const targetAngle = -(indexResultat * arc + arc / 2) + Math.PI / 2 + Math.PI + (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
       const totalRotation = targetAngle + (5 * 2 * Math.PI);
       let start = null;
       const duration = 4000;
@@ -969,6 +969,280 @@ app.post('/roulette/jouer', async (req, res) => {
   await supabase.from('codes_temp').delete().eq('username', username + '_roulette');
   await supabase.from('codes_temp').insert({ username: username + '_roulette', code: 'roulette', expire: Date.now() + 600000 });
   res.json({ success: true, berrys: newBerrys, fruit });
+});
+
+// ==================== BLACKJACK ====================
+app.get('/blackjack', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blackjack Pirate - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a2a0a; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/fond_site.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,20,0,0.85); pointer-events: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
+    .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
+    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ffd700; letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,215,0,0.6); margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #aaa; letter-spacing: 4px; margin-bottom: 20px; }
+    .setup-section { background: rgba(0,0,0,0.7); border: 2px solid #ffd700; border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .pseudo-input, .mise-input { background: rgba(0,0,0,0.7); border: 1px solid #ffd700; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 200px; }
+    .pseudo-input::placeholder, .mise-input::placeholder { color: #666; }
+    .btn { padding: 10px 25px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
+    .btn-gold { background: linear-gradient(135deg, #ffd700, #f39c12); color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+    .btn-gold:hover { box-shadow: 0 0 30px rgba(255,215,0,0.8); transform: scale(1.05); }
+    .btn-green { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+    .btn-red { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+    .btn-blue { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .game-section { display: none; }
+    .game-section.active { display: block; }
+    .berrys-display { background: rgba(0,0,0,0.7); border: 2px solid #ffd700; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 18px; color: #ffd700; }
+    .table { background: radial-gradient(ellipse, #1a5c1a, #0a2a0a); border: 4px solid #8B4513; border-radius: 20px; padding: 30px; margin: 20px 0; box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.4); }
+    .zone-label { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; color: rgba(255,255,255,0.5); margin-bottom: 10px; }
+    .cards-zone { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 120px; align-items: center; margin-bottom: 20px; }
+    .card { width: 75px; height: 105px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 2px solid rgba(255,255,255,0.3); position: relative; animation: cardFlip 0.3s ease; box-shadow: 3px 3px 10px rgba(0,0,0,0.5); }
+    @keyframes cardFlip { from { transform: rotateY(90deg); opacity: 0; } to { transform: rotateY(0deg); opacity: 1; } }
+    .card-pique { background: linear-gradient(135deg, #1a1a2e, #16213e); color: #87ceeb; border-color: #87ceeb; }
+    .card-coeur { background: linear-gradient(135deg, #2c0a0a, #4a0a0a); color: #ff6b6b; border-color: #ff6b6b; }
+    .card-carreau { background: linear-gradient(135deg, #1a0a2a, #2a1040); color: #9b59b6; border-color: #9b59b6; }
+    .card-trefle { background: linear-gradient(135deg, #0a2a0a, #0a4a0a); color: #2ecc71; border-color: #2ecc71; }
+    .card-dos { background: linear-gradient(135deg, #8B4513, #A0522D); color: #ffd700; border-color: #ffd700; font-size: 30px; }
+    .card-symbole { font-size: 28px; }
+    .card-valeur { font-size: 14px; font-family: 'Cinzel', serif; margin-top: 4px; }
+    .score { font-family: 'Cinzel', serif; font-size: 20px; color: #ffd700; margin: 10px 0; }
+    .mise-display { font-family: 'Cinzel', serif; font-size: 16px; color: #f39c12; margin-bottom: 15px; }
+    .actions { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+    .result-box { background: rgba(0,0,0,0.9); border-radius: 15px; padding: 25px; margin-top: 20px; display: none; animation: fadeIn 0.5s forwards; }
+    .result-box.show { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .result-title { font-family: 'Cinzel', serif; font-size: 28px; margin-bottom: 10px; }
+    .result-gain { font-size: 32px; font-weight: bold; color: #ffd700; }
+    .result-win { border: 3px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.4); }
+    .result-lose { border: 3px solid #e74c3c; box-shadow: 0 0 30px rgba(231,76,60,0.4); }
+    .result-push { border: 3px solid #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
+    <div class="title">&#x1F0CF; BLACKJACK PIRATE</div>
+    <div class="subtitle">21 ou bust sur les mers du Grand Line !</div>
+    <div class="setup-section" id="setup-section">
+      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
+      <input type="number" class="mise-input" id="mise" placeholder="Mise (min 50)" min="50">
+      <button class="btn btn-gold" onclick="commencer()">&#x1F3B4; JOUER !</button>
+    </div>
+    <div class="berrys-display" id="berrys-display" style="display:none;">
+      &#x1F4B0; <span id="berrys-amount">0</span> Berrys
+    </div>
+    <div class="game-section" id="game-section">
+      <div class="mise-display" id="mise-display"></div>
+      <div class="table">
+        <div class="zone-label">&#x2694;&#xFE0F; CROUPIER</div>
+        <div class="cards-zone" id="dealer-cards"></div>
+        <div class="score" id="dealer-score"></div>
+        <hr style="border-color:rgba(255,255,255,0.1);margin:15px 0;">
+        <div class="zone-label">&#x1F3F4; TON JEU</div>
+        <div class="cards-zone" id="player-cards"></div>
+        <div class="score" id="player-score"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-green" id="btn-tirer" onclick="tirer()">&#x2795; TIRER</button>
+        <button class="btn btn-red" id="btn-rester" onclick="rester()">&#x270B; RESTER</button>
+      </div>
+      <div class="result-box" id="result-box">
+        <div class="result-title" id="result-title"></div>
+        <div class="result-gain" id="result-gain"></div>
+        <button class="btn btn-gold" style="margin-top:15px;" onclick="rejouer()">&#x1F504; REJOUER</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const symboles = {
+      pique: { emoji: '&#x2666;', class: 'card-pique', nom: 'Marine' },
+      coeur: { emoji: '&#x2665;', class: 'card-coeur', nom: 'Mugiwara' },
+      carreau: { emoji: '&#x2663;', class: 'card-carreau', nom: 'Corsaire' },
+      trefle: { emoji: '&#x2660;', class: 'card-trefle', nom: 'Barbe Noire' }
+    };
+    const valeurs = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    let deck = [], mainJoueur = [], mainCroupier = [], miseActuelle = 0, pseudoActuel = '', berrysActuels = 0, jeuEnCours = false;
+
+    function creerDeck() {
+      deck = [];
+      for (const s of Object.keys(symboles)) {
+        for (const v of valeurs) {
+          deck.push({ valeur: v, symbole: s });
+        }
+      }
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+    }
+
+    function valeurCarte(v) {
+      if (['J','Q','K'].includes(v)) return 10;
+      if (v === 'A') return 11;
+      return parseInt(v);
+    }
+
+    function scoreMain(main) {
+      let total = main.reduce((s, c) => s + valeurCarte(c.valeur), 0);
+      let as = main.filter(c => c.valeur === 'A').length;
+      while (total > 21 && as > 0) { total -= 10; as--; }
+      return total;
+    }
+
+    function afficherCarte(carte, cacheDeuxieme = false) {
+      const s = symboles[carte.symbole];
+      if (cacheDeuxieme) return '<div class="card card-dos"><div>&#x1F3F4;</div><div style="font-size:11px;margin-top:4px;">???</div></div>';
+      return '<div class="card ' + s.class + '"><div class="card-symbole">' + s.emoji + '</div><div class="card-valeur">' + carte.valeur + '</div><div style="font-size:9px;opacity:0.7;">' + s.nom + '</div></div>';
+    }
+
+    function majAffichage(cacheDeuxieme = true) {
+      document.getElementById('player-cards').innerHTML = mainJoueur.map(c => afficherCarte(c)).join('');
+      document.getElementById('dealer-cards').innerHTML = mainCroupier.map((c, i) => afficherCarte(c, cacheDeuxieme && i === 1)).join('');
+      const scoreJ = scoreMain(mainJoueur);
+      document.getElementById('player-score').textContent = 'Score: ' + scoreJ + (scoreJ === 21 && mainJoueur.length === 2 ? ' 🏆 BLACKJACK !' : '');
+      if (!cacheDeuxieme) document.getElementById('dealer-score').textContent = 'Score: ' + scoreMain(mainCroupier);
+      else document.getElementById('dealer-score').textContent = '';
+    }
+
+    async function commencer() {
+      const pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
+      const mise = parseInt(document.getElementById('mise').value);
+      if (!pseudo) { alert('Entre ton pseudo !'); return; }
+      if (!mise || mise < 50) { alert('Mise minimum 50 Berrys !'); return; }
+      const r = await fetch('/blackjack/infos?username=' + pseudo + '&mise=' + mise);
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      pseudoActuel = pseudo;
+      miseActuelle = mise;
+      berrysActuels = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
+      document.getElementById('berrys-display').style.display = 'inline-block';
+      document.getElementById('mise-display').textContent = '&#x1F4B0; Mise : ' + mise.toLocaleString() + ' Berrys';
+      creerDeck();
+      mainJoueur = [deck.pop(), deck.pop()];
+      mainCroupier = [deck.pop(), deck.pop()];
+      jeuEnCours = true;
+      document.getElementById('game-section').classList.add('active');
+      document.getElementById('result-box').classList.remove('show');
+      document.getElementById('btn-tirer').disabled = false;
+      document.getElementById('btn-rester').disabled = false;
+      majAffichage(true);
+      const scoreJ = scoreMain(mainJoueur);
+      if (scoreJ === 21) { setTimeout(() => rester(), 500); }
+    }
+
+    function tirer() {
+      if (!jeuEnCours) return;
+      mainJoueur.push(deck.pop());
+      majAffichage(true);
+      const score = scoreMain(mainJoueur);
+      if (score > 21) { terminer(); }
+    }
+
+    function rester() {
+      document.getElementById('btn-tirer').disabled = true;
+      document.getElementById('btn-rester').disabled = true;
+      majAffichage(false);
+      let scoreCroupier = scoreMain(mainCroupier);
+      const interval = setInterval(() => {
+        if (scoreCroupier < 17) {
+          mainCroupier.push(deck.pop());
+          scoreCroupier = scoreMain(mainCroupier);
+          majAffichage(false);
+        } else {
+          clearInterval(interval);
+          terminer();
+        }
+      }, 600);
+    }
+
+    async function terminer() {
+      jeuEnCours = false;
+      majAffichage(false);
+      const scoreJ = scoreMain(mainJoueur);
+      const scoreC = scoreMain(mainCroupier);
+      const blackjackNaturel = scoreJ === 21 && mainJoueur.length === 2;
+      let resultat = '';
+      if (scoreJ > 21) resultat = 'lose';
+      else if (scoreC > 21) resultat = 'win';
+      else if (blackjackNaturel && !(scoreC === 21 && mainCroupier.length === 2)) resultat = 'blackjack';
+      else if (scoreJ > scoreC) resultat = 'win';
+      else if (scoreJ === scoreC) resultat = 'push';
+      else resultat = 'lose';
+      const r = await fetch('/blackjack/resultat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudoActuel, mise: miseActuelle, resultat })
+      });
+      const data = await r.json();
+      berrysActuels = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
+      const box = document.getElementById('result-box');
+      box.className = 'result-box show';
+      if (resultat === 'win') {
+        box.classList.add('result-win');
+        document.getElementById('result-title').textContent = '🏴‍☠️ Victoire !';
+        document.getElementById('result-gain').textContent = '+' + miseActuelle.toLocaleString() + ' Berrys !';
+        document.getElementById('result-gain').style.color = '#ffd700';
+      } else if (resultat === 'blackjack') {
+        box.classList.add('result-win');
+        document.getElementById('result-title').textContent = '🏆 BLACKJACK ! x2 !';
+        document.getElementById('result-gain').textContent = '+' + (miseActuelle * 2).toLocaleString() + ' Berrys !';
+        document.getElementById('result-gain').style.color = '#ff0000';
+      } else if (resultat === 'lose') {
+        box.classList.add('result-lose');
+        document.getElementById('result-title').textContent = '💀 Perdu !';
+        document.getElementById('result-gain').textContent = '-' + miseActuelle.toLocaleString() + ' Berrys';
+        document.getElementById('result-gain').style.color = '#e74c3c';
+      } else {
+        box.classList.add('result-push');
+        document.getElementById('result-title').textContent = '🤝 Egalite !';
+        document.getElementById('result-gain').textContent = 'Mise remboursee';
+        document.getElementById('result-gain').style.color = '#888';
+      }
+    }
+
+    function rejouer() {
+      document.getElementById('result-box').classList.remove('show');
+      document.getElementById('mise-display').textContent = '';
+      document.getElementById('player-cards').innerHTML = '';
+      document.getElementById('dealer-cards').innerHTML = '';
+      document.getElementById('player-score').textContent = '';
+      document.getElementById('dealer-score').textContent = '';
+      commencer();
+    }
+  </script>
+</body>
+</html>`);
+});
+
+app.get('/blackjack/infos', async (req, res) => {
+  const { username, mise } = req.query;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable ! Tu dois etre enregistre sur le stream.' });
+  if (primeData.berrys < parseInt(mise)) return res.status(400).json({ error: 'Pas assez de Berrys !' });
+  res.json({ berrys: primeData.berrys });
+});
+
+app.post('/blackjack/resultat', async (req, res) => {
+  const { username, mise, resultat } = req.body;
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Erreur' });
+  let newBerrys = primeData.berrys;
+  if (resultat === 'win') newBerrys += mise;
+  else if (resultat === 'blackjack') newBerrys += mise * 2;
+  else if (resultat === 'lose') newBerrys -= mise;
+  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  res.json({ success: true, berrys: newBerrys });
 });
 
 // ==================== ANIMATION OBS ====================
