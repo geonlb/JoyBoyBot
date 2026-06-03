@@ -372,13 +372,14 @@ async function ouvrirCoffre(username) {
 
   const overlay = document.getElementById('coffre-overlay');
   const lootGrid = document.getElementById('loot-grid');
-  lootGrid.innerHTML = data.loot.map(l => `
-    <div class="loot-item" style="border: 2px solid ${couleurs[l.rarete] || '#2ecc71'}; border-radius: 15px; padding: 15px; background: rgba(0,0,0,0.5);">
-      <img src="/fruits/${l.fruit}.png" alt="${l.fruit}" style="filter: drop-shadow(0 0 15px ${couleurs[l.rarete] || '#2ecc71'});">
-      <div class="loot-name" style="color: ${couleurs[l.rarete] || '#2ecc71'};">${l.fruit} no Mi</div>
-      <div class="loot-rarete" style="color: ${couleurs[l.rarete] || '#2ecc71'};">${l.rarete}</div>
-    </div>
-  `).join('');
+  lootGrid.innerHTML = data.loot.map(l => {
+    const couleur = couleurs[l.rarete] || '#2ecc71';
+    return '<div class="loot-item" style="border:2px solid ' + couleur + ';border-radius:15px;padding:15px;background:rgba(0,0,0,0.5);">' +
+      '<img src="/fruits/' + l.fruit + '.png" alt="' + l.fruit + '" style="width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 0 15px ' + couleur + ');">' +
+      '<div class="loot-name" style="color:' + couleur + ';">' + l.fruit + ' no Mi</div>' +
+      '<div class="loot-rarete" style="color:' + couleur + ';">' + l.rarete + '</div>' +
+      '</div>';
+  }).join('');
 
   overlay.classList.add('active');
   document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
