@@ -30,8 +30,8 @@ app.get('/', (req, res) => {
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; overflow-x: hidden; }
-    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at 20% 20%, rgba(255,0,0,0.06) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(255,215,0,0.04) 0%, transparent 50%); pointer-events: none; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; overflow-x: hidden; background-image: url('/persos/fond_site.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5,5,16,0.75); pointer-events: none; }
     .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; position: relative; z-index: 1; }
     .header { text-align: center; margin-bottom: 60px; }
     .logo { width: 120px; height: 120px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(243,156,18,0.5)); }
