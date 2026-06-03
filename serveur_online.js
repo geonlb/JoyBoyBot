@@ -365,7 +365,7 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
     .livre-subtitle { font-size: 11px; color: #c8a96e; letter-spacing: 2px; margin-top: 4px; }
     .achievements-grid { display: none; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 25px; padding: 25px; background: #000000; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; }
 .achievements-grid.ouvert { display: flex; }
-.achievement-item { width: 210px; padding: 10px; border-radius: 12px; text-align: center; transition: transform 0.2s; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); }
+.achievement-item { width: 160px; padding: 8px; border-radius: 12px; text-align: center; transition: transform 0.2s; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); }
 .achievement-item.obtenu { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.6); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
 .achievement-item.obtenu:hover { transform: translateY(-5px); }
 .achievement-item.locked { opacity: 0.3; }
@@ -430,7 +430,7 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
         ].map(a => {
           const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
           return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
-            '<img src="' + a.img + '" style="width:200px;height:95px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
+            '<img src="' + a.img + '" style="width:155px;height:75px;object-fit:contain; + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
             '<div style="font-family:Oswald,sans-serif;font-size:12px;color:' + (obtenu ? '#fff' : '#888') + ';margin-top:6px;letter-spacing:1px;">' + a.nom + '</div>' +
             '<div style="font-size:10px;color:' + (obtenu ? '#aaa' : '#666') + ';margin-top:3px;">' + a.desc + '</div>' +
             '</div>';
