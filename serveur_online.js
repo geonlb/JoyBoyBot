@@ -417,22 +417,20 @@ padding:8px;text-align:center;font-size:13px;z-index:1000;}
 </div>
       <div class="achievements-grid" id="achievements-grid">
         ${[
-          { id: 'premier_pas', emoji: '&#x1F34E;', nom: 'Premier Pas', desc: 'Obtenir son premier fruit' },
-          { id: 'chanceux', emoji: '&#x1F531;', nom: 'Chanceux', desc: 'Obtenir un fruit Mythique' },
-          { id: 'elu', emoji: '&#x1F451;', nom: 'Elu', desc: 'Obtenir un fruit Ultime' },
-          { id: 'collection_commun', emoji: '&#x1F7E2;', nom: 'Collection Commun', desc: 'Avoir tous les fruits Commun' },
-          { id: 'chasseur_rare', emoji: '&#x1F499;', nom: 'Chasseur Rare', desc: 'Avoir tous les fruits Rare' },
-          { id: 'maitre_epique', emoji: '&#x1F49C;', nom: 'Maitre Epique', desc: 'Avoir tous les fruits Epique' },
-          { id: 'legende', emoji: '&#x2B50;', nom: 'Legende', desc: 'Avoir tous les fruits Legendaire' },
-          { id: 'mythique_complet', emoji: '&#x1F531;', nom: 'Mythique Complet', desc: 'Avoir tous les fruits Mythique' },
-          { id: 'vrai_roi', emoji: '&#x1F451;', nom: 'Le Vrai Roi des Pirates', desc: 'Avoir tous les fruits Ultime' },
-          { id: 'chasseur_tresor', emoji: '&#x1F4E6;', nom: 'Chasseur de Tresor', desc: 'Ouvrir son premier coffre' },
+          { id: 'premier_pas', img: '/badges/premier_pas.png' },
+          { id: 'chanceux', img: '/badges/chanceux.png' },
+          { id: 'elu', img: '/badges/elu.png' },
+          { id: 'collection_commun', img: '/badges/collection_commun.png' },
+          { id: 'chasseur_rare', img: '/badges/chasseur_rare.png' },
+          { id: 'maitre_epique', img: '/badges/maitre_epique.png' },
+          { id: 'legende', img: '/badges/legende.png' },
+          { id: 'mythique_complet', img: '/badges/mythique_complet.png' },
+          { id: 'vrai_roi', img: '/badges/vrai_roi.png' },
+          { id: 'chasseur_tresor', img: '/badges/chasseur_tresor.png' },
         ].map(a => {
           const obtenu = (achievementsData || []).some(d => d.achievement === a.id);
           return '<div class="achievement-item ' + (obtenu ? 'obtenu' : 'locked') + '">' +
-            '<div class="achievement-emoji">' + a.emoji + '</div>' +
-            '<div class="achievement-nom">' + a.nom + '</div>' +
-            '<div class="achievement-desc">' + a.desc + '</div>' +
+            '<img src="' + a.img + '" style="width:205px;height:100px;object-fit:contain;' + (obtenu ? '' : 'filter:grayscale(100%) brightness(0.3);') + '">' +
             '</div>';
         }).join('')}
       </div>
