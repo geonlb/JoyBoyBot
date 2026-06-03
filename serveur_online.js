@@ -982,7 +982,7 @@ app.get('/blackjack', (req, res) => {
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a2a0a; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/fond_site.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body { background: #0a2a0a; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/blackjackfond.png');
     body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,20,0,0.85); pointer-events: none; }
     .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
     .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
