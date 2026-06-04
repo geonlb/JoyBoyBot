@@ -1469,6 +1469,7 @@ app.get('/course', (req, res) => {
 
     async function commencerCourse(p) {
       pseudo = (p || '').toLowerCase();
+      document.getElementById('bg-music').play().catch(e => {});
       const r = await fetch('/course/infos?username=' + pseudo);
       const data = await r.json();
       if (data.error) { alert(data.error); return; }
@@ -1603,6 +1604,7 @@ app.get('/course', (req, res) => {
       setTimeout(() => { canvas.style.display = 'none'; }, 5000);
     }
   </script>
+<audio id="bg-music" src="/persos/courseonepieceson.mp3" loop></audio>
 </body>
 </html>`);
 });
