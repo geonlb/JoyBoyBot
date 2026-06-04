@@ -1338,7 +1338,7 @@ app.get('/course', (req, res) => {
     .pseudo-input { background: rgba(0,0,0,0.7); border: 1px solid #f39c12; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 250px; }
     .pseudo-input::placeholder { color: #666; }
     .btn { padding: 12px 30px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
-    .btn-gold { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #000;
+    .btn-gold { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #000; }
     .btn-gold:hover { box-shadow: 0 0 30px rgba(243,156,18,0.8); transform: scale(1.05); }
     .btn-action { background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; margin: 5px; }
     .btn-action:hover { box-shadow: 0 0 20px rgba(138,43,226,0.6); transform: scale(1.05); }
