@@ -1285,7 +1285,7 @@ app.get('/course', (req, res) => {
     .waves2 { position: absolute; bottom: 10px; left: 0; right: 0; height: 40px; background: linear-gradient(180deg, transparent, rgba(0,150,255,0.3)); animation: waveAnim 2.5s infinite ease-in-out reverse; }
     @keyframes waveAnim { 0%, 100% { transform: translateX(-10px) scaleY(1); } 50% { transform: translateX(10px) scaleY(1.1); } }
     .sunny { position: absolute; bottom: 40px; transition: left 2s ease-in-out; }
-    .sunny img { width: 100px; height: 75px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(255,215,0,0.5)); animation: boatRock 2s infinite ease-in-out; }
+    .sunny img { width: 100px; height: 75px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(255,215,0,0.5)); animation: boatRock 2s infinite ease-in-out; transform: scaleX(-1); }
     @keyframes boatRock { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-5px); } }
     .iles { display: flex; justify-content: space-around; align-items: center; position: absolute; top: 20px; left: 5%; right: 5%; }
     .ile { font-size: 30px; opacity: 0.7; transition: all 0.5s; position: relative; }
