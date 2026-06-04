@@ -733,11 +733,6 @@ app.get('/minijeux', (req, res) => {
         <div class="card-gain">&#x1F4B0; Mise variable</div>
         <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
       </a>
-        <div class="card-desc">21 style One Piece, double ta mise ou perds tout !</div>
-        <div class="card-gain">&#x1F4B0; Mise variable</div>
-        <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
-        <div class="soon-badge">BIENTOT</div>
-      </div>
       <a href="/course" class="card">
         <div class="card-icon">&#x1F3F4;</div>
         <div class="card-title">COURSE VERS LE ONE PIECE</div>
@@ -745,11 +740,6 @@ app.get('/minijeux', (req, res) => {
         <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys + Fruits !</div>
         <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
       </a>
-        <div class="card-desc">Resous les enigmes des mers pour trouver le tresor !</div>
-        <div class="card-gain">&#x1F4B0; Jusqu'a 2000 Berrys</div>
-        <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
-        <div class="soon-badge">BIENTOT</div>
-      </div>
     </div>
     <div class="footer"><p>&#x1F3F4; NeyLaBrise — Grand Line &#x1F3F4;</p></div>
   </div>
