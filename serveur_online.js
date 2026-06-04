@@ -687,7 +687,7 @@ app.get('/minijeux', (req, res) => {
       </div>
       <a href="/course" class="card">
         <div class="card-icon">&#x1F3F4;</div>
-        <div class="card-title">COURSE VERS ONE PIECE</div>
+        <div class="card-title">COURSE VERS LE ONE PIECE</div>
         <div class="card-desc">Navigue sur la Grand Line et trouve le tresor ultime !</div>
         <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys + Fruits !</div>
         <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
@@ -1311,7 +1311,7 @@ app.get('/course', (req, res) => {
 <body>
   <div class="container">
     <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
-    <div class="title">&#x1F3F4; COURSE VERS ONE PIECE</div>
+    <div class="title">&#x1F3F4; COURSE VERS LE ONE PIECE</div>
     <div class="subtitle">Navigue sur la Grand Line et trouve le tresor ultime !</div>
     <div class="setup-box" id="setup-box">
       <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
