@@ -231,7 +231,8 @@ enregistrerEventSub();
 // ==================== AUTH TWITCH ====================
 app.get('/auth/twitch', (req, res) => {
   const username = req.query.username;
-  res.redirect('https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID + '&redirect_uri=https://joyboybot-web.onrender.com/auth/callback&response_type=code&scope=user:read:email&state=' + username);
+  const from = req.query.from || 'collection';
+  res.redirect('https://id.twitch.tv/oauth2/authorize?client_id=' + CLIENT_ID + '&redirect_uri=https://joyboybot-web.onrender.com/auth/callback&response_type=code&scope=user:read:email&state=' + username + '|' + from);
 });
 
 app.get('/auth/callback', async (req, res) => {
@@ -240,7 +241,9 @@ app.get('/auth/callback', async (req, res) => {
     const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: CLIENT_ID, client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq', code, grant_type: 'authorization_code', redirect_uri: 'https://joyboybot-web.onrender.com/auth/callback' } });
     const u = await axios.get('https://api.twitch.tv/helix/users', { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + t.data.access_token } });
     const twitchUsername = u.data.data[0].login;
-    res.redirect('/collection/' + twitchUsername + '?verified=true&owner=' + twitchUsername);
+    const from = state.includes('|') ? state.split('|')[1] : 'collection';
+    const cleanUsername = state.includes('|') ? state.split('|')[0] : state;
+    res.redirect('/' + from + '?verified=true&owner=' + twitchUsername);
   } catch (err) { res.redirect('/collection/' + state + '?error=auth'); }
 });
 
@@ -794,10 +797,14 @@ app.get('/roulette', (req, res) => {
     <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
     <div class="title">&#x1F3A1; ROULETTE DES MERS</div>
     <div class="subtitle">Tente ta chance sur le Grand Line !</div>
+    ${req.query.verified === 'true' && req.query.owner ? `
     <div class="search-bar">
-      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
-      <button class="valider-btn" onclick="charger()">Valider</button>
-    </div>
+      <div id="pseudo-display" style="background:rgba(0,0,0,0.7);border:1px solid #8a2be2;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
+      <button class="valider-btn" onclick="chargerAuto('${req.query.owner}')">Jouer !</button>
+    </div>` : `
+    <div style="text-align:center;margin-bottom:20px;">
+      <a href="/auth/twitch?username=guest&from=roulette" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>
+    </div>`}
     <div id="berrys-display" class="berrys-display" style="display:none;">
       <span id="berrys-amount">0</span> Berrys
     </div>
@@ -871,7 +878,12 @@ app.get('/roulette', (req, res) => {
       ctx.fillText('NLB', 200, 205);
     }
 
-    function charger() {
+    function chargerAuto(p) {
+      pseudo = p.toLowerCase();
+      document.getElementById('pseudo').value = pseudo;
+      charger();
+    }
+      function charger() {
       pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
       if (!pseudo) { alert('Entre ton pseudo Twitch !'); return; }
       fetch('/roulette/infos?username=' + pseudo)
@@ -1083,9 +1095,11 @@ app.get('/blackjack', (req, res) => {
     <div class="title">&#x1F0CF; BLACKJACK PIRATE</div>
     <div class="subtitle">21 ou bust sur les mers du Grand Line !</div>
     <div class="setup-section" id="setup-section">
-      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
+      ${req.query.verified === 'true' && req.query.owner ? `
+      <div style="background:rgba(0,0,0,0.7);border:1px solid #ffd700;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
       <input type="number" class="mise-input" id="mise" placeholder="Mise (min 50)" min="50">
-      <button class="btn btn-gold" onclick="commencer()">&#x1F3B4; JOUER !</button>
+      <button class="btn btn-gold" onclick="commencerAuto('${req.query.owner}')">&#x1F3B4; JOUER !</button>` : `
+      <a href="/auth/twitch?username=guest&from=blackjack" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div class="berrys-display" id="berrys-display" style="display:none;">
       &#x1F4B0; <span id="berrys-amount">0</span> Berrys
@@ -1162,7 +1176,31 @@ app.get('/blackjack', (req, res) => {
       if (!cacheDeuxieme) document.getElementById('dealer-score').textContent = 'Score: ' + scoreMain(mainCroupier);
       else document.getElementById('dealer-score').textContent = '';
     }
-
+async function commencerAuto(p) {
+      document.getElementById('pseudo') ? document.getElementById('pseudo').value = p : null;
+      pseudoActuel = p.toLowerCase();
+      const mise = parseInt(document.getElementById('mise').value);
+      if (!mise || mise < 50) { alert('Mise minimum 50 Berrys !'); return; }
+      const r = await fetch('/blackjack/infos?username=' + pseudoActuel + '&mise=' + mise);
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      miseActuelle = mise;
+      berrysActuels = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
+      document.getElementById('berrys-display').style.display = 'inline-block';
+      document.getElementById('mise-display').textContent = 'Mise : ' + mise.toLocaleString() + ' Berrys';
+      creerDeck();
+      mainJoueur = [deck.pop(), deck.pop()];
+      mainCroupier = [deck.pop(), deck.pop()];
+      jeuEnCours = true;
+      document.getElementById('game-section').classList.add('active');
+      document.getElementById('result-box').classList.remove('show');
+      document.getElementById('btn-tirer').disabled = false;
+      document.getElementById('btn-rester').disabled = false;
+      majAffichage(true);
+      const scoreJ = scoreMain(mainJoueur);
+      if (scoreJ === 21) { setTimeout(() => rester(), 500); }
+    }
     async function commencer() {
       const pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
       const mise = parseInt(document.getElementById('mise').value);
@@ -1378,8 +1416,10 @@ app.get('/course', (req, res) => {
     <div class="title">&#x1F3F4; COURSE VERS LE ONE PIECE</div>
     <div class="subtitle">Navigue sur la Grand Line et trouve le tresor ultime !</div>
     <div class="setup-box" id="setup-box">
-      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
-      <button class="btn btn-gold" onclick="commencer()">&#x2693; APPAREILLER !</button>
+      ${req.query.verified === 'true' && req.query.owner ? `
+      <div style="background:rgba(0,0,0,0.7);border:1px solid #87ceeb;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
+      <button class="btn btn-gold" onclick="commencerAuto('${req.query.owner}')">&#x2693; APPAREILLER !</button>` : `
+      <a href="/auth/twitch?username=guest&from=course" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div id="berrys-display" class="berrys-display" style="display:none;">
       &#x1F4B0; <span id="berrys-amount">0</span> Berrys
@@ -1433,8 +1473,23 @@ app.get('/course', (req, res) => {
       ).join('');
     }
 
-    async function commencer() {
-      pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
+    async function commencerAuto(p) {
+      pseudo = p.toLowerCase();
+      const r = await fetch('/course/infos?username=' + pseudo);
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      if (data.cooldown) { alert('Tu peux rejouer dans ' + data.restant + ' heure(s) !'); return; }
+      berrys = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
+      document.getElementById('berrys-display').style.display = 'inline-block';
+      document.getElementById('setup-box').style.display = 'none';
+      document.getElementById('game-section').style.display = 'block';
+      etapeActuelle = 0;
+      jeuEnCours = true;
+      initialiserIles();
+      majProgression();
+      setTimeout(() => prochaineEtape(), 500);
+    }
       if (!pseudo) { alert('Entre ton pseudo !'); return; }
       const r = await fetch('/course/infos?username=' + pseudo);
       const data = await r.json();
