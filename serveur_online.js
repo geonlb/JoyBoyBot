@@ -685,9 +685,13 @@ app.get('/minijeux', (req, res) => {
         <div class="card-cooldown">&#x23F0; Pas de cooldown</div>
         <div class="soon-badge">BIENTOT</div>
       </div>
-      <div class="card card-soon">
+      <a href="/course" class="card">
         <div class="card-icon">&#x1F3F4;</div>
         <div class="card-title">COURSE VERS ONE PIECE</div>
+        <div class="card-desc">Navigue sur la Grand Line et trouve le tresor ultime !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys + Fruits !</div>
+        <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
+      </a>
         <div class="card-desc">Resous les enigmes des mers pour trouver le tresor !</div>
         <div class="card-gain">&#x1F4B0; Jusqu'a 2000 Berrys</div>
         <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
@@ -1247,6 +1251,299 @@ app.post('/blackjack/resultat', async (req, res) => {
   else if (resultat === 'lose') newBerrys -= mise;
   await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
   res.json({ success: true, berrys: newBerrys });
+});
+
+// ==================== COURSE VERS ONE PIECE ====================
+app.get('/course', (req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course vers One Piece - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/coursefond.png'); background-size: cover; background-position: center; background-attachment: fixed; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); pointer-events: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
+    .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
+    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ffd700; letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,215,0,0.8); margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #f39c12; letter-spacing: 4px; margin-bottom: 20px; font-weight: bold; }
+    .setup-box { background: rgba(0,0,0,0.8); border: 2px solid #f39c12; border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .pseudo-input { background: rgba(0,0,0,0.7); border: 1px solid #f39c12; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 250px; }
+    .pseudo-input::placeholder { color: #666; }
+    .btn { padding: 12px 30px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
+    .btn-gold { background: linear-gradient(135deg, #f39c12, #e67e22); color: #000; box-shadow: 0 0 15px rgba(243,156,18,0.4); }
+    .btn-gold:hover { box-shadow: 0 0 30px rgba(243,156,18,0.8); transform: scale(1.05); }
+    .btn-action { background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; margin: 5px; }
+    .btn-action:hover { box-shadow: 0 0 20px rgba(138,43,226,0.6); transform: scale(1.05); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .berrys-display { background: rgba(0,0,0,0.8); border: 2px solid #f39c12; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 18px; color: #f39c12; }
+    .ocean { background: linear-gradient(180deg, #001a3a, #002855); border-radius: 20px; padding: 20px; margin: 20px 0; position: relative; overflow: hidden; height: 180px; border: 3px solid #f39c12; box-shadow: 0 0 30px rgba(243,156,18,0.3); }
+    .waves { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(180deg, transparent, rgba(0,100,200,0.4)); animation: waveAnim 2s infinite ease-in-out; }
+    .waves2 { position: absolute; bottom: 10px; left: 0; right: 0; height: 40px; background: linear-gradient(180deg, transparent, rgba(0,150,255,0.3)); animation: waveAnim 2.5s infinite ease-in-out reverse; }
+    @keyframes waveAnim { 0%, 100% { transform: translateX(-10px) scaleY(1); } 50% { transform: translateX(10px) scaleY(1.1); } }
+    .sunny { position: absolute; bottom: 40px; transition: left 2s ease-in-out; }
+    .sunny img { width: 100px; height: 75px; object-fit: contain; filter: drop-shadow(0 5px 15px rgba(255,215,0,0.5)); animation: boatRock 2s infinite ease-in-out; }
+    @keyframes boatRock { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-5px); } }
+    .iles { display: flex; justify-content: space-around; align-items: center; position: absolute; top: 20px; left: 5%; right: 5%; }
+    .ile { font-size: 30px; opacity: 0.7; transition: all 0.5s; position: relative; }
+    .ile.active { opacity: 1; animation: pulseIle 1s infinite; }
+    .ile.visited { opacity: 0.4; }
+    @keyframes pulseIle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+    .ile-label { font-size: 9px; color: #f39c12; text-align: center; position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-weight: bold; }
+    .event-box { background: rgba(0,0,0,0.9); border-radius: 15px; padding: 25px; margin-top: 20px; display: none; animation: fadeIn 0.5s forwards; }
+    .event-box.show { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .event-icon { font-size: 60px; margin-bottom: 10px; animation: bounce 0.5s ease; }
+    @keyframes bounce { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .event-title { font-family: 'Cinzel', serif; font-size: 22px; color: #ffd700; margin-bottom: 10px; }
+    .event-desc { font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
+    .event-result { font-size: 24px; font-weight: bold; margin: 15px 0; }
+    .actions-box { margin-top: 15px; }
+    .progress-bar { background: rgba(255,255,255,0.1); border-radius: 10px; height: 10px; margin: 15px 0; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #f39c12, #ffd700); height: 100%; border-radius: 10px; transition: width 1s ease; }
+    .etape-label { font-size: 13px; color: #f39c12; letter-spacing: 2px; margin-bottom: 5px; }
+    .confetti { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 9999; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
+    <div class="title">&#x1F3F4; COURSE VERS ONE PIECE</div>
+    <div class="subtitle">Navigue sur la Grand Line et trouve le tresor ultime !</div>
+    <div class="setup-box" id="setup-box">
+      <input type="text" class="pseudo-input" id="pseudo" placeholder="Ton pseudo Twitch...">
+      <button class="btn btn-gold" onclick="commencer()">&#x2693; APPAREILLER !</button>
+    </div>
+    <div id="berrys-display" class="berrys-display" style="display:none;">
+      &#x1F4B0; <span id="berrys-amount">0</span> Berrys
+    </div>
+    <div id="game-section" style="display:none;">
+      <div class="etape-label" id="etape-label">ILE 1/5</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="ocean" id="ocean">
+        <div class="iles" id="iles"></div>
+        <div class="sunny" id="sunny" style="left:2%;">
+          <img src="/persos/sunny.png" alt="Sunny">
+        </div>
+        <div class="waves"></div>
+        <div class="waves2"></div>
+      </div>
+      <div class="event-box" id="event-box">
+        <div class="event-icon" id="event-icon"></div>
+        <div class="event-title" id="event-title"></div>
+        <div class="event-desc" id="event-desc"></div>
+        <div class="event-result" id="event-result"></div>
+        <div class="actions-box" id="actions-box"></div>
+      </div>
+    </div>
+  </div>
+  <canvas class="confetti" id="confetti"></canvas>
+  <script>
+    const iles = [
+      { nom: 'Ile du Debut', emoji: '&#x1F334;' },
+      { nom: 'Ile aux Epees', emoji: '&#x2694;' },
+      { nom: 'Ile de Feu', emoji: '&#x1F30B;' },
+      { nom: 'Ile des Tempetes', emoji: '&#x26C8;' },
+      { nom: 'Ile du Tresor', emoji: '&#x1F3F4;' }
+    ];
+
+    const events = [
+      { type: 'tresor', icon: '&#x1F4B0;', titre: 'Tresor Decouverts !', desc: 'Ton equipage a trouve un coffre au fond des mers !', gain: 300, couleur: '#ffd700' },
+      { type: 'combat_win', icon: '&#x2694;&#xFE0F;', titre: 'Victoire au Combat !', desc: 'Tu as vaincu un pirate rival et recupere son butin !', gain: 200, couleur: '#2ecc71' },
+      { type: 'fruit', icon: '&#x1F34E;', titre: 'Fruit du Demon !', desc: 'Un fruit mysterieux flottait sur l\'eau !', gain: -1, couleur: '#ffffff' },
+      { type: 'marine', icon: '&#x1F6A8;', titre: 'Embuscade de la Marine !', desc: 'La Marine t\'a intercepte et confisque une partie de ton butin !', gain: -150, couleur: '#e74c3c' },
+      { type: 'tempete', icon: '&#x1F32A;', titre: 'Tempete Violente !', desc: 'Une terrible tempete a frappe ton bateau, tu perds du temps mais continues ta route !', gain: 0, couleur: '#3498db' },
+      { type: 'allie', icon: '&#x1F91D;', titre: 'Rencontre un Allie !', desc: 'Un equipage ami partage son butin avec toi !', gain: 150, couleur: '#87ceeb' },
+      { type: 'jackpot', icon: '&#x1F451;', titre: 'ONE PIECE TROUVE !', desc: 'Tu as atteint Raftel et decouvert le legendaire One Piece !', gain: 1000, couleur: '#ff0000' }
+    ];
+
+    let pseudo = '', berrys = 0, etapeActuelle = 0, jeuEnCours = false;
+
+    function initialiserIles() {
+      const ilesDiv = document.getElementById('iles');
+      ilesDiv.innerHTML = iles.map((ile, i) =>
+        '<div class="ile" id="ile-' + i + '">' + ile.emoji + '<div class="ile-label">' + ile.nom + '</div></div>'
+      ).join('');
+    }
+
+    async function commencer() {
+      pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
+      if (!pseudo) { alert('Entre ton pseudo !'); return; }
+      const r = await fetch('/course/infos?username=' + pseudo);
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      if (data.cooldown) { alert('Tu peux rejouer dans ' + data.restant + ' heure(s) !'); return; }
+      berrys = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
+      document.getElementById('berrys-display').style.display = 'inline-block';
+      document.getElementById('setup-box').style.display = 'none';
+      document.getElementById('game-section').style.display = 'block';
+      etapeActuelle = 0;
+      jeuEnCours = true;
+      initialiserIles();
+      majProgression();
+      setTimeout(() => prochaineEtape(), 500);
+    }
+
+    function majProgression() {
+      document.getElementById('etape-label').textContent = 'ILE ' + (etapeActuelle + 1) + '/5';
+      document.getElementById('progress-fill').style.width = (etapeActuelle * 20) + '%';
+      const positions = [2, 20, 40, 60, 80];
+      document.getElementById('sunny').style.left = positions[etapeActuelle] + '%';
+      iles.forEach((_, i) => {
+        const el = document.getElementById('ile-' + i);
+        el.className = 'ile' + (i === etapeActuelle ? ' active' : i < etapeActuelle ? ' visited' : '');
+      });
+    }
+
+    function prochaineEtape() {
+      if (etapeActuelle >= 5) { terminer(); return; }
+      const eventBox = document.getElementById('event-box');
+      eventBox.classList.remove('show');
+      setTimeout(() => {
+        let event;
+        if (etapeActuelle === 4) {
+          event = events.find(e => e.type === 'jackpot');
+        } else {
+          const probas = [25, 20, 10, 20, 10, 15];
+          const rand = Math.random() * 100;
+          let cumul = 0;
+          let idx = 0;
+          for (let i = 0; i < probas.length; i++) {
+            cumul += probas[i];
+            if (rand < cumul) { idx = i; break; }
+          }
+          event = events[idx];
+        }
+        afficherEvent(event);
+      }, 500);
+    }
+
+    async function afficherEvent(event) {
+      document.getElementById('event-icon').innerHTML = event.icon;
+      document.getElementById('event-title').textContent = event.titre;
+      document.getElementById('event-desc').textContent = event.desc;
+      document.getElementById('event-result').style.color = event.couleur;
+
+      const r = await fetch('/course/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudo, type: event.type, gain: event.gain, etape: etapeActuelle })
+      });
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      berrys = data.berrys;
+      document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
+
+      if (event.gain > 0) document.getElementById('event-result').textContent = '+' + event.gain + ' Berrys !';
+      else if (event.gain < 0 && event.gain !== -1) document.getElementById('event-result').textContent = event.gain + ' Berrys !';
+      else if (event.gain === -1) document.getElementById('event-result').textContent = data.fruit + ' no Mi !';
+      else document.getElementById('event-result').textContent = 'Pas de gain cette fois...';
+
+      const actionsBox = document.getElementById('actions-box');
+      if (etapeActuelle >= 4) {
+        actionsBox.innerHTML = '<button class="btn btn-gold" onclick="terminer()">&#x1F3C6; Voir mon butin final !</button>';
+        if (event.type === 'jackpot') lancerConfettis();
+      } else {
+        actionsBox.innerHTML = '<button class="btn btn-action" onclick="allerIleSuivante()">&#x27A1; Ile suivante !</button>';
+      }
+      document.getElementById('event-box').classList.add('show');
+    }
+
+    function allerIleSuivante() {
+      etapeActuelle++;
+      majProgression();
+      prochaineEtape();
+    }
+
+    async function terminer() {
+      await fetch('/course/terminer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudo })
+      });
+      document.getElementById('event-icon').innerHTML = '&#x1F3C6;';
+      document.getElementById('event-title').textContent = 'Aventure terminee !';
+      document.getElementById('event-desc').textContent = 'Tu as traverse toutes les iles du Grand Line !';
+      document.getElementById('event-result').textContent = 'Berrys totaux : ' + berrys.toLocaleString();
+      document.getElementById('event-result').style.color = '#ffd700';
+      document.getElementById('actions-box').innerHTML = '<button class="btn btn-gold" onclick="location.reload()">&#x1F504; Recommencer demain !</button>';
+      document.getElementById('progress-fill').style.width = '100%';
+      document.getElementById('etape-label').textContent = 'AVENTURE TERMINEE !';
+    }
+
+    function lancerConfettis() {
+      const canvas = document.getElementById('confetti');
+      canvas.style.display = 'block';
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const particules = Array.from({length: 150}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 8 + 3,
+        c: ['#ffd700','#ff0000','#8a2be2','#2ecc71','#87ceeb'][Math.floor(Math.random() * 5)],
+        vx: (Math.random() - 0.5) * 4,
+        vy: Math.random() * 4 + 2
+      }));
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particules.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+          ctx.fillStyle = p.c;
+          ctx.fill();
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+      setTimeout(() => { canvas.style.display = 'none'; }, 5000);
+    }
+  </script>
+</body>
+</html>`);
+});
+
+app.get('/course/infos', async (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable ! Tu dois etre enregistre sur le stream.' });
+  const { data: courseRows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_course');
+  const courseData = courseRows && courseRows.length > 0 ? courseRows[0] : null;
+  const cooldown = courseData && Date.now() < parseInt(courseData.expire);
+  const restant = cooldown ? Math.ceil((parseInt(courseData.expire) - Date.now()) / 3600000) : 0;
+  res.json({ berrys: primeData.berrys, cooldown, restant });
+});
+
+app.post('/course/event', async (req, res) => {
+  const { username, type, gain, etape } = req.body;
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Erreur' });
+  let newBerrys = primeData.berrys;
+  let fruit = null;
+  if (gain === -1) {
+    const fruitsListe = ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku', 'Yomi-Yomi', 'Bara-Bara'];
+    fruit = fruitsListe[Math.floor(Math.random() * fruitsListe.length)];
+    await supabase.from('collection').insert({ username, fruit, rarete: 'Commun' });
+  } else if (gain !== 0) {
+    newBerrys = Math.max(0, newBerrys + gain);
+    await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  }
+  res.json({ success: true, berrys: newBerrys, fruit });
+});
+
+app.post('/course/terminer', async (req, res) => {
+  const { username } = req.body;
+  await supabase.from('codes_temp').delete().eq('username', username + '_course');
+  await supabase.from('codes_temp').insert({ username: username + '_course', code: 'course', expire: Date.now() + 86400000 });
+  res.json({ success: true });
 });
 
 // ==================== ANIMATION OBS ====================
