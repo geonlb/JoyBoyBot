@@ -883,8 +883,25 @@ app.get('/roulette', (req, res) => {
 
     function chargerAuto(p) {
       pseudo = p.toLowerCase();
-      document.getElementById('pseudo').value = pseudo;
-      charger();
+      fetch('/roulette/infos?username=' + pseudo)
+        .then(r => r.json())
+        .then(data => {
+          if (data.error) { alert(data.error); return; }
+          berrys = data.berrys;
+          document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
+          document.getElementById('berrys-display').style.display = 'inline-block';
+          if (data.cooldown) {
+            document.getElementById('spin-btn').disabled = true;
+            document.getElementById('spin-btn').textContent = '⏰ ' + data.restant + ' min restantes';
+          } else {
+            document.getElementById('spin-btn').disabled = false;
+            document.getElementById('spin-btn').textContent = '🎰 TOURNER !';
+          }
+          const legendDiv = document.getElementById('legend');
+          legendDiv.innerHTML = segments.filter((s,i,a) => a.findIndex(x=>x.label===s.label) === i).map(s =>
+            '<div class="legend-item" style="border-color:' + s.couleur + ';color:' + s.couleur + ';">' + s.label + '</div>'
+          ).join('');
+        });
     }
       function charger() {
       pseudo = document.getElementById('pseudo').value.trim().toLowerCase();
@@ -1421,7 +1438,7 @@ app.get('/course', (req, res) => {
     <div class="setup-box" id="setup-box">
       ${req.query.verified === 'true' && req.query.owner ? `
       <div style="background:rgba(0,0,0,0.7);border:1px solid #87ceeb;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
-      <button class="btn btn-gold" onclick="commencerAuto('${req.query.owner}')">&#x2693; APPAREILLER !</button>` : `
+      <button class="btn btn-gold" onclick="commencerAuto(this.dataset.owner)" data-owner="${req.query.owner}">&#x2693; APPAREILLER !</button>` : `
       <a href="/auth/twitch?username=guest&from=course" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div id="berrys-display" class="berrys-display" style="display:none;">
@@ -1477,7 +1494,7 @@ app.get('/course', (req, res) => {
     }
 
     async function commencerAuto(p) {
-      pseudo = p.toLowerCase();
+      pseudo = (p || '').toLowerCase();
       const r = await fetch('/course/infos?username=' + pseudo);
       const data = await r.json();
       if (data.error) { alert(data.error); return; }
