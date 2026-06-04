@@ -111,21 +111,14 @@ app.get('/', (req, res) => {
   </div>
   <audio id="bg-music" src="/persos/sonaccueil.mp3" loop></audio>
   <script>
-    let playing = false;
-    function toggleMusic() {
-      const music = document.getElementById('bg-music');
-      const btn = document.getElementById('music-btn');
-      if (playing) {
-        music.pause();
-        btn.innerHTML = '&#x1F507;';
-        btn.style.borderColor = '#8a2be2';
-      } else {
-        music.play();
-        btn.innerHTML = '&#x1F3B5;';
-        btn.style.borderColor = '#87ceeb';
-      }
-      playing = !playing;
-    }
+    
+  </script>
+  <div style="position:fixed;bottom:20px;right:20px;z-index:9999;">
+    <button id="music-btn" onclick="toggleMusic()" style="background:rgba(0,0,0,0.7);border:2px solid #8a2be2;color:#87ceeb;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 0 15px rgba(138,43,226,0.5);transition:all 0.3s;">&#x1F507;</button>
+  </div>
+  <audio id="bg-music" src="/persos/sonaccueil.mp3" loop></audio>
+  <script>
+    
   </script>
   <div style="position:fixed;bottom:20px;right:20px;z-index:9999;">
     <button id="music-btn" onclick="toggleMusic()" style="background:rgba(0,0,0,0.7);border:2px solid #8a2be2;color:#87ceeb;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 0 15px rgba(138,43,226,0.5);transition:all 0.3s;">&#x1F507;</button>
@@ -138,28 +131,7 @@ app.get('/', (req, res) => {
       const btn = document.getElementById('music-btn');
       if (playing) {
         music.pause();
-        btn.innerHTML = '&#x1F507;';
-        btn.style.borderColor = '#8a2be2';
-      } else {
-        music.play();
-        btn.innerHTML = '&#x1F3B5;';
-        btn.style.borderColor = '#87ceeb';
-      }
-      playing = !playing;
-    }
-  </script>
-  <div style="position:fixed;bottom:20px;right:20px;z-index:9999;">
-    <button id="music-btn" onclick="toggleMusic()" style="background:rgba(0,0,0,0.7);border:2px solid #8a2be2;color:#87ceeb;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;box-shadow:0 0 15px rgba(138,43,226,0.5);transition:all 0.3s;">&#x1F507;</button>
-  </div>
-  <audio id="bg-music" src="/persos/sonaccueil.mp3" loop></audio>
-  <script>
-    let playing = false;
-    function toggleMusic() {
-      const music = document.getElementById('bg-music');
-      const btn = document.getElementById('music-btn');
-      if (playing) {
-        music.pause();
-        btn.innerHTML = '&#x1F507;';
+        btn.innerHTML = '&#x1F3B5;&#x20E0;';
         btn.style.borderColor = '#8a2be2';
       } else {
         music.play();
