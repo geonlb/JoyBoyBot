@@ -725,9 +725,13 @@ app.get('/minijeux', (req, res) => {
         <div class="card-gain">&#x1F4B0; Jusqu'a 500 Berrys + Fruits !</div>
         <div class="card-cooldown">&#x23F0; Cooldown : 10 minutes</div>
       </a>
-      <div class="card card-soon">
+      <a href="/combat" class="card">
         <div class="card-icon">&#x2694;&#xFE0F;</div>
         <div class="card-title">COMBAT DE PIRATES</div>
+        <div class="card-desc">Affronte des ennemis légendaires et remporte des Berrys !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 1500 Berrys</div>
+        <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
+      </a>
         <div class="card-desc">Affronte des ennemis légendaires et remporte des Berrys !</div>
         <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys</div>
         <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
@@ -1643,6 +1647,351 @@ app.post('/course/terminer', async (req, res) => {
   await supabase.from('codes_temp').delete().eq('username', username + '_course');
   await supabase.from('codes_temp').insert({ username: username + '_course', code: 'course', expire: Date.now() + 21600000 });
   res.json({ success: true });
+});
+
+// ==================== COMBAT DE PIRATES ====================
+app.get('/combat', (req, res) => {
+  const isAuth = req.query.verified === 'true' && req.query.owner;
+  const owner = req.query.owner || '';
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Combat de Pirates - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #050510; min-height: 100vh; font-family: 'Exo 2', sans-serif; color: white; background-image: url('/persos/combatfond.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); pointer-events: none; }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
+    .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
+    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ff0000; letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,0,0,0.8), 2px 2px 0 #000; margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #fff; letter-spacing: 4px; margin-bottom: 20px; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+    .auth-box { background: rgba(0,0,0,0.8); border: 2px solid #ff0000; border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .btn { padding: 12px 30px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
+    .btn-red { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; box-shadow: 0 0 15px rgba(231,76,60,0.4); }
+    .btn-red:hover { box-shadow: 0 0 30px rgba(231,76,60,0.8); transform: scale(1.05); }
+    .btn-blue { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+    .btn-gold { background: linear-gradient(135deg, #ffd700, #f39c12); color: #000; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .berrys-display { background: rgba(0,0,0,0.8); border: 2px solid #f39c12; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 18px; color: #f39c12; }
+    .ennemis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .ennemi-card { background: rgba(0,0,0,0.8); border-radius: 15px; padding: 20px; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
+    .ennemi-card:hover { transform: translateY(-5px); }
+    .ennemi-card.facile { border-color: #2ecc71; }
+    .ennemi-card.moyen { border-color: #f39c12; }
+    .ennemi-card.difficile { border-color: #e74c3c; }
+    .ennemi-card.legendaire { border-color: #9b59b6; box-shadow: 0 0 20px rgba(155,89,182,0.5); }
+    .ennemi-card img { width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; }
+    .ennemi-nom { font-family: 'Cinzel', serif; font-size: 14px; margin-bottom: 5px; }
+    .ennemi-diff { font-size: 11px; margin-bottom: 5px; }
+    .ennemi-gain { font-size: 12px; color: #f39c12; font-weight: bold; }
+    .ennemi-cooldown { font-size: 10px; color: #888; margin-top: 3px; }
+    .arena { display: none; }
+    .arena.active { display: block; }
+    .combat-zone { background: rgba(0,0,0,0.85); border: 3px solid #e74c3c; border-radius: 20px; padding: 25px; margin: 20px 0; }
+    .fighters { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .fighter { text-align: center; width: 40%; }
+    .fighter img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255,0,0,0.5)); }
+    .fighter-name { font-family: 'Cinzel', serif; font-size: 16px; margin: 8px 0 5px; }
+    .hp-bar-container { background: rgba(255,255,255,0.1); border-radius: 10px; height: 12px; overflow: hidden; }
+    .hp-bar { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+    .hp-bar.player { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+    .hp-bar.enemy { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+    .hp-text { font-size: 11px; color: #aaa; margin-top: 3px; }
+    .vs { font-family: 'Cinzel', serif; font-size: 36px; color: #ff0000; text-shadow: 0 0 20px rgba(255,0,0,0.8); }
+    .combat-log { background: rgba(0,0,0,0.6); border-radius: 10px; padding: 15px; margin: 15px 0; height: 100px; overflow-y: auto; text-align: left; font-size: 13px; }
+    .log-entry { margin-bottom: 5px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .log-player { color: #2ecc71; }
+    .log-enemy { color: #e74c3c; }
+    .log-info { color: #f39c12; }
+    .actions { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+    .effect { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; pointer-events: none; z-index: 9999; display: none; animation: effectAnim 0.8s forwards; }
+    @keyframes effectAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(2); } }
+    .result-box { background: rgba(0,0,0,0.95); border-radius: 20px; padding: 30px; margin-top: 20px; display: none; }
+    .result-box.show { display: block; animation: fadeIn 0.5s forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .result-title { font-family: 'Cinzel', serif; font-size: 32px; margin-bottom: 15px; }
+    .result-gain { font-size: 28px; font-weight: bold; margin: 10px 0; }
+    .shake { animation: shake 0.5s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/minijeux" class="back-btn">&#x2190; Mini Jeux</a>
+    <div class="title">&#x2694;&#xFE0F; COMBAT DE PIRATES</div>
+    <div class="subtitle">Affronte les legendes du Grand Line !</div>
+    <div class="auth-box">
+      ${isAuth ? `
+      <div style="color:white;font-size:14px;border:1px solid #ff0000;padding:8px 20px;border-radius:20px;background:rgba(0,0,0,0.7);">&#x2705; ${owner}</div>` : `
+      <a href="/auth/twitch?username=guest&from=combat" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
+    </div>
+    ${isAuth ? `
+    <div id="berrys-display" class="berrys-display">&#x1F4B0; <span id="berrys-amount">...</span> Berrys</div>
+    <div id="selection-section">
+      <div style="font-family:'Cinzel',serif;font-size:18px;color:#ff0000;letter-spacing:3px;margin-bottom:20px;text-shadow:0 0 10px rgba(255,0,0,0.5);">CHOISIS TON ADVERSAIRE</div>
+      <div class="ennemis-grid">
+        <div class="ennemi-card facile" onclick="choisirEnnemi('wapol',0)">
+          <img src="/persos/wapol.png" alt="Wapol">
+          <div class="ennemi-nom">WAPOL</div>
+          <div class="ennemi-diff" style="color:#2ecc71;">&#x1F7E2; FACILE</div>
+          <div class="ennemi-gain">+150 Berrys</div>
+          <div class="ennemi-cooldown">&#x23F0; 30 min</div>
+        </div>
+        <div class="ennemi-card moyen" onclick="choisirEnnemi('crocodile',1)">
+          <img src="/persos/crocodile.png" alt="Crocodile">
+          <div class="ennemi-nom">CROCODILE</div>
+          <div class="ennemi-diff" style="color:#f39c12;">&#x1F7E1; MOYEN</div>
+          <div class="ennemi-gain">+300 Berrys</div>
+          <div class="ennemi-cooldown">&#x23F0; 30 min</div>
+        </div>
+        <div class="ennemi-card difficile" onclick="choisirEnnemi('doflamingo',2)">
+          <img src="/persos/doflamingo.png" alt="Doflamingo">
+          <div class="ennemi-nom">DOFLAMINGO</div>
+          <div class="ennemi-diff" style="color:#e74c3c;">&#x1F534; DIFFICILE</div>
+          <div class="ennemi-gain">+600 Berrys</div>
+          <div class="ennemi-cooldown">&#x23F0; 30 min</div>
+        </div>
+        <div class="ennemi-card legendaire" onclick="choisirEnnemi('barbenoire',3)">
+          <img src="/persos/barbenoire.png" alt="Barbe Noire">
+          <div class="ennemi-nom">BARBE NOIRE</div>
+          <div class="ennemi-diff" style="color:#9b59b6;">&#x1F7E3; LEGENDAIRE</div>
+          <div class="ennemi-gain">+1500 Berrys</div>
+          <div class="ennemi-cooldown">&#x23F0; 30 min</div>
+        </div>
+      </div>
+    </div>
+    <div class="arena" id="arena">
+      <div class="combat-zone">
+        <div class="fighters">
+          <div class="fighter" id="fighter-player">
+            <img src="/persos/teamnlb.png" alt="Toi" id="player-img">
+            <div class="fighter-name" id="player-name">${owner}</div>
+            <div class="hp-bar-container"><div class="hp-bar player" id="player-hp-bar" style="width:100%"></div></div>
+            <div class="hp-text" id="player-hp-text">100/100 HP</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="fighter" id="fighter-enemy">
+            <img src="" alt="Ennemi" id="enemy-img">
+            <div class="fighter-name" id="enemy-name"></div>
+            <div class="hp-bar-container"><div class="hp-bar enemy" id="enemy-hp-bar" style="width:100%"></div></div>
+            <div class="hp-text" id="enemy-hp-text"></div>
+          </div>
+        </div>
+        <div class="combat-log" id="combat-log"></div>
+        <div class="actions" id="combat-actions">
+          <button class="btn btn-red" onclick="attaquer()" id="btn-attaquer">&#x2694;&#xFE0F; ATTAQUER</button>
+          <button class="btn btn-blue" onclick="defendre()" id="btn-defendre">&#x1F6E1;&#xFE0F; DEFENDRE</button>
+          <button class="btn btn-gold" onclick="technique()" id="btn-technique">&#x26A1; TECHNIQUE</button>
+        </div>
+      </div>
+      <div class="result-box" id="result-box">
+        <div class="result-title" id="result-title"></div>
+        <div class="result-gain" id="result-gain"></div>
+        <button class="btn btn-red" style="margin-top:15px;" onclick="recommencer()">&#x1F504; NOUVEAU COMBAT</button>
+      </div>
+    </div>` : ''}
+  </div>
+  <div class="effect" id="effect"></div>
+  <script>
+    const ennemis = [
+      { nom: 'WAPOL', img: '/persos/wapol.png', hpMax: 80, atk: 8, gain: 150, diff: 0 },
+      { nom: 'CROCODILE', img: '/persos/crocodile.png', hpMax: 120, atk: 15, gain: 300, diff: 1 },
+      { nom: 'DOFLAMINGO', img: '/persos/doflamingo.png', hpMax: 180, atk: 22, gain: 600, diff: 2 },
+      { nom: 'BARBE NOIRE', img: '/persos/barbenoire.png', hpMax: 250, atk: 35, gain: 1500, diff: 3 }
+    ];
+    let playerHP = 100, playerHPMax = 100;
+    let enemyHP = 0, enemyHPMax = 0;
+    let ennemiActuel = null, combatEnCours = false, defense = false;
+    const pseudo = '${owner}';
+
+    async function init() {
+      const r = await fetch('/combat/infos?username=' + pseudo);
+      const data = await r.json();
+      if (data.berrys !== undefined) {
+        document.getElementById('berrys-amount').textContent = data.berrys.toLocaleString();
+      }
+      if (data.cooldowns) {
+        data.cooldowns.forEach((cd, i) => {
+          if (cd > 0) {
+            const cards = document.querySelectorAll('.ennemi-card');
+            if (cards[i]) {
+              cards[i].style.opacity = '0.5';
+              cards[i].style.cursor = 'not-allowed';
+              cards[i].onclick = null;
+              const cooldownDiv = cards[i].querySelector('.ennemi-cooldown');
+              if (cooldownDiv) cooldownDiv.textContent = '⏰ ' + cd + ' min restantes';
+            }
+          }
+        });
+      }
+    }
+
+    function choisirEnnemi(nom, idx) {
+      ennemiActuel = ennemis[idx];
+      playerHP = playerHPMax = 100;
+      enemyHP = enemyHPMax = ennemiActuel.hpMax;
+      defense = false;
+      combatEnCours = true;
+      document.getElementById('selection-section').style.display = 'none';
+      document.getElementById('arena').classList.add('active');
+      document.getElementById('enemy-img').src = ennemiActuel.img;
+      document.getElementById('enemy-name').textContent = ennemiActuel.nom;
+      document.getElementById('enemy-hp-text').textContent = enemyHP + '/' + enemyHPMax + ' HP';
+      document.getElementById('player-hp-text').textContent = playerHP + '/' + playerHPMax + ' HP';
+      majHPBars();
+      addLog('Le combat contre ' + ennemiActuel.nom + ' commence !', 'info');
+    }
+
+    function majHPBars() {
+      document.getElementById('player-hp-bar').style.width = (playerHP / playerHPMax * 100) + '%';
+      document.getElementById('enemy-hp-bar').style.width = (enemyHP / enemyHPMax * 100) + '%';
+      const playerColor = playerHP > 50 ? '#2ecc71' : playerHP > 25 ? '#f39c12' : '#e74c3c';
+      document.getElementById('player-hp-bar').style.background = 'linear-gradient(90deg, ' + playerColor + ', ' + playerColor + ')';
+    }
+
+    function addLog(msg, type) {
+      const log = document.getElementById('combat-log');
+      const div = document.createElement('div');
+      div.className = 'log-entry log-' + type;
+      div.textContent = msg;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showEffect(emoji) {
+      const el = document.getElementById('effect');
+      el.textContent = emoji;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 800);
+    }
+
+    function shake(elementId) {
+      const el = document.getElementById(elementId);
+      el.classList.add('shake');
+      setTimeout(() => el.classList.remove('shake'), 500);
+    }
+
+    function attaquer() {
+      if (!combatEnCours) return;
+      setBtnsDisabled(true);
+      defense = false;
+      const dmgPlayer = Math.floor(Math.random() * 20) + 15;
+      enemyHP = Math.max(0, enemyHP - dmgPlayer);
+      showEffect('&#x1F4A5;');
+      shake('fighter-enemy');
+      addLog('Tu attaques ! -' + dmgPlayer + ' HP a ' + ennemiActuel.nom, 'player');
+      majHPBars();
+      document.getElementById('enemy-hp-text').textContent = enemyHP + '/' + enemyHPMax + ' HP';
+      if (enemyHP <= 0) { setTimeout(() => finCombat(true), 500); return; }
+      setTimeout(() => tourEnnemi(), 800);
+    }
+
+    function defendre() {
+      if (!combatEnCours) return;
+      setBtnsDisabled(true);
+      defense = true;
+      addLog('Tu te mets en position defensive !', 'info');
+      showEffect('&#x1F6E1;&#xFE0F;');
+      setTimeout(() => tourEnnemi(), 800);
+    }
+
+    function technique() {
+      if (!combatEnCours) return;
+      setBtnsDisabled(true);
+      defense = false;
+      const dmgPlayer = Math.floor(Math.random() * 35) + 25;
+      enemyHP = Math.max(0, enemyHP - dmgPlayer);
+      showEffect('&#x26A1;');
+      shake('fighter-enemy');
+      addLog('TECHNIQUE SPECIALE ! -' + dmgPlayer + ' HP a ' + ennemiActuel.nom + ' !', 'player');
+      majHPBars();
+      document.getElementById('enemy-hp-text').textContent = enemyHP + '/' + enemyHPMax + ' HP';
+      if (enemyHP <= 0) { setTimeout(() => finCombat(true), 500); return; }
+      setTimeout(() => tourEnnemi(), 800);
+    }
+
+    function tourEnnemi() {
+      const dmgEnnemi = defense ? Math.floor(ennemiActuel.atk * 0.3) : Math.floor(Math.random() * ennemiActuel.atk) + Math.floor(ennemiActuel.atk * 0.5);
+      playerHP = Math.max(0, playerHP - dmgEnnemi);
+      showEffect('&#x1F480;');
+      shake('fighter-player');
+      addLog(ennemiActuel.nom + ' attaque ! -' + dmgEnnemi + ' HP', 'enemy');
+      majHPBars();
+      document.getElementById('player-hp-text').textContent = playerHP + '/' + playerHPMax + ' HP';
+      if (playerHP <= 0) { setTimeout(() => finCombat(false), 500); return; }
+      defense = false;
+      setBtnsDisabled(false);
+    }
+
+    function setBtnsDisabled(disabled) {
+      ['btn-attaquer','btn-defendre','btn-technique'].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+      });
+    }
+
+    async function finCombat(victoire) {
+      combatEnCours = false;
+      setBtnsDisabled(true);
+      const r = await fetch('/combat/resultat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudo, diff: ennemiActuel.diff, victoire, gain: ennemiActuel.gain })
+      });
+      const data = await r.json();
+      document.getElementById('berrys-amount').textContent = data.berrys.toLocaleString();
+      const box = document.getElementById('result-box');
+      box.style.border = victoire ? '3px solid #ffd700' : '3px solid #e74c3c';
+      box.style.boxShadow = victoire ? '0 0 30px rgba(255,215,0,0.4)' : '0 0 30px rgba(231,76,60,0.4)';
+      document.getElementById('result-title').textContent = victoire ? '&#x1F3C6; VICTOIRE !' : '&#x1F480; DEFAITE !';
+      document.getElementById('result-title').style.color = victoire ? '#ffd700' : '#e74c3c';
+      document.getElementById('result-gain').textContent = victoire ? '+' + ennemiActuel.gain + ' Berrys !' : '-' + Math.floor(ennemiActuel.gain * 0.3) + ' Berrys...';
+      document.getElementById('result-gain').style.color = victoire ? '#ffd700' : '#e74c3c';
+      box.classList.add('show');
+    }
+
+    function recommencer() {
+      document.getElementById('arena').classList.remove('active');
+      document.getElementById('selection-section').style.display = 'block';
+      document.getElementById('result-box').classList.remove('show');
+      document.getElementById('combat-log').innerHTML = '';
+      init();
+    }
+
+    init();
+  </script>
+</body>
+</html>`);
+});
+
+app.get('/combat/infos', async (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable !' });
+  const cooldowns = [];
+  for (let i = 0; i < 4; i++) {
+    const { data: rows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_combat_' + i);
+    const cd = rows && rows.length > 0 ? rows[0] : null;
+    const restant = cd && Date.now() < parseInt(cd.expire) ? Math.ceil((parseInt(cd.expire) - Date.now()) / 60000) : 0;
+    cooldowns.push(restant);
+  }
+  res.json({ berrys: primeData.berrys, cooldowns });
+});
+
+app.post('/combat/resultat', async (req, res) => {
+  const { username, diff, victoire, gain } = req.body;
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Erreur' });
+  let newBerrys = primeData.berrys;
+  if (victoire) newBerrys += gain;
+  else newBerrys = Math.max(0, newBerrys - Math.floor(gain * 0.3));
+  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  await supabase.from('codes_temp').delete().eq('username', username + '_combat_' + diff);
+  await supabase.from('codes_temp').insert({ username: username + '_combat_' + diff, code: 'combat', expire: Date.now() + 1800000 });
+  res.json({ success: true, berrys: newBerrys });
 });
 
 // ==================== ANIMATION OBS ====================
