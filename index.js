@@ -99,7 +99,9 @@ let dernierTopPrime = 0;
 const codesTemp = {};
 const COOLDOWN_TOPPRIME = 120000;
 let dernierFruitGlobal = 0;
-const COOLDOWN_FRUIT_GLOBAL = 300000; // 5minutes
+const COOLDOWN_FRUIT_GLOBAL = 10000; // 10 secondes (animation globale)
+const COOLDOWN_FRUIT_USER = 300000; // 5 minutes par personne
+const cooldownsFruit = {};
 let dernierDispo = 0;
 const COOLDOWN_DISPO = 300000; // 5 minutes
  
@@ -560,7 +562,13 @@ if (Date.now() - dernierFruitGlobal < COOLDOWN_FRUIT_GLOBAL) {
   client.say(channel, `⏳ Une animation est en cours ! Attends encore ${restant} seconde(s) ! 🍎`);
   return;
 }
+if (cooldownsFruit[username] && Date.now() - cooldownsFruit[username] < COOLDOWN_FRUIT_USER) {
+  const restant = Math.ceil((COOLDOWN_FRUIT_USER - (Date.now() - cooldownsFruit[username])) / 60000);
+  client.say(channel, `⏳ ${username}, tu dois attendre encore ${restant} minute(s) avant de relancer !fruit ! 🍎`);
+  return;
+}
 dernierFruitGlobal = Date.now();
+cooldownsFruit[username] = Date.now();
     const fruits = {
     'Ultime':     { chance: 1,  liste: ['Nika-Nika', 'Oni-Oni', 'Roger-Roger', 'Aka-Aka'] },
     'Mythique':   { chance: 2,  liste: ['Mochi-Mochi', 'Gum-Gum', 'Goro-Goro', 'Inu-Inu', 'Uo-Uo', 'Ope-Ope', 'Neko-Neko', 'Soru-Soru', 'Yami-Yami'] },
