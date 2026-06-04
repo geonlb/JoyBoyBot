@@ -242,8 +242,11 @@ app.get('/auth/callback', async (req, res) => {
     const u = await axios.get('https://api.twitch.tv/helix/users', { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + t.data.access_token } });
     const twitchUsername = u.data.data[0].login;
     const from = state.includes('|') ? state.split('|')[1] : 'collection';
-    const cleanUsername = state.includes('|') ? state.split('|')[0] : state;
-    res.redirect('/' + from + '?verified=true&owner=' + twitchUsername);
+    if (from === 'collection') {
+      res.redirect('/collection/' + twitchUsername + '?verified=true&owner=' + twitchUsername);
+    } else {
+      res.redirect('/' + from + '?verified=true&owner=' + twitchUsername);
+    }
   } catch (err) { res.redirect('/collection/' + state + '?error=auth'); }
 });
 
