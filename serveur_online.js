@@ -19,7 +19,17 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6Ik
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CLIENT_ID = process.env.CLIENT_ID || '4wl3wc4mnurd77ctzhl8s8v6gak6yl';
-const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '9w76c932djulze7uhrqdwjbk4d5fnn';
+let ACCESS_TOKEN = process.env.ACCESS_TOKEN || '9w76c932djulze7uhrqdwjbk4d5fnn';
+
+async function refreshToken() {
+  try {
+    const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: TWITCH_CLIENT_ID, client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq', grant_type: 'client_credentials' } });
+    ACCESS_TOKEN = t.data.access_token;
+    console.log('Token Twitch renouvele !');
+  } catch (e) { console.log('Erreur refresh token:', e.message); }
+}
+refreshToken();
+setInterval(refreshToken, 3600000);
 
 // ==================== HOMEPAGE ====================
 app.get('/', (req, res) => {
