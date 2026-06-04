@@ -1196,31 +1196,7 @@ app.get('/blackjack', (req, res) => {
       if (!cacheDeuxieme) document.getElementById('dealer-score').textContent = 'Score: ' + scoreMain(mainCroupier);
       else document.getElementById('dealer-score').textContent = '';
     }
-onclick="commencerCourse(this.dataset.owner)"
-      document.getElementById('pseudo') ? document.getElementById('pseudo').value = p : null;
-      pseudoActuel = p.toLowerCase();
-      const mise = parseInt(document.getElementById('mise').value);
-      if (!mise || mise < 50) { alert('Mise minimum 50 Berrys !'); return; }
-      const r = await fetch('/blackjack/infos?username=' + pseudoActuel + '&mise=' + mise);
-      const data = await r.json();
-      if (data.error) { alert(data.error); return; }
-      miseActuelle = mise;
-      berrysActuels = data.berrys;
-      document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
-      document.getElementById('berrys-display').style.display = 'inline-block';
-      document.getElementById('mise-display').textContent = 'Mise : ' + mise.toLocaleString() + ' Berrys';
-      creerDeck();
-      mainJoueur = [deck.pop(), deck.pop()];
-      mainCroupier = [deck.pop(), deck.pop()];
-      jeuEnCours = true;
-      document.getElementById('game-section').classList.add('active');
-      document.getElementById('result-box').classList.remove('show');
-      document.getElementById('btn-tirer').disabled = false;
-      document.getElementById('btn-rester').disabled = false;
-      majAffichage(true);
-      const scoreJ = scoreMain(mainJoueur);
-      if (scoreJ === 21) { setTimeout(() => rester(), 500); }
-    }
+
     async function commencerAuto(p) {
       pseudoActuel = (p || '').toLowerCase();
       const mise = parseInt(document.getElementById('mise').value);
@@ -1245,31 +1221,7 @@ onclick="commencerCourse(this.dataset.owner)"
       const scoreJ = scoreMain(mainJoueur);
       if (scoreJ === 21) { setTimeout(() => rester(), 500); }
     }
-      const mise = parseInt(document.getElementById('mise').value);
-      if (!pseudo) { alert('Entre ton pseudo !'); return; }
-      if (!mise || mise < 50) { alert('Mise minimum 50 Berrys !'); return; }
-      const r = await fetch('/blackjack/infos?username=' + pseudo + '&mise=' + mise);
-      const data = await r.json();
-      if (data.error) { alert(data.error); return; }
-      pseudoActuel = pseudo;
-      miseActuelle = mise;
-      berrysActuels = data.berrys;
-      document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
-      document.getElementById('berrys-display').style.display = 'inline-block';
-      document.getElementById('mise-display').textContent = 'Mise : ' + mise.toLocaleString() + ' Berrys';
-      creerDeck();
-      mainJoueur = [deck.pop(), deck.pop()];
-      mainCroupier = [deck.pop(), deck.pop()];
-      jeuEnCours = true;
-      document.getElementById('game-section').classList.add('active');
-      document.getElementById('result-box').classList.remove('show');
-      document.getElementById('btn-tirer').disabled = false;
-      document.getElementById('btn-rester').disabled = false;
-      majAffichage(true);
-      const scoreJ = scoreMain(mainJoueur);
-      if (scoreJ === 21) { setTimeout(() => rester(), 500); }
-    }
-
+      
     function tirer() {
       if (!jeuEnCours) return;
       mainJoueur.push(deck.pop());
