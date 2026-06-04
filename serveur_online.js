@@ -1510,23 +1510,7 @@ app.get('/course', (req, res) => {
       majProgression();
       setTimeout(() => prochaineEtape(), 500);
     }
-      if (!pseudo) { alert('Entre ton pseudo !'); return; }
-      const r = await fetch('/course/infos?username=' + pseudo);
-      const data = await r.json();
-      if (data.error) { alert(data.error); return; }
-      if (data.cooldown) { alert('Tu peux rejouer dans ' + data.restant + ' heure(s) !'); return; }
-      berrys = data.berrys;
-      document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
-      document.getElementById('berrys-display').style.display = 'inline-block';
-      document.getElementById('setup-box').style.display = 'none';
-      document.getElementById('game-section').style.display = 'block';
-      etapeActuelle = 0;
-      jeuEnCours = true;
-      initialiserIles();
-      majProgression();
-      setTimeout(() => prochaineEtape(), 500);
-    }
-
+      
     function majProgression() {
       document.getElementById('etape-label').textContent = 'ILE ' + (etapeActuelle + 1) + '/5';
       document.getElementById('progress-fill').style.width = (etapeActuelle * 20) + '%';
