@@ -1270,7 +1270,7 @@ app.get('/course', (req, res) => {
     .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
     .title { font-family: 'Cinzel', serif; font-size: 36px; color: #87ceeb; letter-spacing: 6px; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin-bottom: 5px; }
     .subtitle { font-size: 13px; color: #00008b; letter-spacing: 4px; margin-bottom: 20px; font-weight: bold; }
-    .setup-box { background: rgba(0,0,0,0.8); border: 2px solid #87ceeb; box-shadow: 0 0 15px rgba(135,206,235,0.5);
+    .setup-box { background: rgba(0,0,0,0.8); border: 2px solid #87ceeb; box-shadow: 0 0 15px rgba(135,206,235,0.5); border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
     .pseudo-input { background: rgba(0,0,0,0.7); border: 1px solid #f39c12; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 250px; }
     .pseudo-input::placeholder { color: #666; }
     .btn { padding: 12px 30px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
