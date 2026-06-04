@@ -1641,7 +1641,7 @@ app.post('/course/event', async (req, res) => {
 app.post('/course/terminer', async (req, res) => {
   const { username } = req.body;
   await supabase.from('codes_temp').delete().eq('username', username + '_course');
-  await supabase.from('codes_temp').insert({ username: username + '_course', code: 'course', expire: Date.now() + 86400000 });
+  await supabase.from('codes_temp').insert({ username: username + '_course', code: 'course', expire: Date.now() + 21600000 });
   res.json({ success: true });
 });
 
