@@ -1568,7 +1568,7 @@ app.get('/course', (req, res) => {
       document.getElementById('event-desc').textContent = 'Tu as traverse toutes les iles du Grand Line !';
       document.getElementById('event-result').textContent = 'Berrys totaux : ' + berrys.toLocaleString();
       document.getElementById('event-result').style.color = '#ffd700';
-      document.getElementById('actions-box').innerHTML = '<button class="btn btn-gold" onclick="location.reload()">&#x1F504; Recommencer demain !</button>';
+      document.getElementById('actions-box').innerHTML = '<button class="btn btn-gold" onclick="location.reload()">&#x1F504; Reviens dans 6h !</button>';
       document.getElementById('progress-fill').style.width = '100%';
       document.getElementById('etape-label').textContent = 'AVENTURE TERMINEE !';
     }
