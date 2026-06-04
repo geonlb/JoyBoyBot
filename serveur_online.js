@@ -1959,6 +1959,10 @@ app.get('/combat', (req, res) => {
 
     init();
   </script>
+<audio id="bg-music" src="/persos/combatpirateson.mp3" loop></audio>
+  <script>
+    document.getElementById('bg-music').play().catch(e => {});
+  </script>
 </body>
 </html>`);
 });
