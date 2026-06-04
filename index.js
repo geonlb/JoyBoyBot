@@ -99,7 +99,7 @@ let dernierTopPrime = 0;
 const codesTemp = {};
 const COOLDOWN_TOPPRIME = 120000;
 let dernierFruitGlobal = 0;
-const COOLDOWN_FRUIT_GLOBAL = 10000; // 10 secondes
+const COOLDOWN_FRUIT_GLOBAL = 300000; // 5minutes
 let dernierDispo = 0;
 const COOLDOWN_DISPO = 300000; // 5 minutes
  
