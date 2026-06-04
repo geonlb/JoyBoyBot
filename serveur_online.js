@@ -1118,7 +1118,7 @@ app.get('/blackjack', (req, res) => {
       ${req.query.verified === 'true' && req.query.owner ? `
       <div style="background:rgba(0,0,0,0.7);border:1px solid #ffd700;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
       <input type="number" class="mise-input" id="mise" placeholder="Mise (min 50)" min="50">
-      <button class="btn btn-gold" onclick="commencerAuto('${req.query.owner}')">&#x1F3B4; JOUER !</button>` : `
+      <button class="btn btn-gold" onclick="commencerAuto(this.dataset.owner)" data-owner="${req.query.owner}">&#x1F3B4; JOUER !</button>` : `
       <a href="/auth/twitch?username=guest&from=blackjack" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div class="berrys-display" id="berrys-display" style="display:none;">
