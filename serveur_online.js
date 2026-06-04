@@ -1344,7 +1344,7 @@ app.get('/course', (req, res) => {
     .btn-action:hover { box-shadow: 0 0 20px rgba(138,43,226,0.6); transform: scale(1.05); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     .berrys-display { background: rgba(0,0,0,0.8); border: 2px solid #87ceeb; border-radius: 15px; padding: 10px 25px; display: inline-block; margin-bottom: 20px; font-family: 'Cinzel', serif; font-size: 18px; color: #87ceeb; }
-    .ocean { background: linear-gradient(180deg, #001a3a, #002855); border-radius: 20px; padding: 20px; margin: 20px 0; position: relative; overflow: hidden; height: 180px; border: 3px solid #f39c12; box-shadow: 0 0 30px rgba(243,156,18,0.3); }
+    .ocean { background: linear-gradient(180deg, #001a3a, #002855); border-radius: 20px; padding: 20px; margin: 20px 0; position: relative; overflow: hidden; height: 180px; border: 3px solid #f39c12; box-shadow: 0 0 30px rgba(243,156,18,0.3); z-index: 2; }
     .waves { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(180deg, transparent, rgba(0,100,200,0.4)); animation: waveAnim 2s infinite ease-in-out; }
     .waves2 { position: absolute; bottom: 10px; left: 0; right: 0; height: 40px; background: linear-gradient(180deg, transparent, rgba(0,150,255,0.3)); animation: waveAnim 2.5s infinite ease-in-out reverse; }
     @keyframes waveAnim { 0%, 100% { transform: translateX(-10px) scaleY(1); } 50% { transform: translateX(10px) scaleY(1.1); } }
