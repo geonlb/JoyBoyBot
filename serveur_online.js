@@ -1354,10 +1354,10 @@ app.get('/course', (req, res) => {
       { type: 'tresor', icon: '&#x1F4B0;', titre: 'Tresor Decouverts !', desc: 'Ton equipage a trouve un coffre au fond des mers !', gain: 300, couleur: '#ffd700' },
       { type: 'combat_win', icon: '&#x2694;&#xFE0F;', titre: 'Victoire au Combat !', desc: 'Tu as vaincu un pirate rival et recupere son butin !', gain: 200, couleur: '#2ecc71' },
       { type: 'fruit', icon: '&#x1F34E;', titre: 'Fruit du Demon !', desc: 'Un fruit mysterieux flottait sur l ocean !', gain: -1, couleur: '#ffffff' },
-      { type: 'marine', icon: '&#x1F6A8;', titre: 'Embuscade de la Marine !', desc: 'La Marine t a intercepte et confisque une partie de ton butin !', gain: -150, couleur: '#e74c3c' },
+      { type: 'marine', icon: '&#x1F6A8;', titre: 'Embuscade de la Marine !', desc: 'La Marine t a intercepte et confisque une partie de ton butin !', gain: -100, couleur: '#e74c3c' },
       { type: 'tempete', icon: '&#x1F32A;', titre: 'Tempete Violente !', desc: 'Une terrible tempete a frappe ton bateau, tu perds du temps mais continues ta route !', gain: 0, couleur: '#3498db' },
       { type: 'allie', icon: '&#x1F91D;', titre: 'Rencontre un Allie !', desc: 'Un equipage ami partage son butin avec toi !', gain: 150, couleur: '#87ceeb' },
-      { type: 'jackpot', icon: '&#x1F451;', titre: 'ONE PIECE TROUVE !', desc: 'Tu as atteint Raftel et decouvert le legendaire One Piece !', gain: 1000, couleur: '#ff0000' }
+      { type: 'jackpot', icon: '&#x1F451;', titre: 'ONE PIECE TROUVE !', desc: 'Tu as atteint Raftel et decouvert le legendaire One Piece !', gain: 2000, couleur: '#ff0000' }
     ];
 
     let pseudo = '', berrys = 0, etapeActuelle = 0, jeuEnCours = false;
@@ -1529,9 +1529,9 @@ app.post('/course/event', async (req, res) => {
   let newBerrys = primeData.berrys;
   let fruit = null;
   if (gain === -1) {
-    const fruitsListe = ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku', 'Yomi-Yomi', 'Bara-Bara'];
+    const fruitsListe = ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'];
     fruit = fruitsListe[Math.floor(Math.random() * fruitsListe.length)];
-    await supabase.from('collection').insert({ username, fruit, rarete: 'Commun' });
+    await supabase.from('collection').insert({ username, fruit, rarete: 'Rare' });
   } else if (gain !== 0) {
     newBerrys = Math.max(0, newBerrys + gain);
     await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
