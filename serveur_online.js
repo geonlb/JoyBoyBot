@@ -1860,7 +1860,7 @@ app.get('/combat', (req, res) => {
 
     function showEffect(emoji) {
       const el = document.getElementById('effect');
-      el.textContent = emoji;
+      el.innerHTML = emoji;
       el.style.display = 'block';
       setTimeout(() => { el.style.display = 'none'; }, 800);
     }
@@ -1942,7 +1942,7 @@ app.get('/combat', (req, res) => {
       const box = document.getElementById('result-box');
       box.style.border = victoire ? '3px solid #ffd700' : '3px solid #e74c3c';
       box.style.boxShadow = victoire ? '0 0 30px rgba(255,215,0,0.4)' : '0 0 30px rgba(231,76,60,0.4)';
-      document.getElementById('result-title').textContent = victoire ? '&#x1F3C6; VICTOIRE !' : '&#x1F480; DEFAITE !';
+      document.getElementById('result-title').innerHTML = victoire ? '&#x1F3C6; VICTOIRE !' : '&#x1F480; DEFAITE !';
       document.getElementById('result-title').style.color = victoire ? '#ffd700' : '#e74c3c';
       document.getElementById('result-gain').textContent = victoire ? '+' + ennemiActuel.gain + ' Berrys !' : '-' + Math.floor(ennemiActuel.gain * 0.3) + ' Berrys...';
       document.getElementById('result-gain').style.color = victoire ? '#ffd700' : '#e74c3c';
