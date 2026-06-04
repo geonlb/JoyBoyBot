@@ -1581,7 +1581,7 @@ app.get('/course/infos', async (req, res) => {
   if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable ! Tu dois etre enregistre sur le stream.' });
   const { data: courseRows } = await supabase.from('codes_temp').select('expire').eq('username', username + '_course');
   const courseData = courseRows && courseRows.length > 0 ? courseRows[0] : null;
-  const cooldown = courseData && Date.now() < parseInt(courseData.expire);
+  const cooldown = false;
   const restant = cooldown ? Math.ceil((parseInt(courseData.expire) - Date.now()) / 3600000) : 0;
   res.json({ berrys: primeData.berrys, cooldown, restant });
 });
