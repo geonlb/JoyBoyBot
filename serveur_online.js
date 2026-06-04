@@ -1282,6 +1282,27 @@ app.get('/blackjack', (req, res) => {
       commencer();
     }
   </script>
+<div style="position:fixed;bottom:20px;right:20px;z-index:9999;">
+    <button id="music-btn" onclick="toggleMusic()" style="background:rgba(0,0,0,0.85);border:2px solid #ffd700;color:white;width:55px;height:55px;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 0 20px rgba(255,215,0,0.6);transition:all 0.3s;display:flex;align-items:center;justify-content:center;">&#x1F507;</button>
+  </div>
+  <audio id="bg-music" src="/persos/sonblackjack.mp3" loop></audio>
+  <script>
+    let playing = false;
+    function toggleMusic() {
+      const music = document.getElementById('bg-music');
+      const btn = document.getElementById('music-btn');
+      if (playing) {
+        music.pause();
+        btn.innerHTML = '&#x1F507;';
+        btn.style.borderColor = '#ffd700';
+      } else {
+        music.play();
+        btn.innerHTML = '&#x1F3B5;';
+        btn.style.borderColor = '#87ceeb';
+      }
+      playing = !playing;
+    }
+  </script>
 </body>
 </html>`);
 });
