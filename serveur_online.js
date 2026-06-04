@@ -1353,7 +1353,7 @@ app.get('/course', (req, res) => {
     const events = [
       { type: 'tresor', icon: '&#x1F4B0;', titre: 'Tresor Decouverts !', desc: 'Ton equipage a trouve un coffre au fond des mers !', gain: 300, couleur: '#ffd700' },
       { type: 'combat_win', icon: '&#x2694;&#xFE0F;', titre: 'Victoire au Combat !', desc: 'Tu as vaincu un pirate rival et recupere son butin !', gain: 200, couleur: '#2ecc71' },
-      { type: 'fruit', icon: '&#x1F34E;', titre: 'Fruit du Demon !', desc: 'Un fruit mysterieux flottait sur l\'eau !', gain: -1, couleur: '#ffffff' },
+      { type: 'fruit', icon: '&#x1F34E;', titre: 'Fruit du Demon !', desc: 'Un fruit mysterieux flottait sur l ocean !', gain: -1, couleur: '#ffffff' },
       { type: 'marine', icon: '&#x1F6A8;', titre: 'Embuscade de la Marine !', desc: 'La Marine t\'a intercepte et confisque une partie de ton butin !', gain: -150, couleur: '#e74c3c' },
       { type: 'tempete', icon: '&#x1F32A;', titre: 'Tempete Violente !', desc: 'Une terrible tempete a frappe ton bateau, tu perds du temps mais continues ta route !', gain: 0, couleur: '#3498db' },
       { type: 'allie', icon: '&#x1F91D;', titre: 'Rencontre un Allie !', desc: 'Un equipage ami partage son butin avec toi !', gain: 150, couleur: '#87ceeb' },
