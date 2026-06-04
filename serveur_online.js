@@ -1438,7 +1438,7 @@ app.get('/course', (req, res) => {
     <div class="setup-box" id="setup-box">
       ${req.query.verified === 'true' && req.query.owner ? `
       <div style="background:rgba(0,0,0,0.7);border:1px solid #87ceeb;color:white;padding:10px 20px;border-radius:25px;font-size:14px;">&#x2705; ${req.query.owner}</div>
-      <button class="btn btn-gold" onclick="commencerAuto(this.dataset.owner)" data-owner="${req.query.owner}">&#x2693; APPAREILLER !</button>` : `
+      <button class="btn btn-gold" onclick="commencerCourse(this.dataset.owner)" data-owner="${req.query.owner}">&#x2693; APPAREILLER !</button>` : `
       <a href="/auth/twitch?username=guest&from=course" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div id="berrys-display" class="berrys-display" style="display:none;">
