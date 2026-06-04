@@ -1268,13 +1268,13 @@ app.get('/course', (req, res) => {
     body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); pointer-events: none; }
     .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; position: relative; z-index: 1; text-align: center; }
     .back-btn { display: inline-block; margin-bottom: 20px; color: #87ceeb; text-decoration: none; font-size: 14px; letter-spacing: 2px; }
-    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #ffd700; letter-spacing: 6px; text-shadow: 0 0 30px rgba(255,215,0,0.8); margin-bottom: 5px; }
-    .subtitle { font-size: 13px; color: #f39c12; letter-spacing: 4px; margin-bottom: 20px; font-weight: bold; }
-    .setup-box { background: rgba(0,0,0,0.8); border: 2px solid #f39c12; border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .title { font-family: 'Cinzel', serif; font-size: 36px; color: #87ceeb; letter-spacing: 6px; text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000; margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #00008b; letter-spacing: 4px; margin-bottom: 20px; font-weight: bold; }
+    .setup-box { background: rgba(0,0,0,0.8); border: 2px solid #87ceeb; border-radius: 15px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; }
     .pseudo-input { background: rgba(0,0,0,0.7); border: 1px solid #f39c12; color: white; padding: 10px 20px; border-radius: 25px; font-size: 14px; outline: none; font-family: 'Exo 2', sans-serif; width: 250px; }
     .pseudo-input::placeholder { color: #666; }
     .btn { padding: 12px 30px; border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 2px; border: none; transition: all 0.3s; }
-    .btn-gold { background: linear-gradient(135deg, #f39c12, #e67e22); color: #000; box-shadow: 0 0 15px rgba(243,156,18,0.4); }
+    .btn-gold { background: linear-gradient(135deg, #2ecc71, #27ae60); color: #000;
     .btn-gold:hover { box-shadow: 0 0 30px rgba(243,156,18,0.8); transform: scale(1.05); }
     .btn-action { background: linear-gradient(135deg, #8a2be2, #4169e1); color: white; margin: 5px; }
     .btn-action:hover { box-shadow: 0 0 20px rgba(138,43,226,0.6); transform: scale(1.05); }
