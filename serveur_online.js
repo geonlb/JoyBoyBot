@@ -1196,7 +1196,7 @@ app.get('/blackjack', (req, res) => {
       if (!cacheDeuxieme) document.getElementById('dealer-score').textContent = 'Score: ' + scoreMain(mainCroupier);
       else document.getElementById('dealer-score').textContent = '';
     }
-async function commencerAuto(p) {
+onclick="commencerCourse(this.dataset.owner)"
       document.getElementById('pseudo') ? document.getElementById('pseudo').value = p : null;
       pseudoActuel = p.toLowerCase();
       const mise = parseInt(document.getElementById('mise').value);
@@ -1493,7 +1493,7 @@ app.get('/course', (req, res) => {
       ).join('');
     }
 
-    async function commencerAuto(p) {
+    async function commencerCourse(p) {
       pseudo = (p || '').toLowerCase();
       const r = await fetch('/course/infos?username=' + pseudo);
       const data = await r.json();
