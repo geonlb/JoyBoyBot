@@ -732,9 +732,6 @@ app.get('/minijeux', (req, res) => {
         <div class="card-gain">&#x1F4B0; Jusqu'a 1500 Berrys</div>
         <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
       </a>
-        <div class="card-desc">Affronte des ennemis légendaires et remporte des Berrys !</div>
-        <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys</div>
-        <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
       </div>
       <a href="/blackjack" class="card">
         <div class="card-icon">&#x1F0CF;</div>
