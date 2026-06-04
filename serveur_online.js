@@ -610,6 +610,28 @@ app.get('/collection/:username', async (req, res) => {
       <button class="coffre-close" onclick="fermerCoffre()">Fermer</button>
     </div>
   </div>
+  <div style="position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;align-items:center;gap:10px;">
+    <span style="font-family:'Oswald',sans-serif;font-size:13px;color:#f39c12;letter-spacing:2px;background:rgba(0,0,0,0.7);padding:5px 12px;border-radius:20px;border:1px solid #f39c12;">NLB</span>
+    <button id="music-btn" onclick="toggleMusic()" style="background:rgba(0,0,0,0.85);border:2px solid #f39c12;color:white;width:55px;height:55px;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 0 20px rgba(243,156,18,0.6);transition:all 0.3s;display:flex;align-items:center;justify-content:center;">&#x1F507;</button>
+  </div>
+  <audio id="bg-music" src="/persos/lacommunlb.mp3" loop></audio>
+  <script>
+    let playing = false;
+    function toggleMusic() {
+      const music = document.getElementById('bg-music');
+      const btn = document.getElementById('music-btn');
+      if (playing) {
+        music.pause();
+        btn.innerHTML = '&#x1F507;';
+        btn.style.borderColor = '#f39c12';
+      } else {
+        music.play();
+        btn.innerHTML = '&#x1F3B5;';
+        btn.style.borderColor = '#87ceeb';
+      }
+      playing = !playing;
+    }
+  </script>
 </body>
 </html>`);
 });
