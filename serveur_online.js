@@ -6,13 +6,14 @@ const { createClient } = require('@supabase/supabase-js');
 const REWARD_ID = '5b62a20f-6679-402f-b5de-f307c3224eb8';
 const BROADCASTER_ID = '122593539';
 const TWITCH_CLIENT_ID = '4wl3wc4mnurd77ctzhl8s8v6gak6yl';
+const IMG = 'https://usbsivjrputwwrohezwk.supabase.co/storage/v1/object/public/images';
 
 const app = express();
 const path = require('path');
 app.use(express.static(path.join(__dirname)));
-app.use('/fruits', express.static(path.join(__dirname, 'fruits')));
-app.use('/persos', express.static(path.join(__dirname, 'persos')));
-app.use('/badges', express.static(path.join(__dirname, 'badges')));
+app.get('/fruits/:file', (req, res) => res.redirect(IMG + '/fruits/' + req.params.file));
+app.get('/persos/:file', (req, res) => res.redirect(IMG + '/persos/' + req.params.file));
+app.get('/badges/:file', (req, res) => res.redirect(IMG + '/badges/' + req.params.file));
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://usbsivjrputwwrohezwk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs';
