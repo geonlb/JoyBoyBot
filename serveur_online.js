@@ -1066,6 +1066,47 @@ app.post('/roulette/jouer', async (req, res) => {
   res.json({ success: true, berrys: newBerrys, fruit });
 });
 
+// ==================== LOG POSE (RECOMPENSE QUOTIDIENNE) ====================
+const DAILY_REWARDS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+const DAY_MS = 86400000; // 24h en millisecondes
+
+app.get('/daily/infos', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys, dernier_daily, daily_streak').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable !' });
+  const now = Date.now();
+  const lastClaim = parseInt(primeData.dernier_daily) || 0;
+  const streak = parseInt(primeData.daily_streak) || 0;
+  const cooldown = lastClaim > 0 && now < lastClaim + DAY_MS;
+  const restantH = cooldown ? Math.ceil((lastClaim + DAY_MS - now) / 3600000) : 0;
+  let prochainJour;
+  if (lastClaim === 0 || now > lastClaim + 2 * DAY_MS || streak >= 11) prochainJour = 1;
+  else prochainJour = streak + 1;
+  res.json({ berrys: primeData.berrys, cooldown, restantH, streakActuel: streak, prochainJour, prochaineRecompense: DAILY_REWARDS[prochainJour - 1], rewards: DAILY_REWARDS });
+});
+
+app.post('/daily/claim', async (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data: primeData } = await supabase.from('primes').select('berrys, dernier_daily, daily_streak').eq('username', username).single();
+  if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable !' });
+  const now = Date.now();
+  const lastClaim = parseInt(primeData.dernier_daily) || 0;
+  const streak = parseInt(primeData.daily_streak) || 0;
+  if (lastClaim > 0 && now < lastClaim + DAY_MS) {
+    const restantH = Math.ceil((lastClaim + DAY_MS - now) / 3600000);
+    return res.status(400).json({ error: 'Reviens dans ' + restantH + 'h pour ton prochain Log Pose !' });
+  }
+  let newStreak;
+  if (lastClaim === 0 || now > lastClaim + 2 * DAY_MS || streak >= 11) newStreak = 1;
+  else newStreak = streak + 1;
+  const reward = DAILY_REWARDS[newStreak - 1];
+  const newBerrys = primeData.berrys + reward;
+  await supabase.from('primes').update({ berrys: newBerrys, dernier_daily: now, daily_streak: newStreak }).eq('username', username);
+  res.json({ success: true, reward, berrys: newBerrys, streak: newStreak });
+});
+
 // ==================== BLACKJACK ====================
 app.get('/blackjack', (req, res) => {
   res.send(`<!DOCTYPE html>
