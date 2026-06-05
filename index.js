@@ -8,12 +8,12 @@ const OBSWebSocket = require('obs-websocket-js').default;
 const obs = new OBSWebSocket();
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(
-  'https://usbsivjrputwwrohezwk.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs'
-);
+     'https://usbsivjrputwwrohezwk.supabase.co',
+     process.env.SUPABASE_KEY
+   );
  
 // Connexion OBS
-obs.connect('ws://localhost:4455', 'XsTEosj4q37LH4nF').catch(err => {
+obs.connect('ws://localhost:4455', process.env.OBS_PASSWORD).catch(err => {
   console.log('OBS non connecté:', err.message);
 });
  
@@ -113,7 +113,7 @@ const videos = {
 // Configuration
 const config = {
   BOT_USERNAME: 'JoyBoy_Bot',
-  BOT_TOKEN: 'oauth:tu316qr4o2dsrjjxsqk4amjuwjs9we',
+  BOT_TOKEN: BOT_TOKEN: process.env.BOT_TOKEN,
   CHANNEL: 'NeyLaBrise',
   STREAMER: 'NeyLaBrise'
 };

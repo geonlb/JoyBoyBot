@@ -17,13 +17,14 @@ app.use('/badges', express.static(path.join(__dirname, 'badges')));
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://usbsivjrputwwrohezwk.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzYnNpdmpycHV0d3dyb2hlendrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDExOTM1MSwiZXhwIjoyMDk1Njk1MzUxfQ.UNf-rdDBD0MocGrQW4tzNAW3ksqgR__Zg3b1PwsDlPs';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+console.log('DEBUG secret:', process.env.CLIENT_SECRET ? 'present, longueur=' + process.env.CLIENT_SECRET.length : 'ABSENT');
 
 const CLIENT_ID = process.env.CLIENT_ID || '4wl3wc4mnurd77ctzhl8s8v6gak6yl';
 let ACCESS_TOKEN = process.env.ACCESS_TOKEN || '9w76c932djulze7uhrqdwjbk4d5fnn';
 
 async function refreshToken() {
   try {
-    const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: TWITCH_CLIENT_ID, client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq', grant_type: 'client_credentials' } });
+    const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: TWITCH_CLIENT_ID, client_secret: process.env.CLIENT_SECRET, grant_type: 'client_credentials' } });
     ACCESS_TOKEN = t.data.access_token;
     console.log('Token Twitch renouvele !');
   } catch (e) { console.log('Erreur refresh token:', e.message); }
