@@ -101,7 +101,54 @@ app.get('/', (req, res) => {
       </a>
     </div>
     <div class="footer"><p>&#x1F3F4; NeyLaBrise — Mis a jour en temps reel &#x1F3F4;</p></div>
-  </div>
+  <style>
+@keyframes lpPulse { 0%{transform:scale(1);opacity:0.6;} 80%{transform:scale(2);opacity:0;} 100%{opacity:0;} }
+.lp-pulse{position:absolute;inset:0;border-radius:50%;background:#87ceeb;animation:lpPulse 2s ease-out infinite;pointer-events:none;}
+#logpose-bag:hover > div { box-shadow:0 0 30px rgba(135,206,235,0.9) !important; }
+</style>
+<div id="logpose-bag" onclick="toggleLogPose()" style="position:fixed;bottom:20px;left:20px;z-index:9999;width:60px;height:60px;cursor:pointer;">
+  <span class="lp-pulse"></span>
+  <span class="lp-pulse" style="animation-delay:1s;"></span>
+  <div style="position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#8a2be2,#4169e1);border:2px solid #87ceeb;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 20px rgba(135,206,235,0.6);transition:box-shadow 0.3s;">&#x1F4B0;</div>
+  <span id="lp-badge" style="position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#ff4655;color:white;font-size:13px;font-weight:bold;display:none;align-items:center;justify-content:center;border:2px solid #050510;">!</span>
+</div>
+<div id="logpose-panel" style="position:fixed;bottom:90px;left:20px;z-index:9999;width:280px;background:rgba(0,0,0,0.92);border:1px solid #8a2be2;border-radius:16px;padding:18px;display:none;box-shadow:0 0 30px rgba(138,43,226,0.5);font-family:'Exo 2',sans-serif;">
+  <div id="lp-content">Chargement...</div>
+</div>
+<script>
+(function(){
+  var REWARDS = [50,100,200,300,400,500,600,700,800,900,1000];
+  var params = new URLSearchParams(window.location.search);
+  var verified = params.get('verified') === 'true';
+  var owner = params.get('owner');
+  var currentUser = (verified && owner) ? owner : null;
+  window.toggleLogPose = function(){ var p = document.getElementById('logpose-panel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; };
+  function ladderHTML(h){ var c=''; for(var i=0;i<REWARDS.length;i++){ var d=i+1,n=d===h,bg=n?'#8a2be2':'rgba(255,255,255,0.06)',co=n?'#fff':'#888',bo=n?'#87ceeb':'rgba(255,255,255,0.1)'; c+='<div style="border:1px solid '+bo+';background:'+bg+';border-radius:8px;padding:4px 2px;text-align:center;"><div style="font-size:10px;font-weight:bold;color:'+co+';">J'+d+'</div><div style="font-size:10px;color:'+(n?'#cbe6f7':'#777')+';">'+REWARDS[i]+'</div></div>'; } return '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:12px 0;">'+c+'</div>'; }
+  function header(){ return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:20px;">&#x1F9ED;</span><span style="font-weight:bold;font-size:15px;color:#87ceeb;">Log Pose journalier</span></div>'; }
+  function render(){
+    var c=document.getElementById('lp-content'), badge=document.getElementById('lp-badge');
+    if(!currentUser){ c.innerHTML=header()+'<p style="font-size:13px;color:#bbb;line-height:1.5;margin-bottom:14px;">Connecte-toi avec Twitch pour reclamer ta recompense quotidienne en Berrys !</p><a href="/auth/twitch?username=guest&from=accueil" style="display:block;text-align:center;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;padding:10px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch</a>'; return; }
+    fetch('/daily/infos?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}).then(function(d){
+      if(d.error){ c.innerHTML=header()+'<p style="font-size:13px;color:#ffd479;">'+d.error+'</p>'; return; }
+      var html=header();
+      if(d.cooldown){ if(badge)badge.style.display='none'; html+='<p style="font-size:13px;color:#bbb;margin-bottom:4px;">Tu as deja recupere ton Log Pose !</p><p style="font-size:13px;color:#87ceeb;margin-bottom:2px;">Reviens dans <b>'+d.restantH+'h</b> pour continuer ta serie.</p>'+ladderHTML(d.prochainJour)+'<p style="font-size:11px;color:#777;text-align:center;">Serie actuelle : jour '+d.streakActuel+'</p>'; }
+      else { if(badge)badge.style.display='flex'; html+='<div style="text-align:center;margin-bottom:2px;"><span style="font-size:28px;font-weight:bold;color:#fff;">+'+d.prochaineRecompense+'</span> <span style="font-size:13px;color:#aaa;">Berrys</span></div><p style="font-size:12px;color:#87ceeb;text-align:center;">Jour '+d.prochainJour+' de ta serie</p>'+ladderHTML(d.prochainJour)+'<button id="lp-claim" style="width:100%;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;border:none;border-radius:12px;padding:11px;font-size:15px;font-weight:bold;cursor:pointer;">Recuperer mon Log Pose</button>'; }
+      c.innerHTML=html; var b=document.getElementById('lp-claim'); if(b)b.addEventListener('click',claim);
+    }).catch(function(){ c.innerHTML=header()+'<p style="font-size:13px;color:#f88;">Erreur de connexion, reessaie.</p>'; });
+  }
+  function claim(){
+    var b=document.getElementById('lp-claim'); if(b){b.disabled=true;b.textContent='...';}
+    fetch('/daily/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})}).then(function(r){return r.json();}).then(function(d){
+      if(d.error){ render(); return; }
+      var c=document.getElementById('lp-content'), badge=document.getElementById('lp-badge'); if(badge)badge.style.display='none';
+      c.innerHTML='<div style="text-align:center;padding:10px 0;"><div style="font-size:34px;margin-bottom:6px;">&#x1F4B0;</div><p style="font-size:18px;font-weight:bold;color:#87ceeb;margin-bottom:4px;">+'+d.reward+' Berrys !</p><p style="font-size:13px;color:#bbb;">Serie : jour '+d.streak+' &#x2022; Total : '+d.berrys.toLocaleString()+'</p><p style="font-size:12px;color:#777;margin-top:8px;">Reviens demain pour continuer !</p></div>';
+    }).catch(function(){ render(); });
+  }
+  render();
+  if(verified && owner){ document.getElementById('logpose-panel').style.display='block'; }
+})();
+</script>
+    </div>
   <script>
     function goCollection() {
       const pseudo = document.getElementById('pseudo').value.trim();
@@ -651,103 +698,6 @@ app.get('/collection/:username', async (req, res) => {
       playing = !playing;
     }
   </script>
-  <style>
-@keyframes lpPulse { 0%{transform:scale(1);opacity:0.6;} 80%{transform:scale(2);opacity:0;} 100%{opacity:0;} }
-.lp-pulse{position:absolute;inset:0;border-radius:50%;background:#87ceeb;animation:lpPulse 2s ease-out infinite;pointer-events:none;}
-#logpose-bag:hover > div { box-shadow:0 0 30px rgba(135,206,235,0.9) !important; }
-</style>
-<div id="logpose-bag" onclick="toggleLogPose()" style="position:fixed;bottom:20px;left:20px;z-index:9999;width:60px;height:60px;cursor:pointer;">
-  <span class="lp-pulse"></span>
-  <span class="lp-pulse" style="animation-delay:1s;"></span>
-  <div style="position:absolute;inset:0;border-radius:50%;background:linear-gradient(135deg,#8a2be2,#4169e1);border:2px solid #87ceeb;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 0 20px rgba(135,206,235,0.6);transition:box-shadow 0.3s;">&#x1F4B0;</div>
-  <span id="lp-badge" style="position:absolute;top:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:#ff4655;color:white;font-size:13px;font-weight:bold;display:none;align-items:center;justify-content:center;border:2px solid #050510;">!</span>
-</div>
-<div id="logpose-panel" style="position:fixed;bottom:90px;left:20px;z-index:9999;width:280px;background:rgba(0,0,0,0.92);border:1px solid #8a2be2;border-radius:16px;padding:18px;display:none;box-shadow:0 0 30px rgba(138,43,226,0.5);font-family:'Exo 2',sans-serif;">
-  <div id="lp-content">Chargement...</div>
-</div>
-<script>
-(function(){
-  var REWARDS = [50,100,200,300,400,500,600,700,800,900,1000];
-  var params = new URLSearchParams(window.location.search);
-  var verified = params.get('verified') === 'true';
-  var owner = params.get('owner');
-  var currentUser = (verified && owner) ? owner : null;
-
-  window.toggleLogPose = function(){
-    var p = document.getElementById('logpose-panel');
-    p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-  };
-
-  function ladderHTML(highlightDay){
-    var chips = '';
-    for (var i=0;i<REWARDS.length;i++){
-      var day = i+1;
-      var isNext = day === highlightDay;
-      var bg = isNext ? '#8a2be2' : 'rgba(255,255,255,0.06)';
-      var col = isNext ? '#fff' : '#888';
-      var bord = isNext ? '#87ceeb' : 'rgba(255,255,255,0.1)';
-      chips += '<div style="border:1px solid '+bord+';background:'+bg+';border-radius:8px;padding:4px 2px;text-align:center;">'
-        + '<div style="font-size:10px;font-weight:bold;color:'+col+';">J'+day+'</div>'
-        + '<div style="font-size:10px;color:'+(isNext?'#cbe6f7':'#777')+';">'+REWARDS[i]+'</div></div>';
-    }
-    return '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:12px 0;">'+chips+'</div>';
-  }
-
-  function header(){
-    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:20px;">&#x1F9ED;</span><span style="font-weight:bold;font-size:15px;color:#87ceeb;">Log Pose journalier</span></div>';
-  }
-
-  function render(){
-    var c = document.getElementById('lp-content');
-    var badge = document.getElementById('lp-badge');
-    if (!currentUser){
-      c.innerHTML = header()
-        + '<p style="font-size:13px;color:#bbb;line-height:1.5;margin-bottom:14px;">Connecte-toi avec Twitch pour reclamer ta recompense quotidienne en Berrys !</p>'
-        + '<a href="/auth/twitch?username=guest&from=accueil" style="display:block;text-align:center;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;padding:10px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch</a>';
-      return;
-    }
-    fetch('/daily/infos?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}).then(function(d){
-      if (d.error){ c.innerHTML = header()+'<p style="font-size:13px;color:#ffd479;">'+d.error+'</p>'; return; }
-      var html = header();
-      if (d.cooldown){
-        if (badge) badge.style.display = 'none';
-        html += '<p style="font-size:13px;color:#bbb;margin-bottom:4px;">Tu as deja recupere ton Log Pose !</p>'
-          + '<p style="font-size:13px;color:#87ceeb;margin-bottom:2px;">Reviens dans <b>'+d.restantH+'h</b> pour continuer ta serie.</p>'
-          + ladderHTML(d.prochainJour)
-          + '<p style="font-size:11px;color:#777;text-align:center;">Serie actuelle : jour '+d.streakActuel+'</p>';
-      } else {
-        if (badge) badge.style.display = 'flex';
-        html += '<div style="text-align:center;margin-bottom:2px;"><span style="font-size:28px;font-weight:bold;color:#fff;">+'+d.prochaineRecompense+'</span> <span style="font-size:13px;color:#aaa;">Berrys</span></div>'
-          + '<p style="font-size:12px;color:#87ceeb;text-align:center;">Jour '+d.prochainJour+' de ta serie</p>'
-          + ladderHTML(d.prochainJour)
-          + '<button id="lp-claim" style="width:100%;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;border:none;border-radius:12px;padding:11px;font-size:15px;font-weight:bold;cursor:pointer;">Recuperer mon Log Pose</button>';
-      }
-      c.innerHTML = html;
-      var btn = document.getElementById('lp-claim');
-      if (btn) btn.addEventListener('click', claim);
-    }).catch(function(){ c.innerHTML = header()+'<p style="font-size:13px;color:#f88;">Erreur de connexion, reessaie.</p>'; });
-  }
-
-  function claim(){
-    var btn = document.getElementById('lp-claim');
-    if (btn){ btn.disabled = true; btn.textContent = '...'; }
-    fetch('/daily/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})}).then(function(r){return r.json();}).then(function(d){
-      if (d.error){ render(); return; }
-      var c = document.getElementById('lp-content');
-      var badge = document.getElementById('lp-badge');
-      if (badge) badge.style.display = 'none';
-      c.innerHTML = '<div style="text-align:center;padding:10px 0;">'
-        + '<div style="font-size:34px;margin-bottom:6px;">&#x1F4B0;</div>'
-        + '<p style="font-size:18px;font-weight:bold;color:#87ceeb;margin-bottom:4px;">+'+d.reward+' Berrys !</p>'
-        + '<p style="font-size:13px;color:#bbb;">Serie : jour '+d.streak+' &#x2022; Total : '+d.berrys.toLocaleString()+'</p>'
-        + '<p style="font-size:12px;color:#777;margin-top:8px;">Reviens demain pour continuer !</p></div>';
-    }).catch(function(){ render(); });
-  }
-
-  render();
-  if (verified && owner){ document.getElementById('logpose-panel').style.display = 'block'; }
-})();
-</script>
 </body>
 </html>`);
 });
