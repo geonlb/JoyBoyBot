@@ -232,7 +232,7 @@ app.post('/eventsub', async (req, res) => {
 
 async function enregistrerEventSub() {
   try {
-    const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: TWITCH_CLIENT_ID, client_secret: 'pher47e2e37jw51ygtxphw5dyjo5rq', grant_type: 'client_credentials' } });
+    const t = await axios.post('https://id.twitch.tv/oauth2/token', null, { params: { client_id: TWITCH_CLIENT_ID, client_secret: 'process.env.CLIENT_SECRET', grant_type: 'client_credentials' } });
     await axios.post('https://api.twitch.tv/helix/eventsub/subscriptions', { type: 'channel.channel_points_custom_reward_redemption.add', version: '1', condition: { broadcaster_user_id: BROADCASTER_ID, reward_id: REWARD_ID }, transport: { method: 'webhook', callback: 'https://joyboybot-web.onrender.com/eventsub', secret: 'joyboybotsecret123' } }, { headers: { 'Client-ID': TWITCH_CLIENT_ID, 'Authorization': 'Bearer ' + t.data.access_token, 'Content-Type': 'application/json' } });
     console.log('EventSub enregistre !');
   } catch (err) { console.log('EventSub erreur:', err.response?.data || err.message); }
