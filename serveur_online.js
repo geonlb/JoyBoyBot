@@ -1140,6 +1140,18 @@ app.post('/eveil/genre', async (req, res) => {
   res.json({ success: true });
 });
 
+// Choisir son fruit (definitif)
+app.post('/eveil/fruit', async (req, res) => {
+  const { username, fruit } = req.body;
+  if (!username || !fruit) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: joueur } = await supabase.from('eveil_joueurs').select('fruit').eq('username', u).single();
+  if (!joueur) return res.status(400).json({ error: 'Cree ton personnage d\'abord !' });
+  if (joueur.fruit) return res.status(400).json({ error: 'Tu as deja choisi ton fruit !' });
+  await supabase.from('eveil_joueurs').update({ fruit, stade: 1, niveau: 1, xp: 0, pv_actuels: 100 }).eq('username', u);
+  res.json({ success: true });
+});
+
 // La page du RPG
 app.get('/eveil', (req, res) => {
   const verified = req.query.verified === 'true';
@@ -1186,6 +1198,55 @@ app.get('/eveil', (req, res) => {
     var owner = params.get('owner');
     var currentUser = (verified && owner) ? owner.toLowerCase() : null;
     var IMG = '${EVEIL_IMG}';
+    var FRUITS = [
+      { id:'lave',   nom:'Laviana no NLB',  img:'laviana-no-nlb',  emoji:'🌋', couleur:'#e74c3c', element:'Lave',  fort:'Givre', faible:'Roche' },
+      { id:'marin',  nom:'Watame no NLB',   img:'watame-no-nlb',   emoji:'🌊', couleur:'#3498db', element:'Marin', fort:'Nuage', faible:'Givre' },
+      { id:'nuage',  nom:'Brisa no NLB',    img:'brisa-no-nlb',    emoji:'☁️', couleur:'#bdc3c7', element:'Nuage', fort:'Roche', faible:'Marin' },
+      { id:'roche',  nom:'Stoko no NLB',    img:'stoko-no-nlb',    emoji:'🪨', couleur:'#d4a017', element:'Roche', fort:'Lave',  faible:'Nuage' },
+      { id:'givre',  nom:'Arlio no NLB',    img:'arlio-no-nlb',    emoji:'❄️', couleur:'#5dade2', element:'Givre', fort:'Marin', faible:'Lave' },
+      { id:'neant',  nom:'Neyarole no NLB', img:'neyarole-no-nlb', emoji:'🌑', couleur:'#8e44ad', element:'Neant', fort:'Marin + Roche', faible:'les 4 autres (high risk)' }
+    ];
+
+    function ecranTempleIntro(){
+      document.getElementById('content').innerHTML =
+        '<div class="panel"><div style="font-size:60px;margin-bottom:15px;">🏛️</div>'
+        + '<p class="intro-text">Tu pousses la lourde porte de pierre d\\'un temple oublie au cceur d\\'une ile deserte...<br><br>Dans une salle secrete baignee d\\'une lueur etrange, six fruits du demon en forme d\\'oeuf reposent sur des piedestaux. L\\'un d\\'eux t\\'appelle.<br><br><b style="color:#ffd479;">Choisis bien : ce fruit sera ton partenaire pour toute l\\'aventure.</b></p>'
+        + '<button class="connect-btn" style="border:none;cursor:pointer;" onclick="ecranOeufs()">Entrer dans la salle secrete</button></div>';
+    }
+
+    function ecranOeufs(){
+      var cards = '';
+      for (var i=0;i<FRUITS.length;i++){
+        var f = FRUITS[i];
+        cards += '<div class="genre-card" style="width:260px;border-color:'+f.couleur+'44;" onclick="confirmerFruit(\\''+f.id+'\\')">'
+          + '<img src="'+IMG+'/monstres/'+f.img+'.png" alt="'+f.nom+'" style="width:150px;height:150px;">'
+          + '<div class="genre-nom" style="color:'+f.couleur+';font-size:16px;">'+f.emoji+' '+f.nom+'</div>'
+          + '<div style="font-size:13px;color:#ccc;margin-top:8px;">Element : <b style="color:'+f.couleur+';">'+f.element+'</b></div>'
+          + '<div style="font-size:12px;color:#2ecc71;margin-top:4px;">💪 Fort vs '+f.fort+'</div>'
+          + '<div style="font-size:12px;color:#e74c3c;">⚠️ Faible vs '+f.faible+'</div>'
+          + '</div>';
+      }
+      document.getElementById('content').innerHTML =
+        '<p class="intro-text" style="margin-bottom:25px;">Les six oeufs reposent devant toi. Lequel choisis-tu, Eveilleur ?</p>'
+        + '<div class="genre-grid">'+cards+'</div>';
+    }
+
+    function confirmerFruit(id){
+      var f = null;
+      for (var i=0;i<FRUITS.length;i++){ if(FRUITS[i].id===id) f=FRUITS[i]; }
+      if(!f) return;
+      if(!confirm('Choisir ' + f.nom + ' (' + f.element + ') ? Ce choix est DEFINITIF !')) return;
+      fetch('/eveil/fruit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,fruit:id})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          document.getElementById('content').innerHTML =
+            '<div class="panel"><div style="font-size:70px;margin-bottom:10px;">'+f.emoji+'</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:26px;color:'+f.couleur+';margin-bottom:10px;">'+f.nom+'</div>'
+            + '<p class="intro-text">L\\'oeuf se met a vibrer entre tes mains... Ton aventure d\\'Eveilleur commence !<br><br>(La suite : faire eclore et evoluer ton fruit, bientot !)</p></div>';
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
 
     function ecranConnexion(){
       document.getElementById('content').innerHTML =
@@ -1207,7 +1268,7 @@ app.get('/eveil', (req, res) => {
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
-          document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Parfait ! Ton aventure commence...<br><br>(La suite : le temple et le choix de ton fruit, bientot !)</p></div>';
+          ecranTempleIntro();
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -1218,7 +1279,8 @@ app.get('/eveil', (req, res) => {
         .then(function(r){return r.json();})
         .then(function(d){
           if(!d.joueur){ ecranChoixGenre(); }
-          else { document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Te revoila, '+currentUser+' ! Ton aventure est en cours.<br><br>(La suite arrive bientot !)</p></div>'; }
+          else if(!d.joueur.fruit){ ecranTempleIntro(); }
+          else { document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Te revoila, '+currentUser+' ! Ton fruit : '+d.joueur.fruit+'.<br><br>(La suite arrive bientot !)</p></div>'; }
         })
         .catch(function(){ document.getElementById('content').innerHTML = '<div class="panel"><p class="loading">Erreur de connexion.</p></div>'; });
     }
