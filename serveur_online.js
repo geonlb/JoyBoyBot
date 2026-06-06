@@ -1152,6 +1152,64 @@ app.post('/eveil/fruit', async (req, res) => {
   res.json({ success: true });
 });
 
+// Donnees de progression (lignees d'evolution + courbe XP)
+const EVEIL_LIGNEES = {
+  lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
+  marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'] },
+  nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'] },
+  roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'] },
+  givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'] },
+  neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'] }
+};
+const EVEIL_ECLOSION_XP = 50;        // XP pour faire eclore l'oeuf
+const EVEIL_EVO_ADO = 15;            // niveau pour passer ado (stade 3)
+const EVEIL_EVO_FINAL = 35;          // niveau pour la forme finale (stade 4)
+
+// XP necessaire pour passer du niveau N au niveau N+1 (courbe progressive)
+function xpPourNiveau(niveau) { return 80 + (niveau - 1) * 40 + Math.floor(Math.pow(niveau, 1.7)); }
+
+// Calcule le stade selon le niveau et l'eclosion
+function calculerStade(eclos, niveau) {
+  if (!eclos) return 1;            // oeuf pas encore eclos
+  if (niveau >= EVEIL_EVO_FINAL) return 4;
+  if (niveau >= EVEIL_EVO_ADO) return 3;
+  return 2;                        // bebe
+}
+
+// Ajouter de l'XP a un joueur (gere eclosion, level up, evolution)
+app.post('/eveil/gagner-xp', async (req, res) => {
+  const { username, montant } = req.body;
+  if (!username || !montant) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+
+  let xp = (j.xp || 0) + parseInt(montant);
+  let niveau = j.niveau || 1;
+  let eclos = j.stade >= 2; // si stade >= 2, l'oeuf est deja eclos
+  const events = [];
+
+  // Eclosion de l'oeuf
+  if (!eclos) {
+    if (xp >= EVEIL_ECLOSION_XP) { eclos = true; niveau = 1; xp = xp - EVEIL_ECLOSION_XP; events.push('eclosion'); }
+  }
+
+  // Montees de niveau (si eclos)
+  if (eclos) {
+    while (xp >= xpPourNiveau(niveau)) {
+      xp -= xpPourNiveau(niveau);
+      niveau++;
+      events.push('niveau');
+      if (niveau === EVEIL_EVO_ADO) events.push('evo3');
+      if (niveau === EVEIL_EVO_FINAL) events.push('evo4');
+    }
+  }
+
+  const stade = calculerStade(eclos, niveau);
+  await supabase.from('eveil_joueurs').update({ xp, niveau, stade }).eq('username', u);
+  res.json({ success: true, xp, niveau, stade, events, prochainNiveauXp: xpPourNiveau(niveau) });
+});
+
 // La page du RPG
 app.get('/eveil', (req, res) => {
   const verified = req.query.verified === 'true';
@@ -1182,6 +1240,7 @@ app.get('/eveil', (req, res) => {
     .genre-card img{width:180px;height:240px;object-fit:contain;}
     .genre-nom{font-family:'Cinzel',serif;font-size:20px;letter-spacing:3px;color:#87ceeb;margin-top:12px;}
     .loading{font-size:16px;color:#87ceeb;}
+    @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
   </style>
 </head>
 <body>
@@ -1243,7 +1302,8 @@ app.get('/eveil', (req, res) => {
           document.getElementById('content').innerHTML =
             '<div class="panel"><div style="font-size:70px;margin-bottom:10px;">'+f.emoji+'</div>'
             + '<div style="font-family:Cinzel,serif;font-size:26px;color:'+f.couleur+';margin-bottom:10px;">'+f.nom+'</div>'
-            + '<p class="intro-text">L\\'oeuf se met a vibrer entre tes mains... Ton aventure d\\'Eveilleur commence !<br><br>(La suite : faire eclore et evoluer ton fruit, bientot !)</p></div>';
+            + '<p class="intro-text">L\'oeuf se met a vibrer entre tes mains... Ton aventure d\'Eveilleur commence !</p></div>';
+          setTimeout(monMonstre, 2000);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -1273,6 +1333,69 @@ app.get('/eveil', (req, res) => {
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
+var LIGNEES = {
+      lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
+      marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'] },
+      nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'] },
+      roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'] },
+      givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'] },
+      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'] }
+    };
+
+    function monMonstre(){
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var j = d.joueur;
+          if(!j || !j.fruit){ ecranTempleIntro(); return; }
+          var lig = LIGNEES[j.fruit];
+          var stade = j.stade || 1;
+          var img = lig.stades[stade-1];
+          var nom = lig.noms[stade-1];
+          var eclos = stade >= 2;
+          var html = '<div class="panel" style="border-color:'+lig.couleur+';">';
+          if(!eclos){
+            html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">TON OEUF</div>'
+              + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2s ease-in-out infinite;">'
+              + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin:10px 0;">'+nom+'</div>'
+              + '<p style="font-size:14px;color:#ccc;margin-bottom:8px;">Ton oeuf n\'a pas encore eclos. Couve-le en gagnant de l\'experience !</p>'
+              + barreXP(j.xp, ${EVEIL_ECLOSION_XP}, 'Eclosion', lig.couleur);
+          } else {
+            html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">MON MONSTRE</div>'
+              + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:220px;height:220px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2.5s ease-in-out infinite;">'
+              + '<div style="font-family:Cinzel,serif;font-size:24px;color:'+lig.couleur+';margin:10px 0 4px;">'+nom+'</div>'
+              + '<div style="font-size:13px;color:#aaa;margin-bottom:4px;">Element : <b style="color:'+lig.couleur+';">'+lig.element+'</b> &#x2022; Stade '+stade+'/4</div>'
+              + '<div style="font-size:18px;color:#fff;margin:8px 0;">Niveau <b style="color:'+lig.couleur+';">'+j.niveau+'</b></div>'
+              + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niveau '+(j.niveau+1), lig.couleur);
+          }
+          html += '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l\'XP (test)</button>';
+          html += '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function estimXp(niveau){ return 80 + (niveau-1)*40 + Math.floor(Math.pow(niveau,1.7)); }
+
+    function barreXP(xp, max, label, couleur){
+      var pct = Math.min(100, Math.round((xp/max)*100));
+      return '<div style="max-width:340px;margin:14px auto 0;">'
+        + '<div style="background:rgba(0,0,0,0.5);border:1px solid '+couleur+';border-radius:12px;height:20px;overflow:hidden;">'
+        + '<div style="height:100%;width:'+pct+'%;background:'+couleur+';transition:width 0.5s;"></div></div>'
+        + '<div style="font-size:12px;color:#aaa;margin-top:5px;">'+xp+' / '+max+' XP &#x2192; '+label+'</div></div>';
+    }
+
+    function actionTest(){
+      fetch('/eveil/gagner-xp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,montant:25})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          if(d.events && d.events.indexOf('eclosion')>=0) alert('🥚 Ton oeuf a eclos !');
+          if(d.events && d.events.indexOf('evo3')>=0) alert('✨ Ton monstre evolue en stade 3 !');
+          if(d.events && d.events.indexOf('evo4')>=0) alert('👑 EVOLUTION FINALE ! Ton monstre atteint sa forme ultime avec le Haki !');
+          monMonstre();
+        });
+    }
+
     function demarrer(){
       if(!currentUser){ ecranConnexion(); return; }
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
@@ -1280,7 +1403,7 @@ app.get('/eveil', (req, res) => {
         .then(function(d){
           if(!d.joueur){ ecranChoixGenre(); }
           else if(!d.joueur.fruit){ ecranTempleIntro(); }
-          else { document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Te revoila, '+currentUser+' ! Ton fruit : '+d.joueur.fruit+'.<br><br>(La suite arrive bientot !)</p></div>'; }
+          else { monMonstre(); }
         })
         .catch(function(){ document.getElementById('content').innerHTML = '<div class="panel"><p class="loading">Erreur de connexion.</p></div>'; });
     }
