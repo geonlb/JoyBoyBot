@@ -1250,7 +1250,7 @@ app.get('/eveil', (req, res) => {
 
     function ecranConnexion(){
       document.getElementById('content').innerHTML =
-        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\\'au cceur d\\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
+        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\\'au coeur d\\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
         + '<a href="/auth/twitch?username=guest&from=eveil" class="connect-btn">Se connecter avec Twitch</a></div>';
     }
 
