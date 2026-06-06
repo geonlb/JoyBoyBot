@@ -303,6 +303,8 @@ app.get('/auth/callback', async (req, res) => {
     const from = state.includes('|') ? state.split('|')[1] : 'collection';
     if (from === 'collection') {
       res.redirect('/collection/' + twitchUsername + '?verified=true&owner=' + twitchUsername);
+    } else if (from === 'eveil') {
+      res.redirect('/eveil?verified=true&owner=' + twitchUsername);
     } else if (from === 'accueil') {
       res.redirect('/?verified=true&owner=' + twitchUsername);
     } else {
@@ -1114,6 +1116,116 @@ app.post('/roulette/jouer', async (req, res) => {
   await supabase.from('codes_temp').delete().eq('username', username + '_roulette');
   await supabase.from('codes_temp').insert({ username: username + '_roulette', code: 'roulette', expire: Date.now() + 600000 });
   res.json({ success: true, berrys: newBerrys, fruit });
+});
+
+// ==================== EVEIL DE FRUIT (RPG) ====================
+const EVEIL_IMG = 'https://usbsivjrputwwrohezwk.supabase.co/storage/v1/object/public/images';
+
+// Recuperer l'etat d'un joueur
+app.get('/eveil/joueur', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data } = await supabase.from('eveil_joueurs').select('*').eq('username', username.toLowerCase()).single();
+  res.json({ joueur: data || null });
+});
+
+// Choisir son genre (cree le joueur)
+app.post('/eveil/genre', async (req, res) => {
+  const { username, genre } = req.body;
+  if (!username || !genre) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: existant } = await supabase.from('eveil_joueurs').select('username').eq('username', u).single();
+  if (existant) return res.status(400).json({ error: 'Tu as deja commence ton aventure !' });
+  await supabase.from('eveil_joueurs').insert({ username: u, genre, cree_le: Date.now() });
+  res.json({ success: true });
+});
+
+// La page du RPG
+app.get('/eveil', (req, res) => {
+  const verified = req.query.verified === 'true';
+  const owner = req.query.owner || '';
+  res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'Eveil des Fruits - NeyLaBrise</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#050510;min-height:100vh;font-family:'Exo 2',sans-serif;color:white;background-image:url('/persos/fond_site.png');background-size:cover;background-position:center;background-attachment:fixed;}
+    body::before{content:'';position:fixed;inset:0;background:rgba(5,5,16,0.8);pointer-events:none;}
+    .container{max-width:900px;margin:0 auto;padding:40px 20px;position:relative;z-index:1;text-align:center;}
+    .back-btn{display:inline-block;margin-bottom:20px;color:#87ceeb;text-decoration:none;font-size:14px;letter-spacing:2px;}
+    .title{font-family:'Cinzel',serif;font-size:42px;font-weight:900;color:#fff;letter-spacing:5px;text-shadow:0 0 30px rgba(138,43,226,0.8);}
+    .subtitle{font-size:14px;color:#87ceeb;letter-spacing:4px;margin-top:10px;text-transform:uppercase;}
+    .divider{width:300px;height:1px;background:linear-gradient(to right,transparent,#8a2be2,#87ceeb,#8a2be2,transparent);margin:20px auto 40px;}
+    .panel{background:rgba(0,0,0,0.7);border:1px solid rgba(138,43,226,0.4);border-radius:20px;padding:40px 30px;backdrop-filter:blur(10px);max-width:600px;margin:0 auto;}
+    .intro-text{font-size:15px;color:#ccc;line-height:1.7;margin-bottom:30px;}
+    .connect-btn{display:inline-block;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;padding:14px 35px;border-radius:30px;text-decoration:none;font-weight:bold;font-size:16px;letter-spacing:1px;transition:all 0.3s;}
+    .connect-btn:hover{box-shadow:0 0 30px rgba(138,43,226,0.6);transform:scale(1.05);}
+    .genre-grid{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
+    .genre-card{background:rgba(0,0,0,0.6);border:2px solid rgba(138,43,226,0.4);border-radius:18px;padding:20px;cursor:pointer;transition:all 0.3s;width:240px;}
+    .genre-card:hover{border-color:#87ceeb;transform:translateY(-8px);box-shadow:0 10px 40px rgba(138,43,226,0.4);}
+    .genre-card img{width:180px;height:240px;object-fit:contain;}
+    .genre-nom{font-family:'Cinzel',serif;font-size:20px;letter-spacing:3px;color:#87ceeb;margin-top:12px;}
+    .loading{font-size:16px;color:#87ceeb;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-btn">&#x2190; Retour au port</a>
+    <div class="title">&#x1F34E; L'EVEIL DES FRUITS</div>
+    <div class="subtitle">Deviens un Eveilleur de la Grand Line</div>
+    <div class="divider"></div>
+    <div id="content"><div class="loading">Chargement...</div></div>
+  </div>
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var verified = params.get('verified') === 'true';
+    var owner = params.get('owner');
+    var currentUser = (verified && owner) ? owner.toLowerCase() : null;
+    var IMG = '${EVEIL_IMG}';
+
+    function ecranConnexion(){
+      document.getElementById('content').innerHTML =
+        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\\'au cceur d\\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
+        + '<a href="/auth/twitch?username=guest&from=eveil" class="connect-btn">Se connecter avec Twitch</a></div>';
+    }
+
+    function ecranChoixGenre(){
+      document.getElementById('content').innerHTML =
+        '<div class="panel"><p class="intro-text">Avant de partir a l\\'aventure, dis-nous qui tu es, pirate.</p>'
+        + '<div class="genre-grid">'
+        + '<div class="genre-card" onclick="choisirGenre(\\'homme\\')"><img src="'+IMG+'/eveil/perso-homme.png" alt="Homme"><div class="genre-nom">PIRATE</div></div>'
+        + '<div class="genre-card" onclick="choisirGenre(\\'femme\\')"><img src="'+IMG+'/eveil/perso-femme.png" alt="Femme"><div class="genre-nom">PIRATESSE</div></div>'
+        + '</div></div>';
+    }
+
+    function choisirGenre(genre){
+      fetch('/eveil/genre',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,genre:genre})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Parfait ! Ton aventure commence...<br><br>(La suite : le temple et le choix de ton fruit, bientot !)</p></div>';
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function demarrer(){
+      if(!currentUser){ ecranConnexion(); return; }
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(!d.joueur){ ecranChoixGenre(); }
+          else { document.getElementById('content').innerHTML = '<div class="panel"><p class="intro-text">Te revoila, '+currentUser+' ! Ton aventure est en cours.<br><br>(La suite arrive bientot !)</p></div>'; }
+        })
+        .catch(function(){ document.getElementById('content').innerHTML = '<div class="panel"><p class="loading">Erreur de connexion.</p></div>'; });
+    }
+    demarrer();
+  </script>
+</body>
+</html>`);
 });
 
 // ==================== LOG POSE (RECOMPENSE QUOTIDIENNE) ====================
