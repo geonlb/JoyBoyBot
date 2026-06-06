@@ -1209,7 +1209,7 @@ app.get('/eveil', (req, res) => {
 
     function ecranTempleIntro(){
       document.getElementById('content').innerHTML =
-        '<div class="panel" style="background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.85)), url(\''+IMG+'/eveil/temple.png\') center/cover;border-color:#8a2be2;">'
+        '<div class="panel" style="background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.85)), url(' + IMG + '/eveil/temple.png) center/cover;border-color:#8a2be2;">'
         + '<p class="intro-text">Tu pousses la lourde porte de pierre d\\'un temple oublie au cceur d\\'une ile deserte...<br><br>Dans une salle secrete baignee d\\'une lueur etrange, six fruits du demon en forme d\\'oeuf reposent sur des piedestaux. L\\'un d\\'eux t\\'appelle.<br><br><b style="color:#ffd479;">Choisis bien : ce fruit sera ton partenaire pour toute l\\'aventure.</b></p>'
         + '<button class="connect-btn" style="border:none;cursor:pointer;" onclick="ecranOeufs()">Entrer dans la salle secrete</button></div>';
     }
