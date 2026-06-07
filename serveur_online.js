@@ -1494,42 +1494,60 @@ var BOUTIQUE = {
     };
 
     function boutique(){
-      Promise.all([
-        fetch('/eveil/joueur?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}),
-        fetch('/prime/'+encodeURIComponent(currentUser)).then(function(r){return r.text();})
-      ]).then(function(){
-        fetch('/roulette/infos?username='+encodeURIComponent(currentUser))
-          .then(function(r){return r.json();})
-          .then(function(info){
-            var berrys = (info && info.berrys) ? info.berrys : 0;
-            var cats = ['XP','Soin','Capture'];
-            var html = '<div style="margin-bottom:20px;"><span style="font-family:Cinzel,serif;font-size:26px;color:#f39c12;">🏪 BOUTIQUE</span>'
-              + '<div style="margin-top:8px;font-size:15px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Berrys</div></div>';
-            for(var c=0;c<cats.length;c++){
-              html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin:18px 0 10px;">'+cats[c].toUpperCase()+'</div>';
-              html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">';
-              for(var id in BOUTIQUE){
-                var o = BOUTIQUE[id];
-                if(o.categorie !== cats[c]) continue;
-                html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(243,156,18,0.4);border-radius:14px;padding:16px;text-align:center;">'
-                  + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:'+(o.categorie==='XP'?'70':'105')+'px;height:'+(o.categorie==='XP'?'70':'105')+'px;object-fit:contain;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(243,156,18,0.4));">'
-                  + '<div style="font-family:Cinzel,serif;font-size:15px;color:#fff;">'+o.nom+'</div>'
-                  + '<div style="font-size:11px;color:#aaa;margin:6px 0;">'+o.desc+'</div>'
-                  + '<div style="font-size:13px;color:#f39c12;margin-bottom:10px;">💰 '+o.prix.toLocaleString()+'</div>'
-                  + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">'
-                  + '<button onclick="changeQte(&#39;'+id+'&#39;,-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #f39c12;background:rgba(0,0,0,0.5);color:#f39c12;cursor:pointer;font-size:14px;">-</button>'
-                  + '<span id="qte-'+id+'" style="font-size:15px;color:#fff;min-width:24px;display:inline-block;">1</span>'
-                  + '<button onclick="changeQte(&#39;'+id+'&#39;,1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #f39c12;background:rgba(0,0,0,0.5);color:#f39c12;cursor:pointer;font-size:14px;">+</button>'
-                  + '</div>'
-                  + '<button class="connect-btn" style="border:none;cursor:pointer;font-size:12px;padding:8px 18px;background:linear-gradient(135deg,#f39c12,#e67e22);color:#000;" onclick="acheter(&#39;'+id+'&#39;)">Acheter</button>'
-                  + '</div>';
-              }
-              html += '</div>';
+      fetch('/roulette/infos?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(info){
+          var berrys = (info && info.berrys) ? info.berrys : 0;
+          var cats = [
+            { nom:'OBJETS XP', cle:'XP', couleur:'#2ecc71', emoji:'🍗' },
+            { nom:'OBJETS DE SOIN', cle:'Soin', couleur:'#3498db', emoji:'🧪' },
+            { nom:'OBJETS DE CAPTURE', cle:'Capture', couleur:'#9b59b6', emoji:'🍶' }
+          ];
+
+          var html = '<div style="text-align:center;margin-bottom:25px;">'
+            + '<div style="font-family:Cinzel,serif;font-size:30px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">🏪 LE COMPTOIR</div>'
+            + '<div style="display:inline-block;margin-top:10px;background:rgba(0,0,0,0.7);border:2px solid #f39c12;border-radius:20px;padding:8px 22px;">'
+            + '<span style="font-family:Cinzel,serif;font-size:18px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Berrys</span></div></div>';
+
+          for(var c=0;c<cats.length;c++){
+            var cat = cats[c];
+            var objetsHTML = '';
+            for(var id in BOUTIQUE){
+              var o = BOUTIQUE[id];
+              if(o.categorie !== cat.cle) continue;
+              objetsHTML += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:150px;">'
+                + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:'+(cat.cle==='XP'?'80':'95')+'px;height:'+(cat.cle==='XP'?'80':'95')+'px;object-fit:contain;filter:drop-shadow(0 6px 10px '+cat.couleur+'66);">'
+                + '<div style="font-family:Cinzel,serif;font-size:13px;color:#fff;text-align:center;">'+o.nom+'</div>'
+                + '<div style="font-size:11px;color:#aaa;text-align:center;min-height:28px;">'+o.desc+'</div>'
+                + '<div style="font-size:13px;color:'+cat.couleur+';font-weight:bold;">💰 '+o.prix.toLocaleString()+'</div>'
+                + '<div style="display:flex;align-items:center;gap:6px;">'
+                + '<button onclick="changeQte(&#39;'+id+'&#39;,-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid '+cat.couleur+';background:rgba(0,0,0,0.5);color:'+cat.couleur+';cursor:pointer;">-</button>'
+                + '<span id="qte-'+id+'" style="font-size:14px;color:#fff;min-width:20px;display:inline-block;text-align:center;">1</span>'
+                + '<button onclick="changeQte(&#39;'+id+'&#39;,1)" style="width:24px;height:24px;border-radius:50%;border:1px solid '+cat.couleur+';background:rgba(0,0,0,0.5);color:'+cat.couleur+';cursor:pointer;">+</button>'
+                + '</div>'
+                + '<button class="connect-btn" style="border:none;cursor:pointer;font-size:11px;padding:6px 16px;margin-top:2px;background:linear-gradient(135deg,'+cat.couleur+','+cat.couleur+'cc);color:#000;font-weight:bold;" onclick="acheter(&#39;'+id+'&#39;)">Acheter</button>'
+                + '</div>';
             }
-            html += '<div style="margin-top:25px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>';
-            document.getElementById('content').innerHTML = html;
-          });
-      });
+            // Le presentoir de la categorie
+            html += '<div style="max-width:720px;margin:0 auto 30px;">'
+              // Bandeau titre
+              + '<div style="background:linear-gradient(135deg,'+cat.couleur+','+cat.couleur+'99);border-radius:12px 12px 0 0;padding:10px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 0 20px '+cat.couleur+'44;">'
+              + '<span style="font-size:22px;">'+cat.emoji+'</span>'
+              + '<span style="font-family:Cinzel,serif;font-size:18px;letter-spacing:3px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);">'+cat.nom+'</span></div>'
+              // Le presentoir (etagere)
+              + '<div style="background:linear-gradient(180deg, color-mix(in srgb, '+cat.couleur+' 14%, rgba(0,0,0,0.7)), rgba(0,0,0,0.8));border:1px solid '+cat.couleur+'66;border-top:none;border-radius:0 0 12px 12px;padding:25px 20px 0;">'
+              + '<div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:flex-end;padding-bottom:18px;">'+objetsHTML+'</div>'
+              // La planche de l'etagere
+              + '<div style="height:14px;margin:0 -20px;background:'+cat.couleur+';opacity:0.8;border-radius:0 0 12px 12px;box-shadow:0 4px 12px '+cat.couleur+'66;"></div>'
+              + '</div></div>';
+          }
+
+          html += '<div style="text-align:center;margin-top:10px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>';
+
+          // Fond special boutique : on enveloppe dans un conteneur avec degrade
+          document.getElementById('content').innerHTML =
+            '<div style="background:radial-gradient(ellipse at top, rgba(243,156,18,0.12), transparent 60%), linear-gradient(160deg, #2a1a0a, #1a0a1a, #0a0a1a);border-radius:20px;padding:30px 20px;margin:-10px;">'+html+'</div>';
+        });
     }
 
     function changeQte(id, delta){
