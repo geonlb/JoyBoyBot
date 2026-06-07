@@ -1260,23 +1260,6 @@ app.post('/eveil/acheter', async (req, res) => {
   res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte, achete: qte });
 });
 
-  // Verifier les Berrys
-  const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
-  if (!prime || prime.berrys < objet.prix) return res.status(400).json({ error: 'Pas assez de Berrys ! Il te faut ' + objet.prix + ' Berrys.' });
-
-  // Debiter
-  const newBerrys = prime.berrys - objet.prix;
-  await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
-
-  // Ajouter au sac (delete + insert pour gerer la quantite proprement)
-  const { data: existant } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
-  const newQte = (existant ? existant.quantite : 0) + 1;
-  await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
-  await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
-
-  res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte });
-});
-
 // Donnees de progression (lignees d'evolution + courbe XP)
 const EVEIL_LIGNEES = {
   lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
