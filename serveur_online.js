@@ -1396,6 +1396,11 @@ app.get('/eveil', (req, res) => {
     .genre-nom{font-family:'Cinzel',serif;font-size:20px;letter-spacing:3px;color:#87ceeb;margin-top:12px;}
     .loading{font-size:16px;color:#87ceeb;}
     @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+    @keyframes monteFade{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-120px);opacity:0;}}
+    @keyframes saute{0%,100%{transform:translateY(0);}25%{transform:translateY(-25px);}50%{transform:translateY(0);}75%{transform:translateY(-12px);}}
+    .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
+    .saute{animation:saute 0.8s ease-in-out !important;}
+    .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
     #rotate-msg{display:none;}
     @media (max-width:850px) and (orientation:portrait){
       #rotate-msg{display:flex;position:fixed;inset:0;z-index:99999;background:#050510;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
@@ -1715,7 +1720,9 @@ function bateau(){
           var html = '<div style="background:linear-gradient(rgba(5,5,16,0.55),rgba(5,5,16,0.75)), url('+IMG+'/eveil/bateau.png) center/cover;border:1px solid '+lig.couleur+';border-radius:20px;padding:30px 25px;max-width:680px;margin:0 auto;">'
             + '<div style="font-family:Cinzel,serif;font-size:26px;color:#87ceeb;letter-spacing:2px;margin-bottom:5px;">🏠 MON BATEAU</div>'
             + '<div style="font-size:13px;color:#ccc;margin-bottom:20px;">Le repaire de '+nomAff+'</div>'
-            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2.5s ease-in-out infinite;">'
+            + '<div id="zone-monstre" style="position:relative;display:inline-block;">'
+            + '<img id="bateau-monstre" src="'+IMG+'/monstres/'+img+'.png" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2.5s ease-in-out infinite;">'
+            + '</div>'
             + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin-top:10px;">'+nomAff+'</div>'
             + '<div style="font-size:15px;color:#fff;margin:8px 0;">Humeur : '+humeur+'</div>'
             // Barre de bonheur
@@ -1731,14 +1738,61 @@ function bateau(){
     }
 
     function soin(action){
+      // Empeche de spammer pendant l'animation
       fetch('/eveil/soin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,action:action})})
         .then(function(r){return r.json();})
         .then(function(d){
-          if(d.error){ alert(d.error); return; }
-          alert('❤️ +'+d.gain+' bonheur ! '+d.msg.replace(/&#39;/g, "'"));
-          bateau();
+          if(d.error){ flashErreur(d.error.replace(/&#39;/g, "'")); return; }
+          // Emoji selon l'action
+          var emojis = { laver:'🫧', nourrir:'🍖', jouer:'⭐' };
+          var emoji = emojis[action] || '❤️';
+          animerSoin(emoji, d.gain);
+          // Met a jour la barre de bonheur sans recharger toute la page
+          setTimeout(function(){ bateau(); }, 1700);
         })
-        .catch(function(){ alert('Erreur, reessaie.'); });
+        .catch(function(){ flashErreur('Erreur, reessaie.'); });
+    }
+
+    function animerSoin(emoji, gain){
+      var zone = document.getElementById('zone-monstre');
+      var monstre = document.getElementById('bateau-monstre');
+      if(!zone || !monstre) return;
+
+      // Le monstre saute de joie
+      monstre.classList.add('saute');
+      setTimeout(function(){ monstre.classList.remove('saute'); }, 800);
+
+      // Particules d'emojis qui montent
+      for(var i=0;i<6;i++){
+        (function(idx){
+          setTimeout(function(){
+            var p = document.createElement('div');
+            p.className = 'particule';
+            p.textContent = emoji;
+            p.style.left = (30 + Math.random()*100) + 'px';
+            p.style.top = (80 + Math.random()*60) + 'px';
+            zone.appendChild(p);
+            setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, 1500);
+          }, idx*120);
+        })(i);
+      }
+
+      // Texte "+X bonheur"
+      var g = document.createElement('div');
+      g.className = 'gain-txt';
+      g.textContent = '+' + gain + ' ❤️';
+      g.style.left = '70px';
+      g.style.top = '40px';
+      zone.appendChild(g);
+      setTimeout(function(){ if(g.parentNode) g.parentNode.removeChild(g); }, 1600);
+    }
+
+    function flashErreur(msg){
+      var div = document.createElement('div');
+      div.textContent = msg;
+      div.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(231,76,60,0.95);color:#fff;padding:12px 24px;border-radius:25px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+      document.body.appendChild(div);
+      setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 2500);
     }
 
 function hub(){
