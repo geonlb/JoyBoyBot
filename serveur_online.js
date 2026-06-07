@@ -1167,14 +1167,14 @@ app.post('/eveil/nommer', async (req, res) => {
 
 // Catalogue de la boutique eveil
 const EVEIL_BOUTIQUE = {
-  ration:      { nom:'Ration', emoji:'🍖', prix:200, desc:'Donne +50 XP a ton monstre', type:'xp', valeur:50 },
-  poulet:      { nom:'Poulet d&#39;XP', emoji:'🍗', prix:800, desc:'Donne +250 XP a ton monstre', type:'xp', valeur:250 },
-  potion:      { nom:'Potion', emoji:'🧪', prix:150, desc:'Rend 50 PV (utile en combat)', type:'soin', valeur:50 },
-  elixir:      { nom:'Elixir', emoji:'⭐', prix:400, desc:'Restaure tous les PV (utile en combat)', type:'soin', valeur:9999 },
-  bouteille_verte: { nom:'Elixiteille Verte', emoji:'🟢', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
-  bouteille_bleue: { nom:'Elixiteille Bleue', emoji:'🔵', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
-  bouteille_violette: { nom:'Elixiteille Violette', emoji:'🟣', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
-  bouteille_doree: { nom:'Elixiteille Doree', emoji:'🟡', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
+  ration:      { nom:'Ration', img:'ration', prix:200, desc:'Donne +50 XP a ton monstre', type:'xp', valeur:50 },
+  poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP a ton monstre', type:'xp', valeur:250 },
+  potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV (utile en combat)', type:'soin', valeur:50 },
+  elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV (utile en combat)', type:'soin', valeur:9999 },
+  bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille-rouge', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
+  bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille-bleue', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
+  bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille-noire', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
+  bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille-multicolore', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
 };
 
 // Voir le sac d'un joueur
@@ -1433,14 +1433,14 @@ function ecranNommer(){
     }
 
 var BOUTIQUE = {
-      ration:      { nom:'Ration', emoji:'🍖', prix:200, desc:'Donne +50 XP', categorie:'XP' },
-      poulet:      { nom:'Poulet d&#39;XP', emoji:'🍗', prix:800, desc:'Donne +250 XP', categorie:'XP' },
-      potion:      { nom:'Potion', emoji:'🧪', prix:150, desc:'Rend 50 PV', categorie:'Soin' },
-      elixir:      { nom:'Elixir', emoji:'⭐', prix:400, desc:'Restaure tous les PV', categorie:'Soin' },
-      bouteille_verte:    { nom:'Elixiteille Verte', emoji:'🟢', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
-      bouteille_bleue:    { nom:'Elixiteille Bleue', emoji:'🔵', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
-      bouteille_violette: { nom:'Elixiteille Violette', emoji:'🟣', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
-      bouteille_doree:    { nom:'Elixiteille Doree', emoji:'🟡', prix:5000, desc:'Capture - taux max', categorie:'Capture' }
+      ration:      { nom:'Ration', img:'ration', prix:200, desc:'Donne +50 XP', categorie:'XP' },
+      poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP', categorie:'XP' },
+      potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV', categorie:'Soin' },
+      elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV', categorie:'Soin' },
+      bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille-rouge', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
+      bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille-bleue', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
+      bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille-noire', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
+      bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille-multicolore', prix:5000, desc:'Capture - taux max', categorie:'Capture' }
     };
 
     function boutique(){
@@ -1462,7 +1462,7 @@ var BOUTIQUE = {
                 var o = BOUTIQUE[id];
                 if(o.categorie !== cats[c]) continue;
                 html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(243,156,18,0.4);border-radius:14px;padding:16px;text-align:center;">'
-                  + '<div style="font-size:38px;margin-bottom:6px;">'+o.emoji+'</div>'
+                  + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:70px;height:70px;object-fit:contain;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(243,156,18,0.4));">'
                   + '<div style="font-family:Cinzel,serif;font-size:15px;color:#fff;">'+o.nom+'</div>'
                   + '<div style="font-size:11px;color:#aaa;margin:6px 0;">'+o.desc+'</div>'
                   + '<div style="font-size:13px;color:#f39c12;margin-bottom:10px;">💰 '+o.prix.toLocaleString()+'</div>'
@@ -1505,7 +1505,7 @@ var BOUTIQUE = {
               var o = BOUTIQUE[it.objet];
               if(!o) continue;
               html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:14px;padding:16px;text-align:center;">'
-                + '<div style="font-size:38px;margin-bottom:6px;">'+o.emoji+'</div>'
+                + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:60px;height:60px;object-fit:contain;margin-bottom:6px;">'
                 + '<div style="font-family:Cinzel,serif;font-size:14px;color:#fff;">'+o.nom+'</div>'
                 + '<div style="font-size:18px;color:#87ceeb;margin-top:6px;">x'+it.quantite+'</div>'
                 + '</div>';
