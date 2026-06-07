@@ -1238,6 +1238,7 @@ app.post('/eveil/utiliser', async (req, res) => {
   if (newQte > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
 
   res.json({ success: true, xp, niveau, stade, events, gainXp: objet.valeur, xpAvant: (j.xp || 0), niveauAvant: (j.niveau || 1), stadeAvant: j.stade, prochainNiveauXp: xpPourNiveau(niveau), prochainNiveauXpAvant: xpPourNiveau(j.niveau || 1) });
+});
 
 // Voir le sac d'un joueur
 app.get('/eveil/sac', async (req, res) => {
