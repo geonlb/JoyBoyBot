@@ -1462,7 +1462,7 @@ var BOUTIQUE = {
                 var o = BOUTIQUE[id];
                 if(o.categorie !== cats[c]) continue;
                 html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(243,156,18,0.4);border-radius:14px;padding:16px;text-align:center;">'
-                  + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:70px;height:70px;object-fit:contain;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(243,156,18,0.4));">'
+                  + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:'+(o.categorie==='XP'?'70':'105')+'px;height:'+(o.categorie==='XP'?'70':'105')+'px;object-fit:contain;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(243,156,18,0.4));">'
                   + '<div style="font-family:Cinzel,serif;font-size:15px;color:#fff;">'+o.nom+'</div>'
                   + '<div style="font-size:11px;color:#aaa;margin:6px 0;">'+o.desc+'</div>'
                   + '<div style="font-size:13px;color:#f39c12;margin-bottom:10px;">💰 '+o.prix.toLocaleString()+'</div>'
