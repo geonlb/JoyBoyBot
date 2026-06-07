@@ -1347,12 +1347,12 @@ app.get('/eveil', (req, res) => {
     }
 
     var LIGNEES = {
-      lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'],       attaques:['Morsure Ardente','Souffle de Lave','Apocalypse Volcanique'] },
-      marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'], attaques:['Morsure deferlante','Charge tourbillon','Gueule de l&#39;Ocean'] },
-      nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'],              attaques:['Bourrasque','Serres foudroyantes','Oeil du Cyclone'] },
-      roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'],          attaques:['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'] },
-      givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'],            attaques:['Morsure gelee','Souffle de blizzard','Ere Glaciaire'] },
-      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'] }
+      lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'],       attaques:['Morsure Ardente','Souffle de Lave','Apocalypse Volcanique'],       stats:{pvB:75,pvN:8, atkB:34,atkN:6, defB:12,defN:2} },
+      marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'], attaques:['Morsure deferlante','Charge tourbillon','Gueule de l&#39;Ocean'], stats:{pvB:90,pvN:10, atkB:28,atkN:5, defB:18,defN:3} },
+      nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'],              attaques:['Bourrasque','Serres foudroyantes','Oeil du Cyclone'],            stats:{pvB:65,pvN:7, atkB:28,atkN:5, defB:26,defN:4} },
+      roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'],          attaques:['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'], stats:{pvB:110,pvN:14, atkB:14,atkN:2, defB:30,defN:5} },
+      givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'],            attaques:['Morsure gelee','Souffle de blizzard','Ere Glaciaire'],           stats:{pvB:100,pvN:12, atkB:20,atkN:3, defB:28,defN:5} },
+      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'],                   stats:{pvB:90,pvN:10, atkB:38,atkN:7, defB:8,defN:1} }
     };
 
 function ecranNommer(){
@@ -1465,9 +1465,10 @@ function hub(){
           }
 
           // Stats calculees selon le niveau
-          var pvMax = 80 + j.niveau * 10;
-          var atk = 20 + j.niveau * 4;
-          var def = 15 + j.niveau * 3;
+          var st = lig.stats;
+          var pvMax = st.pvB + j.niveau * st.pvN;
+          var atk = st.atkB + j.niveau * st.atkN;
+          var def = st.defB + j.niveau * st.defN;
           var statBar = function(label, val, valMax, col){
             var pct = Math.min(100, Math.round((val/valMax)*100));
             return '<div style="margin-bottom:8px;text-align:left;">'
@@ -1503,9 +1504,9 @@ function hub(){
             + '</div>'
             // Colonne droite : stats + xp
             + '<div style="flex:1;min-width:220px;">'
-            + statBar('&#x2764;&#xFE0F; PV', pvMax, pvMax, '#2ecc71')
-            + statBar('&#x2694;&#xFE0F; Attaque', atk, 200, '#e74c3c')
-            + statBar('&#x1F6E1;&#xFE0F; Defense', def, 150, '#3498db')
+            + statBar('&#x2764;&#xFE0F; PV', pvMax, 600, '#2ecc71')
+            + statBar('&#x2694;&#xFE0F; Attaque', atk, 220, '#e74c3c')
+            + statBar('&#x1F6E1;&#xFE0F; Defense', def, 180, '#3498db')
             + '<div style="margin-top:12px;">' + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niv '+(j.niveau+1), lig.couleur) + '</div>'
             + '</div>'
             + '</div>'
