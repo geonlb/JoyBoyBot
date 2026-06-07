@@ -1273,6 +1273,40 @@ app.post('/eveil/acheter', async (req, res) => {
   res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte, achete: qte });
 });
 
+// Prendre soin de son monstre (laver/nourrir/jouer) - cooldown 2h, +bonheur
+app.post('/eveil/soin', async (req, res) => {
+  const { username, action } = req.body;
+  if (!username || !action) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const actions = {
+    laver:   { col:'cd_laver',   gain:8,  msg:'Tu as lave ton monstre ! Il brille de proprete.' },
+    nourrir: { col:'cd_nourrir', gain:10, msg:'Tu as nourri ton monstre ! Il se regale.' },
+    jouer:   { col:'cd_jouer',   gain:12, msg:'Tu as joue avec ton monstre ! Il s&#39;amuse comme un fou.' }
+  };
+  const act = actions[action];
+  if (!act) return res.status(400).json({ error: 'Action inconnue' });
+
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+  if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit d&#39;abord eclore !' });
+
+  const maintenant = Date.now();
+  const cd = j[act.col] || 0;
+  if (maintenant < cd) {
+    const restantMin = Math.ceil((cd - maintenant) / 60000);
+    const h = Math.floor(restantMin / 60);
+    const m = restantMin % 60;
+    return res.status(400).json({ error: 'Attends encore ' + (h > 0 ? h + 'h' : '') + m + 'min pour cette action !' });
+  }
+
+  const nouveauBonheur = Math.min(100, (j.bonheur || 50) + act.gain);
+  const update = { bonheur: nouveauBonheur };
+  update[act.col] = maintenant + 2 * 60 * 60 * 1000; // +2h
+  await supabase.from('eveil_joueurs').update(update).eq('username', u);
+
+  res.json({ success: true, bonheur: nouveauBonheur, gain: act.gain, msg: act.msg });
+});
+
 // Donnees de progression (lignees d'evolution + courbe XP)
 const EVEIL_LIGNEES = {
   lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
@@ -1362,9 +1396,19 @@ app.get('/eveil', (req, res) => {
     .genre-nom{font-family:'Cinzel',serif;font-size:20px;letter-spacing:3px;color:#87ceeb;margin-top:12px;}
     .loading{font-size:16px;color:#87ceeb;}
     @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+    #rotate-msg{display:none;}
+    @media (max-width:850px) and (orientation:portrait){
+      #rotate-msg{display:flex;position:fixed;inset:0;z-index:99999;background:#050510;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+    }
+    @keyframes tourne{0%{transform:rotate(0deg);}50%{transform:rotate(90deg);}100%{transform:rotate(90deg);}}
   </style>
 </head>
 <body>
+<div id="rotate-msg">
+    <div style="font-size:70px;animation:tourne 2s ease-in-out infinite;">📱</div>
+    <div style="font-family:'Cinzel',serif;font-size:24px;color:#87ceeb;letter-spacing:2px;margin-top:25px;">TOURNE TON TELEPHONE</div>
+    <div style="font-size:15px;color:#ccc;margin-top:12px;max-width:300px;line-height:1.6;">L'Eveil des Fruits se joue en mode paysage pour une meilleure aventure ! &#x1F3F4;</div>
+  </div>
   <div class="container">
     <a href="/" class="back-btn">&#x2190; Retour au port</a>
     <div class="title">&#x1F34E; L'EVEIL DES FRUITS</div>
@@ -1634,6 +1678,69 @@ var BOUTIQUE = {
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
     
+function bateau(){
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var j = d.joueur;
+          if(!j || !j.fruit){ ecranTempleIntro(); return; }
+          var lig = LIGNEES[j.fruit];
+          var stade = j.stade || 1;
+          var img = lig.stades[stade-1];
+          var nomAff = j.surnom || lig.noms[stade-1];
+          var bonheur = (j.bonheur != null) ? j.bonheur : 50;
+          var maintenant = Date.now();
+
+          // Humeur selon le bonheur
+          var humeur = bonheur >= 80 ? '😍 Radieux' : (bonheur >= 50 ? '😊 Content' : (bonheur >= 25 ? '😐 Bof' : '😢 Triste'));
+
+          var actions = [
+            { id:'laver',   nom:'Laver',   emoji:'🧽', cd:j.cd_laver },
+            { id:'nourrir', nom:'Nourrir', emoji:'🍖', cd:j.cd_nourrir },
+            { id:'jouer',   nom:'Jouer',   emoji:'🎮', cd:j.cd_jouer }
+          ];
+          var btns = '';
+          for(var i=0;i<actions.length;i++){
+            var a = actions[i];
+            var dispo = !a.cd || maintenant >= a.cd;
+            if(dispo){
+              btns += '<button class="connect-btn" style="border:none;cursor:pointer;font-size:14px;padding:12px 22px;" onclick="soin(&#39;'+a.id+'&#39;)">'+a.emoji+' '+a.nom+'</button>';
+            } else {
+              var restMin = Math.ceil((a.cd - maintenant)/60000);
+              var txt = restMin >= 60 ? Math.floor(restMin/60)+'h'+(restMin%60)+'m' : restMin+'min';
+              btns += '<button disabled style="opacity:0.4;cursor:not-allowed;border:none;border-radius:30px;font-size:13px;padding:12px 22px;background:rgba(0,0,0,0.5);color:#888;">'+a.emoji+' '+txt+'</button>';
+            }
+          }
+
+          var html = '<div style="background:linear-gradient(rgba(5,5,16,0.55),rgba(5,5,16,0.75)), url('+IMG+'/eveil/bateau.png) center/cover;border:1px solid '+lig.couleur+';border-radius:20px;padding:30px 25px;max-width:680px;margin:0 auto;">'
+            + '<div style="font-family:Cinzel,serif;font-size:26px;color:#87ceeb;letter-spacing:2px;margin-bottom:5px;">🏠 MON BATEAU</div>'
+            + '<div style="font-size:13px;color:#ccc;margin-bottom:20px;">Le repaire de '+nomAff+'</div>'
+            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2.5s ease-in-out infinite;">'
+            + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin-top:10px;">'+nomAff+'</div>'
+            + '<div style="font-size:15px;color:#fff;margin:8px 0;">Humeur : '+humeur+'</div>'
+            // Barre de bonheur
+            + '<div style="max-width:320px;margin:10px auto;">'
+            + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:3px;"><span>❤️ Bonheur</span><span style="color:#fff;">'+bonheur+'/100</span></div>'
+            + '<div style="background:rgba(0,0,0,0.5);border:1px solid #e91e8c;border-radius:12px;height:18px;overflow:hidden;"><div style="height:100%;width:'+bonheur+'%;background:linear-gradient(90deg,#e91e8c,#ff69b4);transition:width 0.5s;"></div></div></div>'
+            // Boutons de soin
+            + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">'+btns+'</div>'
+            + '<div style="margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function soin(action){
+      fetch('/eveil/soin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,action:action})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          alert('❤️ +'+d.gain+' bonheur ! '+d.msg.replace(/&#39;/g, "'"));
+          bateau();
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -1652,14 +1759,14 @@ function hub(){
             { id:'explo',   emoji:'&#x1F9ED;', titre:'EXPLORATION', desc:'Parcours les iles du Grand Line', actif:false },
             { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
             { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
-            { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:false }
+            { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:true }
           ];
 
           var cards = '';
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : 'sac()');
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : 'bateau()'));
               cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
