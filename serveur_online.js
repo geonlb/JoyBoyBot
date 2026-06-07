@@ -1048,7 +1048,7 @@ app.get('/roulette', (req, res) => {
       box.style.boxShadow = '0 0 30px ' + seg.couleur + '44';
 
       if (seg.berrys === 0) {
-        document.getElementById('result-title').textContent = '🚔 La Marine t\'a arrêté !';
+        document.getElementById('result-title').textContent = '🚔 La Marine t&#39;a arrêté !';
         document.getElementById('result-berrys').textContent = '+0 Berrys';
         document.getElementById('result-berrys').style.color = '#e74c3c';
       } else if (seg.berrys === -1) {
