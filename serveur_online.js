@@ -1334,12 +1334,12 @@ app.get('/eveil', (req, res) => {
     }
 
     var LIGNEES = {
-      lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
-      marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'] },
-      nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'] },
-      roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'] },
-      givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'] },
-      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'] }
+      lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'],       attaques:['Morsure Ardente','Souffle de Lave','Apocalypse Volcanique'] },
+      marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'], attaques:['Morsure deferlante','Charge tourbillon','Gueule de l&#39;Ocean'] },
+      nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'],              attaques:['Bourrasque','Serres foudroyantes','Oeil du Cyclone'] },
+      roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'],          attaques:['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'] },
+      givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'],            attaques:['Morsure gelee','Souffle de blizzard','Ere Glaciaire'] },
+      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'] }
     };
 
     function monMonstre(){
@@ -1353,23 +1353,72 @@ app.get('/eveil', (req, res) => {
           var img = lig.stades[stade-1];
           var nom = lig.noms[stade-1];
           var eclos = stade >= 2;
-          var html = '<div class="panel" style="border-color:'+lig.couleur+';">';
+
+          // OEUF pas encore eclos
           if(!eclos){
-            html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">TON OEUF</div>'
+            var ho = '<div class="panel" style="border-color:'+lig.couleur+';">'
+              + '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">TON OEUF</div>'
               + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2s ease-in-out infinite;">'
               + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin:10px 0;">'+nom+'</div>'
               + '<p style="font-size:14px;color:#ccc;margin-bottom:8px;">Ton oeuf n&#39;a pas encore eclos. Couve-le en gagnant de l&#39;experience !</p>'
-              + barreXP(j.xp, 50, 'Eclosion', lig.couleur);
-          } else {
-            html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">MON MONSTRE</div>'
-              + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:220px;height:220px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2.5s ease-in-out infinite;">'
-              + '<div style="font-family:Cinzel,serif;font-size:24px;color:'+lig.couleur+';margin:10px 0 4px;">'+nom+'</div>'
-              + '<div style="font-size:13px;color:#aaa;margin-bottom:4px;">Element : <b style="color:'+lig.couleur+';">'+lig.element+'</b> &#x2022; Stade '+stade+'/4</div>'
-              + '<div style="font-size:18px;color:#fff;margin:8px 0;">Niveau <b style="color:'+lig.couleur+';">'+j.niveau+'</b></div>'
-              + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niveau '+(j.niveau+1), lig.couleur);
+              + barreXP(j.xp, 50, 'Eclosion', lig.couleur)
+              + '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l&#39;XP (test)</button>'
+              + '</div>';
+            document.getElementById('content').innerHTML = ho;
+            return;
           }
-          html += '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l&#39;XP (test)</button>';
-          html += '</div>';
+
+          // Stats calculees selon le niveau
+          var pvMax = 80 + j.niveau * 10;
+          var atk = 20 + j.niveau * 4;
+          var def = 15 + j.niveau * 3;
+          var statBar = function(label, val, valMax, col){
+            var pct = Math.min(100, Math.round((val/valMax)*100));
+            return '<div style="margin-bottom:8px;text-align:left;">'
+              + '<div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:2px;"><span>'+label+'</span><span style="color:#fff;">'+val+'</span></div>'
+              + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:10px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+col+';"></div></div></div>';
+          };
+
+          // Attaques (l'ultime grisee si pas stade 4)
+          var typesAtk = ['Base','Chargee','Ultime'];
+          var atkHTML = '';
+          for(var a=0;a<3;a++){
+            var estUltime = (a===2);
+            var debloque = !estUltime || stade>=4;
+            var opacite = debloque ? '1' : '0.35';
+            var cadenas = debloque ? '' : ' &#x1F512;';
+            atkHTML += '<div style="background:rgba(0,0,0,0.4);border:1px solid '+lig.couleur+'66;border-radius:10px;padding:8px 12px;margin-bottom:8px;text-align:left;opacity:'+opacite+';">'
+              + '<div style="font-size:10px;color:'+lig.couleur+';letter-spacing:1px;text-transform:uppercase;">'+typesAtk[a]+cadenas+'</div>'
+              + '<div style="font-size:14px;color:#fff;font-weight:bold;">'+lig.attaques[a]+'</div>'
+              + (estUltime && !debloque ? '<div style="font-size:10px;color:#888;">Debloquee au stade final</div>' : '')
+              + '</div>';
+          }
+
+          // La fiche RPG (2 colonnes)
+          var html = '<div class="panel" style="border-color:'+lig.couleur+';max-width:680px;background:linear-gradient(135deg, rgba(0,0,0,0.85), '+lig.couleur+'15);">'
+            + '<div style="display:flex;gap:25px;flex-wrap:wrap;align-items:center;justify-content:center;">'
+            // Colonne gauche : image + nom
+            + '<div style="flex:1;min-width:200px;text-align:center;">'
+            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2.5s ease-in-out infinite;">'
+            + '<div style="font-family:Cinzel,serif;font-size:24px;color:'+lig.couleur+';margin-top:10px;">'+nom+'</div>'
+            + '<div style="display:inline-block;margin-top:6px;padding:3px 14px;border:1px solid '+lig.couleur+';border-radius:15px;font-size:12px;color:'+lig.couleur+';">'+lig.element+' &#x2022; Stade '+stade+'/4</div>'
+            + '<div style="font-size:20px;color:#fff;margin-top:10px;">Niveau <b style="color:'+lig.couleur+';">'+j.niveau+'</b></div>'
+            + '</div>'
+            // Colonne droite : stats + xp
+            + '<div style="flex:1;min-width:220px;">'
+            + statBar('&#x2764;&#xFE0F; PV', pvMax, pvMax, '#2ecc71')
+            + statBar('&#x2694;&#xFE0F; Attaque', atk, 200, '#e74c3c')
+            + statBar('&#x1F6E1;&#xFE0F; Defense', def, 150, '#3498db')
+            + '<div style="margin-top:12px;">' + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niv '+(j.niveau+1), lig.couleur) + '</div>'
+            + '</div>'
+            + '</div>'
+            // Attaques en bas
+            + '<div style="margin-top:20px;border-top:1px solid '+lig.couleur+'44;padding-top:15px;">'
+            + '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:12px;">ATTAQUES</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">'+atkHTML+'</div>'
+            + '</div>'
+            + '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l&#39;XP (test)</button>'
+            + '</div>';
           document.getElementById('content').innerHTML = html;
         });
     }
