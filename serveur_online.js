@@ -1120,12 +1120,28 @@ app.post('/roulette/jouer', async (req, res) => {
 
 // ==================== EVEIL DE FRUIT (RPG) ====================
 const EVEIL_IMG = 'https://usbsivjrputwwrohezwk.supabase.co/storage/v1/object/public/images';
+// Calcule le bonheur reel en tenant compte du temps ecoule (-2/heure)
+async function appliquerDecroissanceBonheur(joueur) {
+  if (!joueur || joueur.stade < 2) return joueur; // pas avant l'eclosion
+  const maintenant = Date.now();
+  const derniereMaj = joueur.bonheur_maj || maintenant;
+  const heuresEcoulees = Math.floor((maintenant - derniereMaj) / (60 * 60 * 1000));
+  if (heuresEcoulees >= 1) {
+    const perte = heuresEcoulees * 2; // -2 par heure
+    const nouveauBonheur = Math.max(0, (joueur.bonheur != null ? joueur.bonheur : 50) - perte);
+    await supabase.from('eveil_joueurs').update({ bonheur: nouveauBonheur, bonheur_maj: maintenant }).eq('username', joueur.username);
+    joueur.bonheur = nouveauBonheur;
+    joueur.bonheur_maj = maintenant;
+  }
+  return joueur;
+}
 
 // Recuperer l'etat d'un joueur
 app.get('/eveil/joueur', async (req, res) => {
   const username = req.query.username;
   if (!username) return res.status(400).json({ error: 'Manque username' });
-  const { data } = await supabase.from('eveil_joueurs').select('*').eq('username', username.toLowerCase()).single();
+  let { data } = await supabase.from('eveil_joueurs').select('*').eq('username', username.toLowerCase()).single();
+  if (data) data = await appliquerDecroissanceBonheur(data);
   res.json({ joueur: data || null });
 });
 
@@ -1300,7 +1316,7 @@ app.post('/eveil/soin', async (req, res) => {
   }
 
   const nouveauBonheur = Math.min(100, (j.bonheur || 50) + act.gain);
-  const update = { bonheur: nouveauBonheur };
+  const update = { bonheur: nouveauBonheur, bonheur_maj: maintenant };
   update[act.col] = maintenant + 2 * 60 * 60 * 1000; // +2h
   await supabase.from('eveil_joueurs').update(update).eq('username', u);
 
