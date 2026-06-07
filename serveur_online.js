@@ -1177,6 +1177,53 @@ const EVEIL_BOUTIQUE = {
   bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille-multicolore', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
 };
 
+// Utiliser un objet du sac
+app.post('/eveil/utiliser', async (req, res) => {
+  const { username, objetId } = req.body;
+  if (!username || !objetId) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const objet = EVEIL_BOUTIQUE[objetId];
+  if (!objet) return res.status(400).json({ error: 'Objet inconnu' });
+
+  // Verifier que le joueur a l'objet
+  const { data: item } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
+  if (!item || item.quantite < 1) return res.status(400).json({ error: 'Tu n&#39;as pas cet objet !' });
+
+  // Pour l'instant, seuls les objets de type 'xp' sont utilisables
+  if (objet.type !== 'xp') return res.status(400).json({ error: 'Cet objet ne peut pas encore etre utilise (bientot !)' });
+
+  // Recuperer le monstre
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+
+  // Appliquer l'XP (meme logique que gagner-xp)
+  let xp = (j.xp || 0) + objet.valeur;
+  let niveau = j.niveau || 1;
+  let eclos = j.stade >= 2;
+  const events = [];
+  if (!eclos) {
+    if (xp >= EVEIL_ECLOSION_XP) { eclos = true; niveau = 1; xp = xp - EVEIL_ECLOSION_XP; events.push('eclosion'); }
+  }
+  if (eclos) {
+    while (xp >= xpPourNiveau(niveau)) {
+      xp -= xpPourNiveau(niveau);
+      niveau++;
+      events.push('niveau');
+      if (niveau === EVEIL_EVO_ADO) events.push('evo3');
+      if (niveau === EVEIL_EVO_FINAL) events.push('evo4');
+    }
+  }
+  const stade = calculerStade(eclos, niveau);
+  await supabase.from('eveil_joueurs').update({ xp, niveau, stade }).eq('username', u);
+
+  // Retirer 1 de l'objet du sac (delete + reinsert avec quantite-1, ou delete si 0)
+  const newQte = item.quantite - 1;
+  await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+  if (newQte > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
+
+  res.json({ success: true, xp, niveau, stade, events, gainXp: objet.valeur });
+});
+
 // Voir le sac d'un joueur
 app.get('/eveil/sac', async (req, res) => {
   const username = req.query.username;
@@ -1504,10 +1551,14 @@ var BOUTIQUE = {
               var it = items[i];
               var o = BOUTIQUE[it.objet];
               if(!o) continue;
+              var estXp = o.categorie === 'XP';
               html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:14px;padding:16px;text-align:center;">'
                 + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:60px;height:60px;object-fit:contain;margin-bottom:6px;">'
                 + '<div style="font-family:Cinzel,serif;font-size:14px;color:#fff;">'+o.nom+'</div>'
-                + '<div style="font-size:18px;color:#87ceeb;margin-top:6px;">x'+it.quantite+'</div>'
+                + '<div style="font-size:18px;color:#87ceeb;margin:6px 0;">x'+it.quantite+'</div>'
+                + (estXp
+                    ? '<button class="connect-btn" style="border:none;cursor:pointer;font-size:11px;padding:6px 16px;" onclick="utiliser(&#39;'+it.objet+'&#39;)">Utiliser</button>'
+                    : '<div style="font-size:10px;color:#888;">Utilisable bientot</div>')
                 + '</div>';
             }
             html += '</div>';
@@ -1517,6 +1568,23 @@ var BOUTIQUE = {
         });
     }
 
+  function utiliser(objetId){
+      var o = BOUTIQUE[objetId];
+      if(!confirm('Utiliser '+o.nom+' ?')) return;
+      fetch('/eveil/utiliser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:objetId})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          var msg = '🍗 +'+d.gainXp+' XP !';
+          if(d.events && d.events.indexOf('eclosion')>=0){ alert('🥚 Ton oeuf a eclos !'); ecranNommer(); return; }
+          if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution stade 3 !';
+          if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
+          alert(msg);
+          sac();
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+    
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
