@@ -1749,7 +1749,7 @@ function bateau(){
             + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">'+btns+'</div>'
             + '<div style="margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="arreterMusiqueBateau();hub()">&#x2190; Retour au repaire</button></div>'
             + '</div>'
-            + '<audio id="musique-bateau" src="/persos/bateau.mp3" loop></audio>'
+            + '<audio id="musique-bateau" src="'+IMG+'/eveil/bateau.mp3" loop></audio>'
             + '<button id="btn-musique-bateau" onclick="toggleMusiqueBateau()" style="position:fixed;bottom:20px;right:20px;z-index:999;background:rgba(0,0,0,0.85);border:2px solid #87ceeb;color:white;width:55px;height:55px;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 0 20px rgba(135,206,235,0.6);">&#x1F3B5;</button>';
           document.getElementById('content').innerHTML = html;
           // Lancer la musique automatiquement (si le navigateur l'autorise)
