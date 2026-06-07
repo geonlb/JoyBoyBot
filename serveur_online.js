@@ -1385,7 +1385,7 @@ app.get('/eveil', (req, res) => {
     }
 
     function actionTest(){
-      fetch('/eveil/gagner-xp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,montant:25})})
+      fetch('/eveil/gagner-xp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,montant:500})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
