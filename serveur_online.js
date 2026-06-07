@@ -1342,6 +1342,57 @@ app.get('/eveil', (req, res) => {
       neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'] }
     };
 
+function hub(){
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var j = d.joueur;
+          if(!j || !j.fruit){ ecranTempleIntro(); return; }
+          var lig = LIGNEES[j.fruit];
+          var stade = j.stade || 1;
+          var img = lig.stades[stade-1];
+          var nom = lig.noms[stade-1];
+          var eclos = stade >= 2;
+
+          var sections = [
+            { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
+            { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:false },
+            { id:'explo',   emoji:'&#x1F9ED;', titre:'EXPLORATION', desc:'Parcours les iles du Grand Line', actif:false },
+            { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:false },
+            { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:false },
+            { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:false }
+          ];
+
+          var cards = '';
+          for(var i=0;i<sections.length;i++){
+            var s = sections[i];
+            if(s.actif){
+              cards += '<div onclick="monMonstre()" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
+                + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
+                + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
+                + '<div style="font-size:12px;color:#aaa;margin-top:6px;">'+s.desc+'</div>'
+                + '</div>';
+            } else {
+              cards += '<div style="background:rgba(0,0,0,0.5);border:1px solid rgba(138,43,226,0.3);border-radius:16px;padding:22px;text-align:center;opacity:0.55;">'
+                + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
+                + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:#87ceeb;">'+s.titre+'</div>'
+                + '<div style="font-size:12px;color:#888;margin-top:6px;">'+s.desc+'</div>'
+                + '<div style="display:inline-block;margin-top:8px;background:rgba(138,43,226,0.3);border:1px solid #8a2be2;color:#8a2be2;font-size:10px;padding:2px 10px;border-radius:10px;">BIENTOT</div>'
+                + '</div>';
+            }
+          }
+
+          var html = '<div style="margin-bottom:25px;display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">'
+            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 12px '+lig.couleur+'aa);">'
+            + '<div style="text-align:left;">'
+            + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+lig.couleur+';">'+nom+'</div>'
+            + '<div style="font-size:13px;color:#aaa;">'+(eclos ? 'Niveau '+j.niveau+' &#x2022; '+lig.element : 'Oeuf a couver')+'</div>'
+            + '</div></div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;max-width:680px;margin:0 auto;">'+cards+'</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
     function monMonstre(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -1418,6 +1469,7 @@ app.get('/eveil', (req, res) => {
             + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">'+atkHTML+'</div>'
             + '</div>'
             + '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l&#39;XP (test)</button>'
+            + '<div style="margin-top:15px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
             + '</div>';
           document.getElementById('content').innerHTML = html;
         });
@@ -1452,7 +1504,7 @@ app.get('/eveil', (req, res) => {
         .then(function(d){
           if(!d.joueur){ ecranChoixGenre(); }
           else if(!d.joueur.fruit){ ecranTempleIntro(); }
-          else { monMonstre(); }
+          else { hub(); }
         })
         .catch(function(){ document.getElementById('content').innerHTML = '<div class="panel"><p class="loading">Erreur de connexion.</p></div>'; });
     }
