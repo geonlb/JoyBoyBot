@@ -1373,11 +1373,7 @@ app.get('/eveil', (req, res) => {
           document.getElementById('content').innerHTML = html;
         });
     }
-          html += '</div>';
-          document.getElementById('content').innerHTML = html;
-        });
-    }
-
+        
     function estimXp(niveau){ return 80 + (niveau-1)*40 + Math.floor(Math.pow(niveau,1.7)); }
 
     function barreXP(xp, max, label, couleur){
