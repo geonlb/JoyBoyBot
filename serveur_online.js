@@ -1232,7 +1232,7 @@ app.get('/eveil/sac', async (req, res) => {
   res.json({ sac: data || [] });
 });
 
-// Acheter un objet (avec quantite)
+// Acheter un objet (avec quantite + limite XP/jour)
 app.post('/eveil/acheter', async (req, res) => {
   const { username, objetId, quantite } = req.body;
   if (!username || !objetId) return res.status(400).json({ error: 'Manque des infos' });
@@ -1240,8 +1240,21 @@ app.post('/eveil/acheter', async (req, res) => {
   const objet = EVEIL_BOUTIQUE[objetId];
   if (!objet) return res.status(400).json({ error: 'Objet inconnu' });
 
-  const qte = Math.max(1, Math.min(99, parseInt(quantite) || 1)); // entre 1 et 99
+  const qte = Math.max(1, Math.min(99, parseInt(quantite) || 1));
   const coutTotal = objet.prix * qte;
+
+  // Limite des objets XP : 5 par jour (total ration + poulet confondus)
+  if (objet.type === 'xp') {
+    const { data: jx } = await supabase.from('eveil_joueurs').select('xp_achats_jour, xp_achats_date').eq('username', u).single();
+    const aujourdhui = new Date().toISOString().slice(0, 10); // format YYYY-MM-DD
+    let dejaAchetes = (jx && jx.xp_achats_date === aujourdhui) ? (jx.xp_achats_jour || 0) : 0;
+    if (dejaAchetes + qte > 5) {
+      const restant = Math.max(0, 5 - dejaAchetes);
+      return res.status(400).json({ error: 'Limite de 5 objets XP par jour ! Il t&#39;en reste ' + restant + ' aujourd&#39;hui.' });
+    }
+    // Mettre a jour le compteur du jour
+    await supabase.from('eveil_joueurs').update({ xp_achats_jour: dejaAchetes + qte, xp_achats_date: aujourdhui }).eq('username', u);
+  }
 
   // Verifier les Berrys
   const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
@@ -1505,7 +1518,7 @@ var BOUTIQUE = {
           ];
 
           var html = '<div style="text-align:center;margin-bottom:25px;">'
-            + '<div style="font-family:Cinzel,serif;font-size:30px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">🏪 LE COMPTOIR</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:30px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">🏪 BRISE SHOP</div>'
             + '<div style="display:inline-block;margin-top:10px;background:rgba(0,0,0,0.7);border:2px solid #f39c12;border-radius:20px;padding:8px 22px;">'
             + '<span style="font-family:Cinzel,serif;font-size:18px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Berrys</span></div></div>';
 
