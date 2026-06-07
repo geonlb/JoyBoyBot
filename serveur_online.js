@@ -1152,6 +1152,19 @@ app.post('/eveil/fruit', async (req, res) => {
   res.json({ success: true });
 });
 
+// Nommer son monstre (a l'eclosion, definitif)
+app.post('/eveil/nommer', async (req, res) => {
+  const { username, surnom } = req.body;
+  if (!username || !surnom) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const nom = surnom.trim().slice(0, 20); // max 20 caracteres
+  if (nom.length < 1) return res.status(400).json({ error: 'Nom invalide' });
+  const { data: j } = await supabase.from('eveil_joueurs').select('surnom').eq('username', u).single();
+  if (j && j.surnom) return res.status(400).json({ error: 'Deja nomme !' });
+  await supabase.from('eveil_joueurs').update({ surnom: nom }).eq('username', u);
+  res.json({ success: true, surnom: nom });
+});
+
 // Donnees de progression (lignees d'evolution + courbe XP)
 const EVEIL_LIGNEES = {
   lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
@@ -1342,6 +1355,38 @@ app.get('/eveil', (req, res) => {
       neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'] }
     };
 
+function ecranNommer(){
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var j = d.joueur;
+          var lig = LIGNEES[j.fruit];
+          var img = lig.stades[1]; // stade 2 (bebe)
+          var espece = lig.noms[1];
+          document.getElementById('content').innerHTML =
+            '<div class="panel" style="border-color:'+lig.couleur+';">'
+            + '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">&#x1F389; ECLOSION !</div>'
+            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2s ease-in-out infinite;">'
+            + '<p class="intro-text" style="margin:15px 0;">Ton oeuf a eclos ! Voici <b style="color:'+lig.couleur+';">'+espece+'</b>.<br>Quel nom veux-tu lui donner ?</p>'
+            + '<input id="surnom-input" type="text" maxlength="20" placeholder="Son petit nom..." style="background:rgba(0,0,0,0.6);border:1px solid '+lig.couleur+';color:#fff;padding:12px 18px;border-radius:25px;font-size:15px;text-align:center;outline:none;width:240px;font-family:Exo 2,sans-serif;">'
+            + '<div style="font-size:11px;color:#888;margin-top:6px;">(20 caracteres max &#x2022; definitif)</div>'
+            + '<div style="margin-top:18px;"><button class="connect-btn" style="border:none;cursor:pointer;" onclick="validerNom()">Valider ce nom</button></div>'
+            + '</div>';
+        });
+    }
+
+    function validerNom(){
+      var nom = document.getElementById('surnom-input').value.trim();
+      if(nom.length < 1){ alert('Donne-lui un nom !'); return; }
+      fetch('/eveil/nommer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,surnom:nom})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          monMonstre();
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -1385,7 +1430,7 @@ function hub(){
           var html = '<div style="margin-bottom:25px;display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">'
             + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 12px '+lig.couleur+'aa);">'
             + '<div style="text-align:left;">'
-            + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+lig.couleur+';">'+nom+'</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+lig.couleur+';">'+(j.surnom || nom)+'</div>'
             + '<div style="font-size:13px;color:#aaa;">'+(eclos ? 'Niveau '+j.niveau+' &#x2022; '+lig.element : 'Oeuf a couver')+'</div>'
             + '</div></div>'
             + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;max-width:680px;margin:0 auto;">'+cards+'</div>';
@@ -1451,7 +1496,8 @@ function hub(){
             // Colonne gauche : image + nom
             + '<div style="flex:1;min-width:200px;text-align:center;">'
             + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'aa);animation:flotte 2.5s ease-in-out infinite;">'
-            + '<div style="font-family:Cinzel,serif;font-size:24px;color:'+lig.couleur+';margin-top:10px;">'+nom+'</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:24px;color:'+lig.couleur+';margin-top:10px;">'+(j.surnom || nom)+'</div>'
+            + (j.surnom ? '<div style="font-size:12px;color:#888;font-style:italic;">'+nom+'</div>' : '')
             + '<div style="display:inline-block;margin-top:6px;padding:3px 14px;border:1px solid '+lig.couleur+';border-radius:15px;font-size:12px;color:'+lig.couleur+';">'+lig.element+' &#x2022; Stade '+stade+'/4</div>'
             + '<div style="font-size:20px;color:#fff;margin-top:10px;">Niveau <b style="color:'+lig.couleur+';">'+j.niveau+'</b></div>'
             + '</div>'
@@ -1490,7 +1536,7 @@ function hub(){
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
-          if(d.events && d.events.indexOf('eclosion')>=0) alert('🥚 Ton oeuf a eclos !');
+          if(d.events && d.events.indexOf('eclosion')>=0){ ecranNommer(); return; }
           if(d.events && d.events.indexOf('evo3')>=0) alert('✨ Ton monstre evolue en stade 3 !');
           if(d.events && d.events.indexOf('evo4')>=0) alert('👑 EVOLUTION FINALE ! Ton monstre atteint sa forme ultime avec le Haki !');
           monMonstre();
