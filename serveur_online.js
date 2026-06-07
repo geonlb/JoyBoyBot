@@ -1277,7 +1277,7 @@ app.get('/eveil', (req, res) => {
       var cards = '';
       for (var i=0;i<FRUITS.length;i++){
         var f = FRUITS[i];
-        cards += '<div class="genre-card" style="width:260px;border-color:'+f.couleur+'44;" onclick="confirmerFruit(\''+f.id+'\')">'
+        cards += '<div class="genre-card" style="width:260px;border-color:'+f.couleur+'44;" onclick="confirmerFruit(&#39;'+f.id+'&#39;)">'
           + '<img src="'+IMG+'/monstres/'+f.img+'.png" alt="'+f.nom+'" style="width:150px;height:150px;">'
           + '<div class="genre-nom" style="color:'+f.couleur+';font-size:16px;">'+f.emoji+' '+f.nom+'</div>'
           + '<div style="font-size:13px;color:#ccc;margin-top:8px;">Element : <b style="color:'+f.couleur+';">'+f.element+'</b></div>'
@@ -1302,7 +1302,7 @@ app.get('/eveil', (req, res) => {
           document.getElementById('content').innerHTML =
             '<div class="panel"><div style="font-size:70px;margin-bottom:10px;">'+f.emoji+'</div>'
             + '<div style="font-family:Cinzel,serif;font-size:26px;color:'+f.couleur+';margin-bottom:10px;">'+f.nom+'</div>'
-            + '<p class="intro-text">L\'oeuf se met a vibrer entre tes mains... Ton aventure d\'Eveilleur commence !</p></div>';
+            + '<p class="intro-text">L&#39;oeuf se met a vibrer entre tes mains... Ton aventure d&#39;Eveilleur commence !</p></div>';
           setTimeout(monMonstre, 2000);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
@@ -1310,16 +1310,16 @@ app.get('/eveil', (req, res) => {
 
     function ecranConnexion(){
       document.getElementById('content').innerHTML =
-        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\'au coeur d\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
+        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu&#39;au coeur d&#39;un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
         + '<a href="/auth/twitch?username=guest&from=eveil" class="connect-btn">Se connecter avec Twitch</a></div>';
     }
 
     function ecranChoixGenre(){
       document.getElementById('content').innerHTML =
-        '<div class="panel"><p class="intro-text">Avant de partir a l\'aventure, dis-nous qui tu es, pirate.</p>'
+        '<div class="panel"><p class="intro-text">Avant de partir a l&#39;aventure, dis-nous qui tu es, pirate.</p>'
         + '<div class="genre-grid">'
-        + '<div class="genre-card" onclick="choisirGenre(\'homme\')"><img src="'+IMG+'/eveil/perso-homme.png" alt="Homme"><div class="genre-nom">PIRATE</div></div>'
-        + '<div class="genre-card" onclick="choisirGenre(\'femme\')"><img src="'+IMG+'/eveil/perso-femme.png" alt="Femme"><div class="genre-nom">PIRATESSE</div></div>'
+        + '<div class="genre-card" onclick="choisirGenre(&#39;homme&#39;)"><img src="'+IMG+'/eveil/perso-homme.png" alt="Homme"><div class="genre-nom">PIRATE</div></div>'
+        + '<div class="genre-card" onclick="choisirGenre(&#39;femme&#39;)"><img src="'+IMG+'/eveil/perso-femme.png" alt="Femme"><div class="genre-nom">PIRATESSE</div></div>'
         + '</div></div>';
     }
 
@@ -1333,7 +1333,7 @@ app.get('/eveil', (req, res) => {
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
-var LIGNEES = {
+    var LIGNEES = {
       lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
       marin: { element:'Marin', couleur:'#3498db', stades:['watame-no-nlb','requinounou','sharkathor','megabysse'], noms:['Watame no NLB','Requinounou','Sharkathor','Megabysse'] },
       nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'] },
@@ -1358,7 +1358,7 @@ var LIGNEES = {
             html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">TON OEUF</div>'
               + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2s ease-in-out infinite;">'
               + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin:10px 0;">'+nom+'</div>'
-              + '<p style="font-size:14px;color:#ccc;margin-bottom:8px;">Ton oeuf n\'a pas encore eclos. Couve-le en gagnant de l\'experience !</p>'
+              + '<p style="font-size:14px;color:#ccc;margin-bottom:8px;">Ton oeuf n&#39;a pas encore eclos. Couve-le en gagnant de l&#39;experience !</p>'
               + barreXP(j.xp, 50, 'Eclosion', lig.couleur);
           } else {
             html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">MON MONSTRE</div>'
@@ -1368,7 +1368,11 @@ var LIGNEES = {
               + '<div style="font-size:18px;color:#fff;margin:8px 0;">Niveau <b style="color:'+lig.couleur+';">'+j.niveau+'</b></div>'
               + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niveau '+(j.niveau+1), lig.couleur);
           }
-          html += '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l\'XP (test)</button>';
+          html += '<button class="connect-btn" style="border:none;cursor:pointer;margin-top:20px;" onclick="actionTest()">&#x1F31F; Gagner de l&#39;XP (test)</button>';
+          html += '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
           html += '</div>';
           document.getElementById('content').innerHTML = html;
         });
