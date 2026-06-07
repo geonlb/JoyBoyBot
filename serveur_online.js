@@ -1656,28 +1656,60 @@ var BOUTIQUE = {
         .then(function(r){return r.json();})
         .then(function(d){
           var items = d.sac || [];
-          var html = '<div style="margin-bottom:20px;"><span style="font-family:Cinzel,serif;font-size:26px;color:#87ceeb;">🎒 MON SAC</span></div>';
-          if(items.length === 0){
-            html += '<div class="panel"><p class="intro-text">Ton sac est vide ! Va faire un tour a la boutique. 🏪</p></div>';
-          } else {
-            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;max-width:680px;margin:0 auto;">';
-            for(var i=0;i<items.length;i++){
-              var it = items[i];
-              var o = BOUTIQUE[it.objet];
-              if(!o) continue;
+          // Index des quantites par objet
+          var qteParObjet = {};
+          for(var k=0;k<items.length;k++){ qteParObjet[items[k].objet] = items[k].quantite; }
+
+          // Categories du sac (avec les futures vides)
+          var categories = [
+            { cle:'XP',       nom:'OBJETS XP',      couleur:'#2ecc71' },
+            { cle:'Soin',     nom:'OBJETS DE SOIN', couleur:'#3498db' },
+            { cle:'Capture',  nom:'CAPTURE',        couleur:'#9b59b6' },
+            { cle:'Quete',    nom:'OBJETS DE QUETE',couleur:'#e67e22' },
+            { cle:'Materiaux',nom:'MATERIAUX',      couleur:'#95a5a6' }
+          ];
+
+          var panneaux = '';
+          for(var c=0;c<categories.length;c++){
+            var cat = categories[c];
+            // Cases d'objets de cette categorie
+            var cases = '';
+            var compte = 0;
+            for(var id in BOUTIQUE){
+              var o = BOUTIQUE[id];
+              if(o.categorie !== cat.cle) continue;
+              var q = qteParObjet[id] || 0;
+              if(q < 1) continue; // on n'affiche que ce qu'on possede
+              compte++;
               var estXp = o.categorie === 'XP';
-              html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:14px;padding:16px;text-align:center;">'
-                + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:60px;height:60px;object-fit:contain;margin-bottom:6px;">'
-                + '<div style="font-family:Cinzel,serif;font-size:14px;color:#fff;">'+o.nom+'</div>'
-                + '<div style="font-size:18px;color:#87ceeb;margin:6px 0;">x'+it.quantite+'</div>'
-                + (estXp
-                    ? '<button class="connect-btn" style="border:none;cursor:pointer;font-size:11px;padding:6px 16px;" onclick="utiliser(&#39;'+it.objet+'&#39;)">Utiliser</button>'
-                    : '<div style="font-size:10px;color:#888;">Utilisable bientot</div>')
+              cases += '<div style="position:relative;background:linear-gradient(160deg,#3a2a18,#2a1d10);border:2px solid #6b4f2e;border-radius:8px;padding:8px;width:88px;text-align:center;box-shadow:inset 0 2px 6px rgba(0,0,0,0.5);">'
+                + '<div style="position:absolute;top:-6px;right:-6px;background:'+cat.couleur+';color:#000;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid #2a1d10;">'+q+'</div>'
+                + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:46px;height:46px;object-fit:contain;">'
+                + '<div style="font-size:9px;color:#e8d5a3;margin-top:4px;line-height:1.1;min-height:22px;">'+o.nom+'</div>'
+                + (estXp ? '<button onclick="utiliser(&#39;'+id+'&#39;)" style="margin-top:4px;background:'+cat.couleur+';border:none;border-radius:6px;color:#000;font-size:9px;font-weight:bold;padding:3px 6px;cursor:pointer;width:100%;">Utiliser</button>' : '')
                 + '</div>';
             }
-            html += '</div>';
+            if(compte === 0){
+              cases = '<div style="font-size:11px;color:#8a7355;font-style:italic;padding:14px;">Vide pour l&#39;instant...</div>';
+            }
+            // Le panneau parchemin de la categorie
+            panneaux += '<div style="background:linear-gradient(160deg,#5a4226,#43301b);border:3px solid #2a1d10;border-radius:12px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.4);">'
+              // Bandeau-plaque grave
+              + '<div style="background:linear-gradient(180deg,#6b4f2e,#4a3520);border:2px solid #2a1d10;border-radius:8px;padding:6px 12px;margin-bottom:10px;text-align:center;box-shadow:inset 0 1px 3px rgba(255,220,150,0.2);">'
+              + '<span style="font-family:Cinzel,serif;font-size:14px;letter-spacing:2px;color:'+cat.couleur+';text-shadow:0 1px 2px rgba(0,0,0,0.6);">'+cat.nom+'</span></div>'
+              // Zone des cases
+              + '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:60px;align-items:center;">'+cases+'</div>'
+              + '</div>';
           }
-          html += '<div style="margin-top:25px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>';
+
+          var html = '<div style="max-width:720px;margin:0 auto;background:linear-gradient(170deg,#4a3520,#2a1d10);border:4px solid #1a1109;border-radius:20px;padding:25px 20px;box-shadow:0 8px 30px rgba(0,0,0,0.6);">'
+            // Titre facon plaque
+            + '<div style="background:linear-gradient(180deg,#6b4f2e,#43301b);border:3px solid #2a1d10;border-radius:12px;padding:12px 25px;margin:0 auto 20px;display:inline-block;box-shadow:inset 0 2px 4px rgba(255,220,150,0.25);">'
+            + '<span style="font-family:Cinzel,serif;font-size:24px;letter-spacing:3px;color:#f5d98a;text-shadow:0 2px 3px rgba(0,0,0,0.7);">🎒 SAC A DOS</span></div>'
+            // Grille des panneaux
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">'+panneaux+'</div>'
+            + '<div style="margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
           document.getElementById('content').innerHTML = html;
         });
     }
