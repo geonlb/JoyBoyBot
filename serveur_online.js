@@ -1048,7 +1048,7 @@ app.get('/roulette', (req, res) => {
       box.style.boxShadow = '0 0 30px ' + seg.couleur + '44';
 
       if (seg.berrys === 0) {
-        document.getElementById('result-title').textContent = '🚔 La Marine t\\'a arrêté !';
+        document.getElementById('result-title').textContent = '🚔 La Marine t\'a arrêté !';
         document.getElementById('result-berrys').textContent = '+0 Berrys';
         document.getElementById('result-berrys').style.color = '#e74c3c';
       } else if (seg.berrys === -1) {
@@ -1269,7 +1269,7 @@ app.get('/eveil', (req, res) => {
     function ecranTempleIntro(){
       document.getElementById('content').innerHTML =
         '<div class="panel" style="background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.85)), url(' + IMG + '/eveil/temple.png) center/cover;border-color:#8a2be2;">'
-        + '<p class="intro-text">Tu pousses la lourde porte de pierre d\\'un temple oublie au cceur d\\'une ile deserte...<br><br>Dans une salle secrete baignee d\\'une lueur etrange, six fruits du demon en forme d\\'oeuf reposent sur des piedestaux. L\\'un d\\'eux t\\'appelle.<br><br><b style="color:#ffd479;">Choisis bien : ce fruit sera ton partenaire pour toute l\\'aventure.</b></p>'
+        + '<p class="intro-text">Tu pousses la lourde porte de pierre d\'un temple oublie au cceur d\'une ile deserte...<br><br>Dans une salle secrete baignee d\'une lueur etrange, six fruits du demon en forme d\'oeuf reposent sur des piedestaux. L\'un d\'eux t\'appelle.<br><br><b style="color:#ffd479;">Choisis bien : ce fruit sera ton partenaire pour toute l\'aventure.</b></p>'
         + '<button class="connect-btn" style="border:none;cursor:pointer;" onclick="ecranOeufs()">Entrer dans la salle secrete</button></div>';
     }
 
@@ -1277,7 +1277,7 @@ app.get('/eveil', (req, res) => {
       var cards = '';
       for (var i=0;i<FRUITS.length;i++){
         var f = FRUITS[i];
-        cards += '<div class="genre-card" style="width:260px;border-color:'+f.couleur+'44;" onclick="confirmerFruit(\\''+f.id+'\\')">'
+        cards += '<div class="genre-card" style="width:260px;border-color:'+f.couleur+'44;" onclick="confirmerFruit(\''+f.id+'\')">'
           + '<img src="'+IMG+'/monstres/'+f.img+'.png" alt="'+f.nom+'" style="width:150px;height:150px;">'
           + '<div class="genre-nom" style="color:'+f.couleur+';font-size:16px;">'+f.emoji+' '+f.nom+'</div>'
           + '<div style="font-size:13px;color:#ccc;margin-top:8px;">Element : <b style="color:'+f.couleur+';">'+f.element+'</b></div>'
@@ -1310,16 +1310,16 @@ app.get('/eveil', (req, res) => {
 
     function ecranConnexion(){
       document.getElementById('content').innerHTML =
-        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\\'au coeur d\\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
+        '<div class="panel"><p class="intro-text">Bienvenue, futur pirate ! Une legende raconte qu\'au coeur d\'un temple oublie sommeillent six fruits du demon mysterieux, attendant leur Eveilleur.<br><br>Connecte-toi pour commencer ton aventure et choisir ton destin.</p>'
         + '<a href="/auth/twitch?username=guest&from=eveil" class="connect-btn">Se connecter avec Twitch</a></div>';
     }
 
     function ecranChoixGenre(){
       document.getElementById('content').innerHTML =
-        '<div class="panel"><p class="intro-text">Avant de partir a l\\'aventure, dis-nous qui tu es, pirate.</p>'
+        '<div class="panel"><p class="intro-text">Avant de partir a l\'aventure, dis-nous qui tu es, pirate.</p>'
         + '<div class="genre-grid">'
-        + '<div class="genre-card" onclick="choisirGenre(\\'homme\\')"><img src="'+IMG+'/eveil/perso-homme.png" alt="Homme"><div class="genre-nom">PIRATE</div></div>'
-        + '<div class="genre-card" onclick="choisirGenre(\\'femme\\')"><img src="'+IMG+'/eveil/perso-femme.png" alt="Femme"><div class="genre-nom">PIRATESSE</div></div>'
+        + '<div class="genre-card" onclick="choisirGenre(\'homme\')"><img src="'+IMG+'/eveil/perso-homme.png" alt="Homme"><div class="genre-nom">PIRATE</div></div>'
+        + '<div class="genre-card" onclick="choisirGenre(\'femme\')"><img src="'+IMG+'/eveil/perso-femme.png" alt="Femme"><div class="genre-nom">PIRATESSE</div></div>'
         + '</div></div>';
     }
 
