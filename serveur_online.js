@@ -1731,10 +1731,27 @@ function bateau(){
             + '<div style="background:rgba(0,0,0,0.5);border:1px solid #e91e8c;border-radius:12px;height:18px;overflow:hidden;"><div style="height:100%;width:'+bonheur+'%;background:linear-gradient(90deg,#e91e8c,#ff69b4);transition:width 0.5s;"></div></div></div>'
             // Boutons de soin
             + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px;">'+btns+'</div>'
-            + '<div style="margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
-            + '</div>';
+            + '<div style="margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="arreterMusiqueBateau();hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>'
+            + '<audio id="musique-bateau" src="/persos/bateau.mp3" loop></audio>'
+            + '<button id="btn-musique-bateau" onclick="toggleMusiqueBateau()" style="position:fixed;bottom:20px;right:20px;z-index:999;background:rgba(0,0,0,0.85);border:2px solid #87ceeb;color:white;width:55px;height:55px;border-radius:50%;font-size:24px;cursor:pointer;box-shadow:0 0 20px rgba(135,206,235,0.6);">&#x1F3B5;</button>';
           document.getElementById('content').innerHTML = html;
+          // Lancer la musique automatiquement (si le navigateur l'autorise)
+          var mb = document.getElementById('musique-bateau');
+          if(mb){ mb.volume = 0.4; var p = mb.play(); if(p){ p.catch(function(){}); } }
         });
+    }
+    function toggleMusiqueBateau(){
+      var mb = document.getElementById('musique-bateau');
+      var btn = document.getElementById('btn-musique-bateau');
+      if(!mb) return;
+      if(mb.paused){ mb.play(); if(btn) btn.innerHTML = '&#x1F3B5;'; }
+      else { mb.pause(); if(btn) btn.innerHTML = '&#x1F507;'; }
+    }
+
+    function arreterMusiqueBateau(){
+      var mb = document.getElementById('musique-bateau');
+      if(mb){ mb.pause(); mb.currentTime = 0; }
     }
 
     function soin(action){
