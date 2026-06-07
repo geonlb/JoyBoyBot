@@ -1165,6 +1165,51 @@ app.post('/eveil/nommer', async (req, res) => {
   res.json({ success: true, surnom: nom });
 });
 
+// Catalogue de la boutique eveil
+const EVEIL_BOUTIQUE = {
+  ration:      { nom:'Ration', emoji:'🍖', prix:200, desc:'Donne +50 XP a ton monstre', type:'xp', valeur:50 },
+  poulet:      { nom:'Poulet d&#39;XP', emoji:'🍗', prix:800, desc:'Donne +250 XP a ton monstre', type:'xp', valeur:250 },
+  potion:      { nom:'Potion', emoji:'🧪', prix:150, desc:'Rend 50 PV (utile en combat)', type:'soin', valeur:50 },
+  elixir:      { nom:'Elixir', emoji:'⭐', prix:400, desc:'Restaure tous les PV (utile en combat)', type:'soin', valeur:9999 },
+  bouteille_verte: { nom:'Elixiteille Verte', emoji:'🟢', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
+  bouteille_bleue: { nom:'Elixiteille Bleue', emoji:'🔵', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
+  bouteille_violette: { nom:'Elixiteille Violette', emoji:'🟣', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
+  bouteille_doree: { nom:'Elixiteille Doree', emoji:'🟡', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
+};
+
+// Voir le sac d'un joueur
+app.get('/eveil/sac', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const { data } = await supabase.from('eveil_sac').select('*').eq('username', username.toLowerCase());
+  res.json({ sac: data || [] });
+});
+
+// Acheter un objet
+app.post('/eveil/acheter', async (req, res) => {
+  const { username, objetId } = req.body;
+  if (!username || !objetId) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const objet = EVEIL_BOUTIQUE[objetId];
+  if (!objet) return res.status(400).json({ error: 'Objet inconnu' });
+
+  // Verifier les Berrys
+  const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
+  if (!prime || prime.berrys < objet.prix) return res.status(400).json({ error: 'Pas assez de Berrys ! Il te faut ' + objet.prix + ' Berrys.' });
+
+  // Debiter
+  const newBerrys = prime.berrys - objet.prix;
+  await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+
+  // Ajouter au sac (delete + insert pour gerer la quantite proprement)
+  const { data: existant } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
+  const newQte = (existant ? existant.quantite : 0) + 1;
+  await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+  await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
+
+  res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte });
+});
+
 // Donnees de progression (lignees d'evolution + courbe XP)
 const EVEIL_LIGNEES = {
   lave:  { element:'Lave',  couleur:'#e74c3c', stades:['laviana-no-nlb','salarlo','volcave','avladrak'],       noms:['Laviana no NLB','Salarlo','Volcave','AvlaDrak'] },
@@ -1387,6 +1432,91 @@ function ecranNommer(){
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
+var BOUTIQUE = {
+      ration:      { nom:'Ration', emoji:'🍖', prix:200, desc:'Donne +50 XP', categorie:'XP' },
+      poulet:      { nom:'Poulet d&#39;XP', emoji:'🍗', prix:800, desc:'Donne +250 XP', categorie:'XP' },
+      potion:      { nom:'Potion', emoji:'🧪', prix:150, desc:'Rend 50 PV', categorie:'Soin' },
+      elixir:      { nom:'Elixir', emoji:'⭐', prix:400, desc:'Restaure tous les PV', categorie:'Soin' },
+      bouteille_verte:    { nom:'Elixiteille Verte', emoji:'🟢', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
+      bouteille_bleue:    { nom:'Elixiteille Bleue', emoji:'🔵', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
+      bouteille_violette: { nom:'Elixiteille Violette', emoji:'🟣', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
+      bouteille_doree:    { nom:'Elixiteille Doree', emoji:'🟡', prix:5000, desc:'Capture - taux max', categorie:'Capture' }
+    };
+
+    function boutique(){
+      Promise.all([
+        fetch('/eveil/joueur?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}),
+        fetch('/prime/'+encodeURIComponent(currentUser)).then(function(r){return r.text();})
+      ]).then(function(){
+        fetch('/roulette/infos?username='+encodeURIComponent(currentUser))
+          .then(function(r){return r.json();})
+          .then(function(info){
+            var berrys = (info && info.berrys) ? info.berrys : 0;
+            var cats = ['XP','Soin','Capture'];
+            var html = '<div style="margin-bottom:20px;"><span style="font-family:Cinzel,serif;font-size:26px;color:#f39c12;">🏪 BOUTIQUE</span>'
+              + '<div style="margin-top:8px;font-size:15px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Berrys</div></div>';
+            for(var c=0;c<cats.length;c++){
+              html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin:18px 0 10px;">'+cats[c].toUpperCase()+'</div>';
+              html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">';
+              for(var id in BOUTIQUE){
+                var o = BOUTIQUE[id];
+                if(o.categorie !== cats[c]) continue;
+                html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(243,156,18,0.4);border-radius:14px;padding:16px;text-align:center;">'
+                  + '<div style="font-size:38px;margin-bottom:6px;">'+o.emoji+'</div>'
+                  + '<div style="font-family:Cinzel,serif;font-size:15px;color:#fff;">'+o.nom+'</div>'
+                  + '<div style="font-size:11px;color:#aaa;margin:6px 0;">'+o.desc+'</div>'
+                  + '<div style="font-size:13px;color:#f39c12;margin-bottom:10px;">💰 '+o.prix.toLocaleString()+'</div>'
+                  + '<button class="connect-btn" style="border:none;cursor:pointer;font-size:12px;padding:8px 18px;background:linear-gradient(135deg,#f39c12,#e67e22);color:#000;" onclick="acheter(&#39;'+id+'&#39;)">Acheter</button>'
+                  + '</div>';
+              }
+              html += '</div>';
+            }
+            html += '<div style="margin-top:25px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>';
+            document.getElementById('content').innerHTML = html;
+          });
+      });
+    }
+
+    function acheter(id){
+      var o = BOUTIQUE[id];
+      if(!confirm('Acheter '+o.nom+' pour '+o.prix+' Berrys ?')) return;
+      fetch('/eveil/acheter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:id})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          alert('✅ '+o.nom+' achete ! (Tu en as '+d.quantite+' dans ton sac)');
+          boutique();
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function sac(){
+      fetch('/eveil/sac?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var items = d.sac || [];
+          var html = '<div style="margin-bottom:20px;"><span style="font-family:Cinzel,serif;font-size:26px;color:#87ceeb;">🎒 MON SAC</span></div>';
+          if(items.length === 0){
+            html += '<div class="panel"><p class="intro-text">Ton sac est vide ! Va faire un tour a la boutique. 🏪</p></div>';
+          } else {
+            html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;max-width:680px;margin:0 auto;">';
+            for(var i=0;i<items.length;i++){
+              var it = items[i];
+              var o = BOUTIQUE[it.objet];
+              if(!o) continue;
+              html += '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:14px;padding:16px;text-align:center;">'
+                + '<div style="font-size:38px;margin-bottom:6px;">'+o.emoji+'</div>'
+                + '<div style="font-family:Cinzel,serif;font-size:14px;color:#fff;">'+o.nom+'</div>'
+                + '<div style="font-size:18px;color:#87ceeb;margin-top:6px;">x'+it.quantite+'</div>'
+                + '</div>';
+            }
+            html += '</div>';
+          }
+          html += '<div style="margin-top:25px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -1403,8 +1533,8 @@ function hub(){
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
             { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:false },
             { id:'explo',   emoji:'&#x1F9ED;', titre:'EXPLORATION', desc:'Parcours les iles du Grand Line', actif:false },
-            { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:false },
-            { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:false },
+            { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
+            { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
             { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:false }
           ];
 
@@ -1412,7 +1542,8 @@ function hub(){
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              cards += '<div onclick="monMonstre()" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : 'sac()');
+              cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
                 + '<div style="font-size:12px;color:#aaa;margin-top:6px;">'+s.desc+'</div>'
