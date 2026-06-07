@@ -1232,13 +1232,33 @@ app.get('/eveil/sac', async (req, res) => {
   res.json({ sac: data || [] });
 });
 
-// Acheter un objet
+// Acheter un objet (avec quantite)
 app.post('/eveil/acheter', async (req, res) => {
-  const { username, objetId } = req.body;
+  const { username, objetId, quantite } = req.body;
   if (!username || !objetId) return res.status(400).json({ error: 'Manque des infos' });
   const u = username.toLowerCase();
   const objet = EVEIL_BOUTIQUE[objetId];
   if (!objet) return res.status(400).json({ error: 'Objet inconnu' });
+
+  const qte = Math.max(1, Math.min(99, parseInt(quantite) || 1)); // entre 1 et 99
+  const coutTotal = objet.prix * qte;
+
+  // Verifier les Berrys
+  const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
+  if (!prime || prime.berrys < coutTotal) return res.status(400).json({ error: 'Pas assez de Berrys ! Il te faut ' + coutTotal.toLocaleString() + ' Berrys pour ' + qte + 'x.' });
+
+  // Debiter
+  const newBerrys = prime.berrys - coutTotal;
+  await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+
+  // Ajouter au sac
+  const { data: existant } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
+  const newQte = (existant ? existant.quantite : 0) + qte;
+  await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+  await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
+
+  res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte, achete: qte });
+});
 
   // Verifier les Berrys
   const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
@@ -1513,6 +1533,11 @@ var BOUTIQUE = {
                   + '<div style="font-family:Cinzel,serif;font-size:15px;color:#fff;">'+o.nom+'</div>'
                   + '<div style="font-size:11px;color:#aaa;margin:6px 0;">'+o.desc+'</div>'
                   + '<div style="font-size:13px;color:#f39c12;margin-bottom:10px;">💰 '+o.prix.toLocaleString()+'</div>'
+                  + '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;">'
+                  + '<button onclick="changeQte(&#39;'+id+'&#39;,-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #f39c12;background:rgba(0,0,0,0.5);color:#f39c12;cursor:pointer;font-size:14px;">-</button>'
+                  + '<span id="qte-'+id+'" style="font-size:15px;color:#fff;min-width:24px;display:inline-block;">1</span>'
+                  + '<button onclick="changeQte(&#39;'+id+'&#39;,1)" style="width:26px;height:26px;border-radius:50%;border:1px solid #f39c12;background:rgba(0,0,0,0.5);color:#f39c12;cursor:pointer;font-size:14px;">+</button>'
+                  + '</div>'
                   + '<button class="connect-btn" style="border:none;cursor:pointer;font-size:12px;padding:8px 18px;background:linear-gradient(135deg,#f39c12,#e67e22);color:#000;" onclick="acheter(&#39;'+id+'&#39;)">Acheter</button>'
                   + '</div>';
               }
@@ -1524,14 +1549,24 @@ var BOUTIQUE = {
       });
     }
 
+    function changeQte(id, delta){
+      var el = document.getElementById('qte-'+id);
+      var q = parseInt(el.textContent) + delta;
+      if(q < 1) q = 1;
+      if(q > 99) q = 99;
+      el.textContent = q;
+    }
+
     function acheter(id){
       var o = BOUTIQUE[id];
-      if(!confirm('Acheter '+o.nom+' pour '+o.prix+' Berrys ?')) return;
-      fetch('/eveil/acheter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:id})})
+      var q = parseInt(document.getElementById('qte-'+id).textContent) || 1;
+      var total = o.prix * q;
+      if(!confirm('Acheter '+q+'x '+o.nom+' pour '+total.toLocaleString()+' Berrys ?')) return;
+      fetch('/eveil/acheter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:id,quantite:q})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
-          alert('✅ '+o.nom+' achete ! (Tu en as '+d.quantite+' dans ton sac)');
+          alert('✅ '+d.achete+'x '+o.nom+' achete ! (Tu en as '+d.quantite+' dans ton sac)');
           boutique();
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
