@@ -1359,7 +1359,7 @@ var LIGNEES = {
               + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2s ease-in-out infinite;">'
               + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+lig.couleur+';margin:10px 0;">'+nom+'</div>'
               + '<p style="font-size:14px;color:#ccc;margin-bottom:8px;">Ton oeuf n\'a pas encore eclos. Couve-le en gagnant de l\'experience !</p>'
-              + barreXP(j.xp, ${EVEIL_ECLOSION_XP}, 'Eclosion', lig.couleur);
+              + barreXP(j.xp, 50, 'Eclosion', lig.couleur);
           } else {
             html += '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:10px;">MON MONSTRE</div>'
               + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:220px;height:220px;object-fit:contain;filter:drop-shadow(0 0 25px '+lig.couleur+'88);animation:flotte 2.5s ease-in-out infinite;">'
