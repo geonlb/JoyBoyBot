@@ -1405,9 +1405,9 @@ const EVEIL_MONSTRES = {
   celestion:  { nom:'Celestion', img:'celestion', element:'neant', rarete:'ultime', zone:3 }
 };
 const EVEIL_ZONES = {
-  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:6, couleur:'#2ecc71' },
-  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:5, nivMax:14, couleur:'#9b59b6' },
-  3: { nom:'Abysses Maudits', desc:'Le repaire des monstres les plus puissants', nivMin:13, nivMax:25, couleur:'#e74c3c' }
+  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:20, couleur:'#2ecc71' },
+  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:21, nivMax:40, couleur:'#9b59b6' },
+  3: { nom:'Abysses Maudits', desc:'Le repaire des monstres les plus puissants', nivMin:41, nivMax:60, couleur:'#e74c3c' }
 };
 const RARETE_INFO = {
   commun: { nom:'Commun', couleur:'#2ecc71', tauxBase:0.45 },
