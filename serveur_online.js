@@ -93,12 +93,12 @@ app.get('/', (req, res) => {
       <a href="#" onclick="goWanted()" class="card">
         <img src="/persos/wantednlb.png" style="width:80px;height:80px;object-fit:contain;margin-bottom:15px;">
         <div class="card-title">WANTED</div>
-        <div class="card-desc">Consulte ton avis de recherche et ta prime en Berrys !</div>
+        <div class="card-desc">Consulte ton avis de recherche et ta prime en Brise !</div>
       </a>
       <a href="/minijeux" class="card">
         <div class="card-icon">&#x1F3AE;</div>
         <div class="card-title">MINI JEUX</div>
-        <div class="card-desc">Joue et gagne des Berrys hors live !</div>
+        <div class="card-desc">Joue et gagne des Brise hors live !</div>
       </a>
     </div>
     <div class="footer"><p>&#x1F3F4; NeyLaBrise — Mis a jour en temps reel &#x1F3F4;</p></div>
@@ -125,15 +125,15 @@ app.get('/', (req, res) => {
   var currentUser = (verified && owner) ? owner : null;
   window.toggleLogPose = function(){ var p = document.getElementById('logpose-panel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; };
   function ladderHTML(h){ var c=''; for(var i=0;i<REWARDS.length;i++){ var d=i+1,n=d===h,bg=n?'#8a2be2':'rgba(255,255,255,0.06)',co=n?'#fff':'#888',bo=n?'#87ceeb':'rgba(255,255,255,0.1)'; c+='<div style="border:1px solid '+bo+';background:'+bg+';border-radius:8px;padding:4px 2px;text-align:center;"><div style="font-size:10px;font-weight:bold;color:'+co+';">J'+d+'</div><div style="font-size:10px;color:'+(n?'#cbe6f7':'#777')+';">'+REWARDS[i]+'</div></div>'; } return '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:12px 0;">'+c+'</div>'; }
-  function header(){ return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:20px;">&#x1F9ED;</span><span style="font-weight:bold;font-size:15px;color:#87ceeb;">Berrys journalier</span></div>'; }
+  function header(){ return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:20px;">&#x1F9ED;</span><span style="font-weight:bold;font-size:15px;color:#87ceeb;">Brise journalier</span></div>'; }
   function render(){
     var c=document.getElementById('lp-content'), badge=document.getElementById('lp-badge');
-    if(!currentUser){ c.innerHTML=header()+'<p style="font-size:13px;color:#bbb;line-height:1.5;margin-bottom:14px;">Connecte-toi avec Twitch pour reclamer ta recompense quotidienne en Berrys !</p><a href="/auth/twitch?username=guest&from=accueil" style="display:block;text-align:center;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;padding:10px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch</a>'; return; }
+    if(!currentUser){ c.innerHTML=header()+'<p style="font-size:13px;color:#bbb;line-height:1.5;margin-bottom:14px;">Connecte-toi avec Twitch pour reclamer ta recompense quotidienne en Brise !</p><a href="/auth/twitch?username=guest&from=accueil" style="display:block;text-align:center;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;padding:10px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch</a>'; return; }
     fetch('/daily/infos?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}).then(function(d){
       if(d.error){ c.innerHTML=header()+'<p style="font-size:13px;color:#ffd479;">'+d.error+'</p>'; return; }
       var html=header();
       if(d.cooldown){ if(badge)badge.style.display='none'; html+='<p style="font-size:13px;color:#bbb;margin-bottom:4px;">Tu as deja recupere ton Log Pose !</p><p style="font-size:13px;color:#87ceeb;margin-bottom:2px;">Reviens dans <b>'+d.restantH+'h</b> pour continuer ta serie.</p>'+ladderHTML(d.prochainJour)+'<p style="font-size:11px;color:#777;text-align:center;">Serie actuelle : jour '+d.streakActuel+'</p>'; }
-      else { if(badge)badge.style.display='flex'; html+='<div style="text-align:center;margin-bottom:2px;"><span style="font-size:28px;font-weight:bold;color:#fff;">+'+d.prochaineRecompense+'</span> <span style="font-size:13px;color:#aaa;">Berrys</span></div><p style="font-size:12px;color:#87ceeb;text-align:center;">Jour '+d.prochainJour+' de ta serie</p>'+ladderHTML(d.prochainJour)+'<button id="lp-claim" style="width:100%;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;border:none;border-radius:12px;padding:11px;font-size:15px;font-weight:bold;cursor:pointer;">Recuperer mon Log Pose</button>'; }
+      else { if(badge)badge.style.display='flex'; html+='<div style="text-align:center;margin-bottom:2px;"><span style="font-size:28px;font-weight:bold;color:#fff;">+'+d.prochaineRecompense+'</span> <span style="font-size:13px;color:#aaa;">Brise</span></div><p style="font-size:12px;color:#87ceeb;text-align:center;">Jour '+d.prochainJour+' de ta serie</p>'+ladderHTML(d.prochainJour)+'<button id="lp-claim" style="width:100%;background:linear-gradient(135deg,#8a2be2,#4169e1);color:white;border:none;border-radius:12px;padding:11px;font-size:15px;font-weight:bold;cursor:pointer;">Recuperer mon Log Pose</button>'; }
       c.innerHTML=html; var b=document.getElementById('lp-claim'); if(b)b.addEventListener('click',claim);
     }).catch(function(){ c.innerHTML=header()+'<p style="font-size:13px;color:#f88;">Erreur de connexion, reessaie.</p>'; });
   }
@@ -142,7 +142,7 @@ app.get('/', (req, res) => {
     fetch('/daily/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})}).then(function(r){return r.json();}).then(function(d){
       if(d.error){ render(); return; }
       var c=document.getElementById('lp-content'), badge=document.getElementById('lp-badge'); if(badge)badge.style.display='none';
-      c.innerHTML='<div style="text-align:center;padding:10px 0;"><div style="font-size:34px;margin-bottom:6px;">&#x1F4B0;</div><p style="font-size:18px;font-weight:bold;color:#87ceeb;margin-bottom:4px;">+'+d.reward+' Berrys !</p><p style="font-size:13px;color:#bbb;">Serie : jour '+d.streak+' &#x2022; Total : '+d.berrys.toLocaleString()+'</p><p style="font-size:12px;color:#777;margin-top:8px;">Reviens demain pour continuer !</p></div>';
+      c.innerHTML='<div style="text-align:center;padding:10px 0;"><div style="font-size:34px;margin-bottom:6px;">&#x1F4B0;</div><p style="font-size:18px;font-weight:bold;color:#87ceeb;margin-bottom:4px;">+'+d.reward+' Brise !</p><p style="font-size:13px;color:#bbb;">Serie : jour '+d.streak+' &#x2022; Total : '+d.berrys.toLocaleString()+'</p><p style="font-size:12px;color:#777;margin-top:8px;">Reviens demain pour continuer !</p></div>';
     }).catch(function(){ render(); });
   }
   render();
@@ -244,7 +244,7 @@ app.get('/grandline', async (req, res) => {
       const prime = (primes || []).find(p => p.username === m.username);
       const b = prime ? prime.berrys.toLocaleString() : '0';
       const av = avatars[m.username] || '';
-      return '<div class="member-card"><img src="' + av + '" alt="' + m.username + '" class="member-avatar"><div class="member-info"><div class="member-name">' + m.username + '</div><div class="member-perso">' + m.personnage + '</div><div class="member-prime">&#x1F4B0; ' + b + ' Berrys</div></div></div>';
+      return '<div class="member-card"><img src="' + av + '" alt="' + m.username + '" class="member-avatar"><div class="member-info"><div class="member-name">' + m.username + '</div><div class="member-perso">' + m.personnage + '</div><div class="member-prime">&#x1F4B0; ' + b + ' Brise</div></div></div>';
     }).join('');
     return '<div class="faction-card" style="border-color:' + f.couleur + ';background:' + f.bg + ';" onclick="toggleFaction(this)">' +
       '<div class="faction-header">' +
@@ -271,8 +271,8 @@ app.post('/eventsub', async (req, res) => {
       const newSubs = c ? c.subs + 1 : 1;
       await supabase.from('compteur').upsert({ username, subs: newSubs });
       const { data: p } = await supabase.from('primes').select('berrys').eq('username', username).single();
-      const newBerrys = p ? p.berrys + 5000 : 5000;
-      await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+      const newBrise = p ? p.berrys + 5000 : 5000;
+      await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
     }
   }
   res.sendStatus(200);
@@ -363,7 +363,7 @@ app.post('/coffre', async (req, res) => {
 
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData || primeData.berrys < 2000) {
-    return res.status(400).json({ error: 'Pas assez de Berrys ! Il faut 2000 Berrys pour ouvrir un coffre !' });
+    return res.status(400).json({ error: 'Pas assez de Brise ! Il faut 2000 Brise pour ouvrir un coffre !' });
   }
 
   const fruitsListe = {
@@ -388,11 +388,11 @@ app.post('/coffre', async (req, res) => {
   };
 
   const loot = [tirerFruit(), tirerFruit(), tirerFruit()];
-  const newBerrys = primeData.berrys - 2000;
+  const newBrise = primeData.berrys - 2000;
 
   await supabase.from('codes_temp').delete().eq('username', username + '_coffre');
 await supabase.from('codes_temp').insert({ username: username + '_coffre', code: 'coffre', expire: Date.now() + 1200000 });
-  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
   for (const { fruit, rarete } of loot) {
     await supabase.from('collection').insert({ username, fruit, rarete });
   }
@@ -415,7 +415,7 @@ await supabase.from('codes_temp').insert({ username: username + '_coffre', code:
   const autresAchievements = await verifierAchievements(username, allFruits || [], fruitsG);
   const tousAchievements = [...nouveauxAchievements, ...autresAchievements];
 
-  res.json({ success: true, loot, berrys: newBerrys, achievements: tousAchievements });
+  res.json({ success: true, loot, berrys: newBrise, achievements: tousAchievements });
 });
 
 // ==================== VENDRE ====================
@@ -428,9 +428,9 @@ app.post('/vendre', async (req, res) => {
   if (!fruitsUser || fruitsUser.length < 2) return res.status(400).json({ error: 'Pas de doublon a vendre !' });
   await supabase.from('collection').delete().eq('id', fruitsUser[0].id);
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
-  const newBerrys = (primeData ? primeData.berrys : 0) + valeur;
-  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
-  res.json({ success: true, berrys: newBerrys, valeur });
+  const newBrise = (primeData ? primeData.berrys : 0) + valeur;
+  await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
+  res.json({ success: true, berrys: newBrise, valeur });
 });
 
 // ==================== COLLECTION ====================
@@ -614,7 +614,7 @@ app.get('/collection/:username', async (req, res) => {
       <img src="${avatar}" alt="${username}">
       <div class="profile-info">
         <h1>${username}</h1>
-        <p class="berrys">&#x1F4B0; ${berrys.toLocaleString()} Berrys</p>
+        <p class="berrys">&#x1F4B0; ${berrys.toLocaleString()} Brise</p>
       </div>
     </div>
     <div class="divider"></div>
@@ -627,7 +627,7 @@ app.get('/collection/:username', async (req, res) => {
       </div>
       <div class="achievements-grid" id="achievements-grid">${achievementsHTML}</div>
     </div>
-    ${isOwner ? '<div style="text-align:center;margin-bottom:30px;"><button onclick="ouvrirCoffre(\'' + username + '\')" class="coffre-btn">&#x1F4E6; Ouvrir un Coffre Mystere (2000 Berrys)</button></div>' : ''}
+    ${isOwner ? '<div style="text-align:center;margin-bottom:30px;"><button onclick="ouvrirCoffre(\'' + username + '\')" class="coffre-btn">&#x1F4E6; Ouvrir un Coffre Mystere (2000 Brise)</button></div>' : ''}
   </div>
   ${etageres}
   <div class="footer"><p>NeyLaBrise - Grand Line</p></div>
@@ -641,7 +641,7 @@ app.get('/collection/:username', async (req, res) => {
       const data = await res.json();
       if (data.success) {
         document.getElementById('bag-amount').textContent = '&#x1F4B0; ' + data.berrys.toLocaleString();
-        alert('Vendu ! +' + data.valeur + ' Berrys !');
+        alert('Vendu ! +' + data.valeur + ' Brise !');
         location.reload();
       } else { alert(data.error); }
     }
@@ -732,7 +732,7 @@ app.get('/leaderboard', async (req, res) => {
     const perso = membre ? membre.personnage : '';
     const medal = i < 3 ? medals[i] : (i + 1) + '.';
     const isTop3 = i < 3;
-    return '<div class="player-row ' + (isTop3 ? 'top3' : '') + '" style="' + (isTop3 ? 'border-color:' + ['#ff0000','#ff8c00','#ffd700'][i] + ';background:rgba(0,0,0,.85)' + ';' : '') + '"><div class="rank">' + medal + '</div><img src="' + avatar + '" class="player-avatar"><div class="player-info"><div class="player-name">' + s.username + '</div>' + (perso ? '<div class="player-perso">' + perso + '</div>' : '') + '</div><div class="player-stats"><div class="player-score">' + s.score.toLocaleString() + ' Berrys</div><div class="player-fruits">' + s.fruits + ' fruits</div></div></div>';
+    return '<div class="player-row ' + (isTop3 ? 'top3' : '') + '" style="' + (isTop3 ? 'border-color:' + ['#ff0000','#ff8c00','#ffd700'][i] + ';background:rgba(0,0,0,.85)' + ';' : '') + '"><div class="rank">' + medal + '</div><img src="' + avatar + '" class="player-avatar"><div class="player-info"><div class="player-name">' + s.username + '</div>' + (perso ? '<div class="player-perso">' + perso + '</div>' : '') + '</div><div class="player-stats"><div class="player-score">' + s.score.toLocaleString() + ' Brise</div><div class="player-fruits">' + s.fruits + ' fruits</div></div></div>';
   }).join('');
 
   res.send('<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Classement - NeyLaBrise</title><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a1a url(/persos/classementfond.png) center/cover fixed;min-height:100vh;padding:30px 20px;font-family:\'Roboto\',sans-serif;color:white;}.header{text-align:center;margin-bottom:40px;position:relative;z-index:1;}.factions-grid{position:relative;z-index:1;}.header h1{font-family:\'Oswald\',sans-serif;font-size:42px;letter-spacing:6px;color:#ffffff;text-shadow:0 0 10px #8a2be2,0 0 20px #8a2be2,0 0 40px #8a2be2;}.divider{width:200px;height:2px;background:linear-gradient(to right,transparent,#f39c12,transparent);margin:15px auto;}.subtitle{font-size:13px;color:#888;letter-spacing:3px;}.leaderboard{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}.player-row{display:flex;align-items:center;gap:15px;background:rgba(0,0,0,.85);border:3px solid #ffffff;border-radius:12px;padding:12px 20px;transition:transform .2s;}.player-row:hover{transform:translateX(5px);}.player-row.top3{border:3px solid;}.rank{font-family:\'Oswald\',sans-serif;font-size:22px;width:40px;text-align:center;}.player-avatar{width:45px;height:45px;border-radius:50%;border:2px solid rgba(255,255,255,.2);object-fit:cover;}.player-info{flex:1;}.player-name{font-family:\'Oswald\',sans-serif;font-size:18px;letter-spacing:1px;}.player-perso{font-size:12px;color:#f39c12;font-style:italic;}.player-stats{text-align:right;}.player-score{font-family:\'Oswald\',sans-serif;font-size:20px;color:#f39c12;}.player-fruits{font-size:11px;color:#888;}.points-legend{max-width:700px;margin:30px auto 0;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:25px;display:flex;justify-content:center;gap:15px;flex-wrap:wrap;}.legend-item{font-size:15px;font-weight:bold;padding:6px 14px;border-radius:20px;}.footer{text-align:center;margin-top:40px;font-size:12px;color:#555;letter-spacing:3px;}</style></head><body><div class="header"><h1>&#x1F3C6; CLASSEMENT &#x1F3C6;</h1><div class="divider"></div><p class="subtitle"> - NEYLABRISE</p></div><div class="leaderboard">' + rows + '</div><div class="footer"><p>NeyLaBrise - Grand Line</p></div></body></html>');
@@ -777,7 +777,7 @@ app.get('/minijeux', (req, res) => {
     <a href="/" class="back-btn">&#x2190; Retour</a>
     <div class="header">
       <div class="title">MINI JEUX</div>
-      <div class="subtitle">Gagne des Berrys hors live !</div>
+      <div class="subtitle">Gagne des Brise hors live !</div>
       <div class="divider"></div>
     </div>
     <div class="cards-grid">
@@ -785,14 +785,14 @@ app.get('/minijeux', (req, res) => {
         <div class="card-icon">&#x1F3A1;</div>
         <div class="card-title">ROULETTE DES MERS</div>
         <div class="card-desc">Tourne la roue et tente ta chance sur les mers du Grand Line !</div>
-        <div class="card-gain">&#x1F4B0; Jusqu'a 500 Berrys + Fruits !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 500 Brise + Fruits !</div>
         <div class="card-cooldown">&#x23F0; Cooldown : 10 minutes</div>
       </a>
       <a href="/combat" class="card">
         <div class="card-icon">&#x2694;&#xFE0F;</div>
         <div class="card-title">COMBAT DE PIRATES</div>
-        <div class="card-desc">Affronte des ennemis légendaires et remporte des Berrys !</div>
-        <div class="card-gain">&#x1F4B0; Jusqu'a 1500 Berrys</div>
+        <div class="card-desc">Affronte des ennemis légendaires et remporte des Brise !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 1500 Brise</div>
         <div class="card-cooldown">&#x23F0; Cooldown : 30 minutes</div>
       </a>
       </div>
@@ -807,7 +807,7 @@ app.get('/minijeux', (req, res) => {
         <div class="card-icon">&#x1F3F4;</div>
         <div class="card-title">COURSE VERS LE ONE PIECE</div>
         <div class="card-desc">Navigue sur la Grand Line et trouve le tresor ultime !</div>
-        <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Berrys + Fruits !</div>
+        <div class="card-gain">&#x1F4B0; Jusqu'a 1000 Brise + Fruits !</div>
         <div class="card-cooldown">&#x23F0; 1 fois par jour</div>
       </a>
     </div>
@@ -873,7 +873,7 @@ app.get('/roulette', (req, res) => {
       <a href="/auth/twitch?username=guest&from=roulette" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>
     </div>`}
     <div id="berrys-display" class="berrys-display" style="display:none;">
-      <span id="berrys-amount">0</span> Berrys
+      <span id="berrys-amount">0</span> Brise
     </div>
     <div class="wheel-wrapper">
       <div class="pointer" style="position:absolute;top:-20px;left:50%;transform:translateX(-50%) rotate(0deg);font-size:50px;color:#f39c12;text-shadow:0 0 15px rgba(243,156,18,0.8);">▼</div>
@@ -889,14 +889,14 @@ app.get('/roulette', (req, res) => {
   </div>
   <script>
     const segments = [
-      { label: '+50 Berrys', berrys: 50, couleur: '#87ceeb', prob: 30 },
+      { label: '+50 Brise', berrys: 50, couleur: '#87ceeb', prob: 30 },
       { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 20 },
-      { label: '+100 Berrys', berrys: 100, couleur: '#8a2be2', prob: 20 },
-      { label: '+50 Berrys', berrys: 50, couleur: '#87ceeb', prob: 0 },
-      { label: '+200 Berrys', berrys: 200, couleur: '#ff69b4', prob: 15 },
+      { label: '+100 Brise', berrys: 100, couleur: '#8a2be2', prob: 20 },
+      { label: '+50 Brise', berrys: 50, couleur: '#87ceeb', prob: 0 },
+      { label: '+200 Brise', berrys: 200, couleur: '#ff69b4', prob: 15 },
       { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 0 },
-      { label: '+500 Berrys', berrys: 500, couleur: '#ff0000', prob: 10 },
-      { label: '+100 Berrys', berrys: 100, couleur: '#8a2be2', prob: 0 },
+      { label: '+500 Brise', berrys: 500, couleur: '#ff0000', prob: 10 },
+      { label: '+100 Brise', berrys: 100, couleur: '#8a2be2', prob: 0 },
       { label: 'Fruit !', berrys: -1, couleur: '#ffffff', prob: 5 },
       { label: 'Marine !', berrys: 0, couleur: '#1a1a2e', prob: 0 },
     ];
@@ -1049,7 +1049,7 @@ app.get('/roulette', (req, res) => {
 
       if (seg.berrys === 0) {
         document.getElementById('result-title').textContent = '🚔 La Marine t&#39;a arrêté !';
-        document.getElementById('result-berrys').textContent = '+0 Berrys';
+        document.getElementById('result-berrys').textContent = '+0 Brise';
         document.getElementById('result-berrys').style.color = '#e74c3c';
       } else if (seg.berrys === -1) {
         document.getElementById('result-title').textContent = '🍎 Fruit du Démon !';
@@ -1057,7 +1057,7 @@ app.get('/roulette', (req, res) => {
         document.getElementById('result-berrys').style.color = '#ffffff';
       } else {
         document.getElementById('result-title').textContent = '🏴‍☠️ Butin récupéré !';
-        document.getElementById('result-berrys').textContent = '+' + seg.berrys + ' Berrys !';
+        document.getElementById('result-berrys').textContent = '+' + seg.berrys + ' Brise !';
         document.getElementById('result-berrys').style.color = seg.couleur;
       }
 
@@ -1103,19 +1103,19 @@ app.post('/roulette/jouer', async (req, res) => {
   const seg = segments[index];
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable !' });
-  let newBerrys = primeData.berrys;
+  let newBrise = primeData.berrys;
   let fruit = null;
   if (seg.berrys === -1) {
     const fruitsListe = ['Bomu-Bomu', 'Seiryu', 'Sube-Sube', 'Baku-Baku', 'Yomi-Yomi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru'];
     fruit = fruitsListe[Math.floor(Math.random() * fruitsListe.length)];
     await supabase.from('collection').insert({ username, fruit, rarete: 'Commun' });
   } else {
-    newBerrys += seg.berrys;
-    await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+    newBrise += seg.berrys;
+    await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
   }
   await supabase.from('codes_temp').delete().eq('username', username + '_roulette');
   await supabase.from('codes_temp').insert({ username: username + '_roulette', code: 'roulette', expire: Date.now() + 600000 });
-  res.json({ success: true, berrys: newBerrys, fruit });
+  res.json({ success: true, berrys: newBrise, fruit });
 });
 
 // ==================== EVEIL DE FRUIT (RPG) ====================
@@ -1288,13 +1288,13 @@ app.post('/eveil/acheter', async (req, res) => {
     await supabase.from('eveil_joueurs').update({ xp_achats_jour: dejaAchetes + qte, xp_achats_date: aujourdhui }).eq('username', u);
   }
 
-  // Verifier les Berrys
+  // Verifier les Brise
   const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
-  if (!prime || prime.berrys < coutTotal) return res.status(400).json({ error: 'Pas assez de Berrys ! Il te faut ' + coutTotal.toLocaleString() + ' Berrys pour ' + qte + 'x.' });
+  if (!prime || prime.berrys < coutTotal) return res.status(400).json({ error: 'Pas assez de Brise ! Il te faut ' + coutTotal.toLocaleString() + ' Brise pour ' + qte + 'x.' });
 
   // Debiter
-  const newBerrys = prime.berrys - coutTotal;
-  await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  const newBrise = prime.berrys - coutTotal;
+  await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
 
   // Ajouter au sac
   const { data: existant } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
@@ -1302,7 +1302,7 @@ app.post('/eveil/acheter', async (req, res) => {
   await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
   await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: newQte });
 
-  res.json({ success: true, berrys: newBerrys, objet: objet.nom, quantite: newQte, achete: qte });
+  res.json({ success: true, berrys: newBrise, objet: objet.nom, quantite: newQte, achete: qte });
 });
 
 // Prendre soin de son monstre (laver/nourrir/jouer) - cooldown 2h, +bonheur
@@ -1503,18 +1503,18 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   // Victoire ?
   if (c.enPv <= 0) {
     const gainXp = 20 + c.enNiv * 8;
-    const gainBerrys = 30 + c.enNiv * 5;
+    const gainBrise = 30 + c.enNiv * 5;
     // Applique XP
     let xp = (j.xp || 0) + gainXp, niveau = j.niveau, events = [];
     while (xp >= xpPourNiveau(niveau)) { xp -= xpPourNiveau(niveau); niveau++; events.push('niveau'); if(niveau===EVEIL_EVO_ADO)events.push('evo3'); if(niveau===EVEIL_EVO_FINAL)events.push('evo4'); }
     const stade = calculerStade(true, niveau);
-    // Applique Berrys
+    // Applique Brise
     const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
-    const newBerrys = (prime ? prime.berrys : 0) + gainBerrys;
-    await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+    const newBrise = (prime ? prime.berrys : 0) + gainBrise;
+    await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
     // Sauve (PV joueur conserves, combat fini)
     await supabase.from('eveil_joueurs').update({ xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBerrys, events, niveau, stade, combat: c });
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c });
   }
 
   // --- Riposte de l'ennemi ---
@@ -1946,7 +1946,7 @@ var BOUTIQUE = {
           var html = '<div style="text-align:center;margin-bottom:25px;">'
             + '<div style="font-family:Cinzel,serif;font-size:30px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">🏪 BRISE SHOP</div>'
             + '<div style="display:inline-block;margin-top:10px;background:rgba(0,0,0,0.7);border:2px solid #f39c12;border-radius:20px;padding:8px 22px;">'
-            + '<span style="font-family:Cinzel,serif;font-size:18px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Berrys</span></div></div>';
+            + '<span style="font-family:Cinzel,serif;font-size:18px;color:#f39c12;">💰 '+berrys.toLocaleString()+' Brise</span></div></div>';
 
           for(var c=0;c<cats.length;c++){
             var cat = cats[c];
@@ -2001,7 +2001,7 @@ var BOUTIQUE = {
       var o = BOUTIQUE[id];
       var q = parseInt(document.getElementById('qte-'+id).textContent) || 1;
       var total = o.prix * q;
-      if(!confirm('Acheter '+q+'x '+o.nom+' pour '+total.toLocaleString()+' Berrys ?')) return;
+      if(!confirm('Acheter '+q+'x '+o.nom+' pour '+total.toLocaleString()+' Brise ?')) return;
       fetch('/eveil/acheter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:id,quantite:q})})
         .then(function(r){return r.json();})
         .then(function(d){
@@ -2482,7 +2482,7 @@ var ATTAQUES_FRONT = {
               if(d.victoire){
                 arreterSon('start');
                 jouerSon('victoire');
-                var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBerrys+' Berrys';
+                var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBrise+' Brise';
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
@@ -2972,9 +2972,9 @@ app.post('/daily/claim', async (req, res) => {
   if (lastClaim === 0 || now > lastClaim + 2 * DAY_MS || streak >= 11) newStreak = 1;
   else newStreak = streak + 1;
   const reward = DAILY_REWARDS[newStreak - 1];
-  const newBerrys = primeData.berrys + reward;
-  await supabase.from('primes').update({ berrys: newBerrys, dernier_daily: now, daily_streak: newStreak }).eq('username', username);
-  res.json({ success: true, reward, berrys: newBerrys, streak: newStreak });
+  const newBrise = primeData.berrys + reward;
+  await supabase.from('primes').update({ berrys: newBrise, dernier_daily: now, daily_streak: newStreak }).eq('username', username);
+  res.json({ success: true, reward, berrys: newBrise, streak: newStreak });
 });
 
 // ==================== BLACKJACK ====================
@@ -3045,7 +3045,7 @@ app.get('/blackjack', (req, res) => {
       <a href="/auth/twitch?username=guest&from=blackjack" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div class="berrys-display" id="berrys-display" style="display:none;">
-      &#x1F4B0; <span id="berrys-amount">0</span> Berrys
+      &#x1F4B0; <span id="berrys-amount">0</span> Brise
     </div>
     <div class="game-section" id="game-section">
       <div class="mise-display" id="mise-display"></div>
@@ -3123,7 +3123,7 @@ app.get('/blackjack', (req, res) => {
     async function commencerAuto(p) {
       pseudoActuel = (p || '').toLowerCase();
       const mise = parseInt(document.getElementById('mise').value);
-      if (!mise || mise < 50) { alert('Mise minimum 50 Berrys !'); return; }
+      if (!mise || mise < 50) { alert('Mise minimum 50 Brise !'); return; }
       const r = await fetch('/blackjack/infos?username=' + pseudoActuel + '&mise=' + mise);
       const data = await r.json();
       if (data.error) { alert(data.error); return; }
@@ -3131,7 +3131,7 @@ app.get('/blackjack', (req, res) => {
       berrysActuels = data.berrys;
       document.getElementById('berrys-amount').textContent = berrysActuels.toLocaleString();
       document.getElementById('berrys-display').style.display = 'inline-block';
-      document.getElementById('mise-display').textContent = 'Mise : ' + mise.toLocaleString() + ' Berrys';
+      document.getElementById('mise-display').textContent = 'Mise : ' + mise.toLocaleString() + ' Brise';
       creerDeck();
       mainJoueur = [deck.pop(), deck.pop()];
       mainCroupier = [deck.pop(), deck.pop()];
@@ -3196,17 +3196,17 @@ app.get('/blackjack', (req, res) => {
       if (resultat === 'win') {
         box.classList.add('result-win');
         document.getElementById('result-title').textContent = '🏴‍☠️ Victoire !';
-        document.getElementById('result-gain').textContent = '+' + miseActuelle.toLocaleString() + ' Berrys !';
+        document.getElementById('result-gain').textContent = '+' + miseActuelle.toLocaleString() + ' Brise !';
         document.getElementById('result-gain').style.color = '#ffd700';
       } else if (resultat === 'blackjack') {
         box.classList.add('result-win');
         document.getElementById('result-title').textContent = '🏆 BLACKJACK ! x2 !';
-        document.getElementById('result-gain').textContent = '+' + (miseActuelle * 2).toLocaleString() + ' Berrys !';
+        document.getElementById('result-gain').textContent = '+' + (miseActuelle * 2).toLocaleString() + ' Brise !';
         document.getElementById('result-gain').style.color = '#ff0000';
       } else if (resultat === 'lose') {
         box.classList.add('result-lose');
         document.getElementById('result-title').textContent = '💀 Perdu !';
-        document.getElementById('result-gain').textContent = '-' + miseActuelle.toLocaleString() + ' Berrys';
+        document.getElementById('result-gain').textContent = '-' + miseActuelle.toLocaleString() + ' Brise';
         document.getElementById('result-gain').style.color = '#e74c3c';
       } else {
         box.classList.add('result-push');
@@ -3256,7 +3256,7 @@ app.get('/blackjack/infos', async (req, res) => {
   if (!username) return res.status(400).json({ error: 'Manque username' });
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData) return res.status(400).json({ error: 'Pseudo introuvable ! Tu dois etre enregistre sur le stream.' });
-  if (primeData.berrys < parseInt(mise)) return res.status(400).json({ error: 'Pas assez de Berrys !' });
+  if (primeData.berrys < parseInt(mise)) return res.status(400).json({ error: 'Pas assez de Brise !' });
   res.json({ berrys: primeData.berrys });
 });
 
@@ -3264,12 +3264,12 @@ app.post('/blackjack/resultat', async (req, res) => {
   const { username, mise, resultat } = req.body;
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData) return res.status(400).json({ error: 'Erreur' });
-  let newBerrys = primeData.berrys;
-  if (resultat === 'win') newBerrys += mise;
-  else if (resultat === 'blackjack') newBerrys += mise * 2;
-  else if (resultat === 'lose') newBerrys -= mise;
-  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
-  res.json({ success: true, berrys: newBerrys });
+  let newBrise = primeData.berrys;
+  if (resultat === 'win') newBrise += mise;
+  else if (resultat === 'blackjack') newBrise += mise * 2;
+  else if (resultat === 'lose') newBrise -= mise;
+  await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
+  res.json({ success: true, berrys: newBrise });
 });
 
 // ==================== COURSE VERS ONE PIECE ====================
@@ -3339,7 +3339,7 @@ app.get('/course', (req, res) => {
       <a href="/auth/twitch?username=guest&from=course" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     <div id="berrys-display" class="berrys-display" style="display:none;">
-      &#x1F4B0; <span id="berrys-amount">0</span> Berrys
+      &#x1F4B0; <span id="berrys-amount">0</span> Brise
     </div>
     <div id="game-section" style="display:none;">
       <div class="etape-label" id="etape-label">ILE 1/5</div>
@@ -3459,8 +3459,8 @@ app.get('/course', (req, res) => {
       berrys = data.berrys;
       document.getElementById('berrys-amount').textContent = berrys.toLocaleString();
 
-      if (event.gain > 0) document.getElementById('event-result').textContent = '+' + event.gain + ' Berrys !';
-      else if (event.gain < 0 && event.gain !== -1) document.getElementById('event-result').textContent = event.gain + ' Berrys !';
+      if (event.gain > 0) document.getElementById('event-result').textContent = '+' + event.gain + ' Brise !';
+      else if (event.gain < 0 && event.gain !== -1) document.getElementById('event-result').textContent = event.gain + ' Brise !';
       else if (event.gain === -1) document.getElementById('event-result').textContent = data.fruit + ' no Mi !';
       else document.getElementById('event-result').textContent = 'Pas de gain cette fois...';
 
@@ -3489,7 +3489,7 @@ app.get('/course', (req, res) => {
       document.getElementById('event-icon').innerHTML = '&#x1F3C6;';
       document.getElementById('event-title').textContent = 'Aventure terminee !';
       document.getElementById('event-desc').textContent = 'Tu as traverse toutes les iles du Grand Line !';
-      document.getElementById('event-result').textContent = 'Berrys totaux : ' + berrys.toLocaleString();
+      document.getElementById('event-result').textContent = 'Brise totaux : ' + berrys.toLocaleString();
       document.getElementById('event-result').style.color = '#ffd700';
       document.getElementById('actions-box').innerHTML = '<button class="btn btn-gold" onclick="location.reload()">&#x1F504; Reviens dans 6h !</button>';
       document.getElementById('progress-fill').style.width = '100%';
@@ -3548,17 +3548,17 @@ app.post('/course/event', async (req, res) => {
   const { username, type, gain, etape } = req.body;
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData) return res.status(400).json({ error: 'Erreur' });
-  let newBerrys = primeData.berrys;
+  let newBrise = primeData.berrys;
   let fruit = null;
   if (gain === -1) {
     const fruitsListe = ['Yomi-Yomi', 'Hobi-Hobi', 'Bara-Bara', 'Horo-Horo', 'Doru-Doru', 'Clank-Clank', 'Hito-Hito'];
     fruit = fruitsListe[Math.floor(Math.random() * fruitsListe.length)];
     await supabase.from('collection').insert({ username, fruit, rarete: 'Rare' });
   } else if (gain !== 0) {
-    newBerrys = Math.max(0, newBerrys + gain);
-    await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+    newBrise = Math.max(0, newBrise + gain);
+    await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
   }
-  res.json({ success: true, berrys: newBerrys, fruit });
+  res.json({ success: true, berrys: newBrise, fruit });
 });
 
 app.post('/course/terminer', async (req, res) => {
@@ -3648,7 +3648,7 @@ app.get('/combat', (req, res) => {
       <a href="/auth/twitch?username=guest&from=combat" style="background:#9146ff;color:white;padding:12px 25px;border-radius:25px;text-decoration:none;font-weight:bold;font-size:14px;">Se connecter avec Twitch pour jouer !</a>`}
     </div>
     ${isAuth ? `
-    <div id="berrys-display" class="berrys-display">&#x1F4B0; <span id="berrys-amount">...</span> Berrys</div>
+    <div id="berrys-display" class="berrys-display">&#x1F4B0; <span id="berrys-amount">...</span> Brise</div>
     <div id="selection-section">
       <div style="font-family:'Cinzel',serif;font-size:18px;color:#ff0000;letter-spacing:3px;margin-bottom:20px;text-shadow:0 0 10px rgba(255,0,0,0.5);">CHOISIS TON ADVERSAIRE</div>
       <div class="ennemis-grid">
@@ -3656,28 +3656,28 @@ app.get('/combat', (req, res) => {
           <img src="/persos/wapol.png" alt="Wapol">
           <div class="ennemi-nom">WAPOL</div>
           <div class="ennemi-diff" style="color:#2ecc71;">&#x1F7E2; FACILE</div>
-          <div class="ennemi-gain">+150 Berrys</div>
+          <div class="ennemi-gain">+150 Brise</div>
           <div class="ennemi-cooldown">&#x23F0; 30 min</div>
         </div>
         <div class="ennemi-card moyen" onclick="choisirEnnemi('crocodile',1)">
           <img src="/persos/crocodile.png" alt="Crocodile">
           <div class="ennemi-nom">CROCODILE</div>
           <div class="ennemi-diff" style="color:#f39c12;">&#x1F7E1; MOYEN</div>
-          <div class="ennemi-gain">+300 Berrys</div>
+          <div class="ennemi-gain">+300 Brise</div>
           <div class="ennemi-cooldown">&#x23F0; 30 min</div>
         </div>
         <div class="ennemi-card difficile" onclick="choisirEnnemi('doflamingo',2)">
           <img src="/persos/doflamingo.png" alt="Doflamingo">
           <div class="ennemi-nom">DOFLAMINGO</div>
           <div class="ennemi-diff" style="color:#e74c3c;">&#x1F534; DIFFICILE</div>
-          <div class="ennemi-gain">+600 Berrys</div>
+          <div class="ennemi-gain">+600 Brise</div>
           <div class="ennemi-cooldown">&#x23F0; 30 min</div>
         </div>
         <div class="ennemi-card legendaire" onclick="choisirEnnemi('barbenoire',3)">
           <img src="/persos/barbenoire.png" alt="Barbe Noire">
           <div class="ennemi-nom">BARBE NOIRE</div>
           <div class="ennemi-diff" style="color:#9b59b6;">&#x1F7E3; LEGENDAIRE</div>
-          <div class="ennemi-gain">+1500 Berrys</div>
+          <div class="ennemi-gain">+1500 Brise</div>
           <div class="ennemi-cooldown">&#x23F0; 30 min</div>
         </div>
       </div>
@@ -3866,7 +3866,7 @@ app.get('/combat', (req, res) => {
       box.style.boxShadow = victoire ? '0 0 30px rgba(255,215,0,0.4)' : '0 0 30px rgba(231,76,60,0.4)';
       document.getElementById('result-title').innerHTML = victoire ? '&#x1F3C6; VICTOIRE !' : '&#x1F480; DEFAITE !';
       document.getElementById('result-title').style.color = victoire ? '#ffd700' : '#e74c3c';
-      document.getElementById('result-gain').textContent = victoire ? '+' + ennemiActuel.gain + ' Berrys !' : '-' + Math.floor(ennemiActuel.gain * 0.3) + ' Berrys...';
+      document.getElementById('result-gain').textContent = victoire ? '+' + ennemiActuel.gain + ' Brise !' : '-' + Math.floor(ennemiActuel.gain * 0.3) + ' Brise...';
       document.getElementById('result-gain').style.color = victoire ? '#ffd700' : '#e74c3c';
       box.classList.add('show');
     }
@@ -3908,13 +3908,13 @@ app.post('/combat/resultat', async (req, res) => {
   const { username, diff, victoire, gain } = req.body;
   const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', username).single();
   if (!primeData) return res.status(400).json({ error: 'Erreur' });
-  let newBerrys = primeData.berrys;
-  if (victoire) newBerrys += gain;
-  else newBerrys = Math.max(0, newBerrys - Math.floor(gain * 0.3));
-  await supabase.from('primes').upsert({ username, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+  let newBrise = primeData.berrys;
+  if (victoire) newBrise += gain;
+  else newBrise = Math.max(0, newBrise - Math.floor(gain * 0.3));
+  await supabase.from('primes').upsert({ username, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
   await supabase.from('codes_temp').delete().eq('username', username + '_combat_' + diff);
   await supabase.from('codes_temp').insert({ username: username + '_combat_' + diff, code: 'combat', expire: Date.now() + 1800000 });
-  res.json({ success: true, berrys: newBerrys });
+  res.json({ success: true, berrys: newBrise });
 });
 
 // ==================== ANIMATION OBS ====================
