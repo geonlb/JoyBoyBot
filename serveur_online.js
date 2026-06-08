@@ -1187,10 +1187,10 @@ const EVEIL_BOUTIQUE = {
   poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP a ton monstre', type:'xp', valeur:250 },
   potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV (utile en combat)', type:'soin', valeur:50 },
   elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV (utile en combat)', type:'soin', valeur:9999 },
-  bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille-rouge', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
-  bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille-bleue', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
-  bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille-noire', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
-  bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille-multicolore', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
+  bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille_rouge', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
+  bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille_bleue', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
+  bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille_noire', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
+  bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille_multicolore', prix:5000, desc:'Capture (taux maximal) - bientot', type:'capture', valeur:4 }
 };
 
 // Utiliser un objet du sac
@@ -1764,8 +1764,8 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
     .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
-    @keyframes elixiVole{0%{left:45%;top:70%;transform:scale(0.7) rotate(0deg);opacity:1;}60%{left:52%;top:22%;transform:scale(1.1) rotate(360deg);opacity:1;}100%{left:52%;top:26%;transform:scale(1) rotate(540deg);opacity:1;}}
-    @keyframes elixiTombe{0%{top:24%;}100%{top:42%;}}
+    @keyframes elixiVole{0%{left:45%;top:72%;transform:scale(0.7) rotate(0deg);opacity:1;}60%{left:48%;top:40%;transform:scale(1.1) rotate(360deg);opacity:1;}100%{left:48%;top:44%;transform:scale(1) rotate(540deg);opacity:1;}}
+    @keyframes elixiTombe{0%{top:44%;}100%{top:46%;}}
     @keyframes elixiTremble{0%,100%{transform:scale(1) rotate(0deg);}15%{transform:scale(1) rotate(-22deg) translateX(-6px);}30%{transform:scale(1) rotate(0deg);}45%{transform:scale(1) rotate(22deg) translateX(6px);}60%{transform:scale(1) rotate(0deg);}75%{transform:scale(1) rotate(-12deg) translateX(-3px);}90%{transform:scale(1) rotate(8deg);}}
     @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
     @keyframes monstreSort{0%{transform:scale(0.05);opacity:0;}100%{transform:scale(1);opacity:1;}}
@@ -1923,10 +1923,10 @@ var BOUTIQUE = {
       poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP', categorie:'XP' },
       potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV', categorie:'Soin' },
       elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV', categorie:'Soin' },
-      bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille-rouge', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
-      bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille-bleue', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
-      bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille-noire', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
-      bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille-multicolore', prix:5000, desc:'Capture - taux max', categorie:'Capture' }
+      bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille_rouge', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
+      bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille_bleue', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
+      bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille_noire', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
+      bouteille_multicolore: { nom:'Elixiteille Multicolore', img:'bouteille_multicolore', prix:5000, desc:'Capture - taux max', categorie:'Capture' }
     };
 
     function boutique(){
@@ -2619,11 +2619,13 @@ function ouvrirSacCombat(){
       for(var s=0; s<scint; s++){
         (function(idx){
           setTimeout(function(){
-            elixi.style.animation = 'elixiTremble 0.5s ease-in-out';
+            elixi.style.animation = 'none';
+            void elixi.offsetWidth; // force le reset de l'animation
+            elixi.style.animation = 'elixiTremble 0.6s ease-in-out';
             jouerSon('attaque');
             // petit flash
             var fl = document.createElement('div');
-            fl.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;width:70px;height:70px;z-index:61;left:52%;top:26%;background:radial-gradient(circle,'+couleurB+',transparent 70%);animation:scintille 0.6s;';
+            fl.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;width:80px;height:80px;z-index:61;left:48%;top:44%;background:radial-gradient(circle,'+couleurB+',transparent 70%);animation:scintille 0.6s;';
             arene.appendChild(fl);
             setTimeout(function(){ if(fl.parentNode) fl.remove(); }, 600);
           }, delai + idx*700);
