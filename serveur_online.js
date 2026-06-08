@@ -1428,9 +1428,13 @@ app.get('/eveil/brisepedia', async (req, res) => {
 
 // Lancer un combat (genere un monstre sauvage)
 app.post('/eveil/combat/start', async (req, res) => {
-  const { username } = req.body;
+  const { username, zone } = req.body;
   if (!username) return res.status(400).json({ error: 'Manque username' });
   const u = username.toLowerCase();
+  const z = parseInt(zone) || 1;
+  const zoneInfo = EVEIL_ZONES[z];
+  if (!zoneInfo) return res.status(400).json({ error: 'Zone inconnue' });
+
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
   if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
@@ -1440,18 +1444,29 @@ app.post('/eveil/combat/start', async (req, res) => {
   let pvJoueur = (j.pv_actuels != null && j.pv_actuels > 0) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
   if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avec une potion avant de combattre.' });
 
-  // Genere un monstre sauvage : element aleatoire, niveau proche du joueur
-  const elemEnnemi = EVEIL_ELEMENTS[Math.floor(Math.random()*EVEIL_ELEMENTS.length)];
-  const nivEnnemi = Math.max(1, j.niveau + (Math.floor(Math.random()*5) - 2)); // niveau joueur +/- 2
-  const stadeEnnemi = calculerStade(true, nivEnnemi);
-  const se = statsCalc(elemEnnemi, nivEnnemi);
+  // Choisir un monstre AU HASARD parmi ceux de la zone
+  const monstresZone = Object.keys(EVEIL_MONSTRES).filter(function(id){ return EVEIL_MONSTRES[id].zone === z; });
+  // Ponderation par rarete : commun plus frequent, ultime rare
+  const poids = { commun:60, epique:30, ultime:10 };
+  let pool = [];
+  monstresZone.forEach(function(id){ var n = poids[EVEIL_MONSTRES[id].rarete] || 10; for(var k=0;k<n;k++) pool.push(id); });
+  const monstreId = pool[Math.floor(Math.random()*pool.length)];
+  const monstre = EVEIL_MONSTRES[monstreId];
+
+  // Niveau de l'ennemi dans la fourchette de la zone
+  const nivEnnemi = Math.max(1, zoneInfo.nivMin + Math.floor(Math.random()*(zoneInfo.nivMax - zoneInfo.nivMin + 1)));
+  const se = statsCalc(monstre.element, nivEnnemi);
 
   const combat = {
-    enElem: elemEnnemi, enNiv: nivEnnemi, enStade: stadeEnnemi,
+    monstreId: monstreId, enElem: monstre.element, enNiv: nivEnnemi, enStade: 2,
+    enNom: monstre.nom, enImg: monstre.img, enRarete: monstre.rarete, zone: z,
     enPvMax: se.pvMax, enPv: se.pvMax, enAtk: se.atk, enDef: se.def,
     joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
     tour: 1
   };
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
+
+  res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade });
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
 
   res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade });
