@@ -2226,13 +2226,38 @@ var ATTAQUES_FRONT = {
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
 
     function combat(){
-      fetch('/eveil/combat/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
+      // Affiche l'ecran de choix de zone
+      fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var zones = d.zones;
+          var cards = '';
+          for(var z in zones){
+            var zo = zones[z];
+            cards += '<div onclick="lancerCombatZone('+z+')" style="position:relative;background:linear-gradient(rgba(5,5,16,0.45),rgba(5,5,16,0.75)), url('+IMG+'/eveil/zone'+z+'.png) center/cover;border:2px solid '+zo.couleur+';border-radius:16px;padding:25px 20px;cursor:pointer;transition:transform 0.2s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;" onmouseover="this.style.transform=&#39;scale(1.03)&#39;;" onmouseout="this.style.transform=&#39;scale(1)&#39;;">'
+              + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+zo.couleur+';text-shadow:0 2px 4px rgba(0,0,0,0.8);">'+zo.nom+'</div>'
+              + '<div style="font-size:12px;color:#ddd;text-shadow:0 1px 3px rgba(0,0,0,0.9);margin-top:4px;">'+zo.desc+'</div>'
+              + '<div style="font-size:11px;color:'+zo.couleur+';margin-top:6px;">Niveaux '+zo.nivMin+' - '+zo.nivMax+'</div>'
+              + '</div>';
+          }
+          var html = '<div style="max-width:680px;margin:0 auto;">'
+            + '<div style="text-align:center;font-family:Cinzel,serif;font-size:26px;color:#8a2be2;letter-spacing:3px;margin-bottom:8px;">&#x2694;&#xFE0F; CHOISIS TA ZONE</div>'
+            + '<div style="text-align:center;font-size:13px;color:#aaa;margin-bottom:20px;">Explore une zone pour affronter ses monstres sauvages</div>'
+            + '<div style="display:grid;grid-template-columns:1fr;gap:14px;">'+cards+'</div>'
+            + '<div style="text-align:center;margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function lancerCombatZone(zone){
+      fetch('/eveil/combat/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,zone:zone})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); hub(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
           jouerSon('start');
-          afficherCombat(['Un monstre sauvage apparait !']);
+          afficherCombat([d.combat.enNom + ' sauvage apparait !']);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -2244,8 +2269,8 @@ var ATTAQUES_FRONT = {
       var imgJ = ligJ.stades[e.joStade-1];
       var nomJ = ligJ.noms[e.joStade-1];
       var ligE = LIGNEES[c.enElem];
-      var imgE = ligE.stades[c.enStade-1];
-      var nomE = ligE.noms[c.enStade-1];
+      var imgE = c.enImg || ligE.stades[c.enStade-1];
+      var nomE = c.enNom || ligE.noms[c.enStade-1];
 
       var pctJ = Math.max(0, Math.round((c.joPv/c.joPvMax)*100));
       var pctE = Math.max(0, Math.round((c.enPv/c.enPvMax)*100));
