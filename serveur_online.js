@@ -1764,7 +1764,7 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
     .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
-    @keyframes elixiVole{0%{left:18%;top:62%;transform:scale(0.6) rotate(0deg);opacity:1;}60%{left:62%;top:18%;transform:scale(1) rotate(360deg);opacity:1;}100%{left:66%;top:24%;transform:scale(0.85) rotate(540deg);opacity:1;}}
+    @keyframes elixiVole{0%{left:45%;top:70%;transform:scale(0.6) rotate(0deg);opacity:1;}60%{left:55%;top:22%;transform:scale(1) rotate(360deg);opacity:1;}100%{left:55%;top:26%;transform:scale(0.85) rotate(540deg);opacity:1;}}
     @keyframes elixiTombe{0%{top:24%;}100%{top:42%;}}
     @keyframes elixiTremble{0%,100%{transform:scale(0.85) rotate(0deg);}25%{transform:scale(0.85) rotate(-18deg);}75%{transform:scale(0.85) rotate(18deg);}}
     @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
@@ -2599,7 +2599,7 @@ function ouvrirSacCombat(){
       // Cree l'elixiteille volante
       var elixi = document.createElement('img');
       elixi.src = IMG+'/objets/'+bouteille+'.png';
-      elixi.style.cssText = 'position:absolute;width:55px;height:55px;object-fit:contain;z-index:60;left:18%;top:62%;';
+      elixi.style.cssText = 'position:absolute;width:55px;height:55px;object-fit:contain;z-index:60;left:45%;top:70%;';
       elixi.style.animation = 'elixiVole 0.9s ease-in-out forwards';
       arene.style.position = 'relative';
       arene.appendChild(elixi);
