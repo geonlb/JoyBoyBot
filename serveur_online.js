@@ -1547,7 +1547,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 const ELIXITEILLE_FORCE = {
   bouteille_rouge: 1.0, bouteille_bleue: 1.6, bouteille_noire: 2.6, bouteille_multicolore: 5.0
 };
-const RARETE_TAUXBASE = { commun: 0.45, epique: 0.22, ultime: 0.05 };
+const RARETE_TAUXBASE = { commun: 0.30, epique: 0.12, ultime: 0.03 };
 
 // Tenter une capture
 // Utiliser une potion PENDANT le combat (soigne + le monstre riposte)
@@ -1619,7 +1619,7 @@ app.post('/eveil/combat/capture', async (req, res) => {
 
   // Calcul du taux
   const tauxBase = RARETE_TAUXBASE[c.enRarete] || 0.22;
-  const bonusPV = 1 + 1.5 * ((c.enPvMax - c.enPv) / c.enPvMax);
+  const bonusPV = 1 + 1.2 * ((c.enPvMax - c.enPv) / c.enPvMax);
   let taux = tauxBase * force * bonusPV;
   taux = Math.min(0.95, taux); // plafond 95%
   const reussi = Math.random() < taux;
@@ -1770,7 +1770,7 @@ app.get('/eveil', (req, res) => {
     @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
     @keyframes monstreSort{0%{transform:scale(0.02);opacity:0;filter:brightness(4) saturate(0);}50%{opacity:1;filter:brightness(3) saturate(0);}100%{transform:scale(1);opacity:1;filter:none;}}
     @keyframes scintille{0%{opacity:0;transform:scale(0.3);}50%{opacity:1;transform:scale(1.3);}100%{opacity:0;transform:scale(0.8);}}
-    @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(2) drop-shadow(0 0 25px #2ecc71);}100%{filter:none;}}
+    @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(1.8) drop-shadow(0 0 25px currentColor);}100%{filter:none;}}
     .elixi-flash{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe87a,transparent 70%);pointer-events:none;animation:scintille 0.5s;}
     @keyframes fumeeCapture{0%{opacity:0;transform:scale(0.2);}30%{opacity:1;transform:scale(1.4);}100%{opacity:0;transform:scale(2);}}
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
@@ -2647,6 +2647,7 @@ function ouvrirSacCombat(){
       // Resultat final
       setTimeout(function(){
         if(d.capture){
+          elixi.style.color = couleurB;
           elixi.style.animation = 'captureSuccess 0.8s ease-in-out';
           arreterSon('start'); jouerSon('victoire');
           setTimeout(function(){
@@ -2758,6 +2759,7 @@ var brisepediaZone = 0; // 0 = toutes les zones
     }
 
 function hub(){
+      arreterSon('start');
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
