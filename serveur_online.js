@@ -1382,6 +1382,47 @@ function statsCalc(fruit, niveau) {
   return { pvMax: s.pvB + niveau*s.pvN, atk: s.atkB + niveau*s.atkN, def: s.defB + niveau*s.defN };
 }
 const EVEIL_ELEMENTS = ['lave','marin','nuage','roche','givre','neant'];
+// ========== MONSTRES SAUVAGES & ZONES (Brisepedia) ==========
+// rarete : 'commun', 'epique', 'ultime'  |  img : fichier dans monstres/ (sans .png)
+// PLACEHOLDER : on utilise tes 6 creatures comme images temporaires, a remplacer par tes vrais monstres
+const EVEIL_MONSTRES = {
+  // Zone 1 - debutant
+  m_crabo:    { nom:'Crabo', img:'watame-no-nlb', element:'marin', rarete:'commun', zone:1 },
+  m_flamy:    { nom:'Flamy', img:'laviana-no-nlb', element:'lave', rarete:'commun', zone:1 },
+  m_cailloux: { nom:'Cailloux', img:'stoko-no-nlb', element:'roche', rarete:'commun', zone:1 },
+  m_brumo:    { nom:'Brumo', img:'brisa-no-nlb', element:'nuage', rarete:'epique', zone:1 },
+  // Zone 2 - intermediaire
+  m_glacius:  { nom:'Glacius', img:'arlio-no-nlb', element:'givre', rarete:'commun', zone:2 },
+  m_volkan:   { nom:'Volkan', img:'salarlo', element:'lave', rarete:'epique', zone:2 },
+  m_requious: { nom:'Requious', img:'requinounou', element:'marin', rarete:'epique', zone:2 },
+  m_voidling: { nom:'Voidling', img:'neyarole-no-nlb', element:'neant', rarete:'ultime', zone:2 },
+  // Zone 3 - avance
+  m_titanroc: { nom:'Titanroc', img:'roknar', element:'roche', rarete:'epique', zone:3 },
+  m_cyclor:   { nom:'Cyclor', img:'zephyx', element:'nuage', rarete:'epique', zone:3 },
+  m_abyssal:  { nom:'Abyssal', img:'sharkathor', element:'marin', rarete:'ultime', zone:3 },
+  m_neantis:  { nom:'Neantis', img:'neantis', element:'neant', rarete:'ultime', zone:3 }
+};
+const EVEIL_ZONES = {
+  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:6, couleur:'#2ecc71' },
+  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:5, nivMax:14, couleur:'#9b59b6' },
+  3: { nom:'Abysses Maudits', desc:'Le repaire des monstres les plus puissants', nivMin:13, nivMax:25, couleur:'#e74c3c' }
+};
+const RARETE_INFO = {
+  commun: { nom:'Commun', couleur:'#2ecc71', tauxBase:0.45 },
+  epique: { nom:'Epique', couleur:'#9b59b6', tauxBase:0.22 },
+  ultime: { nom:'Ultime', couleur:'#e74c3c', tauxBase:0.08 }
+};
+
+// Recuperer la Brisepedia d'un joueur (tous les monstres + ce qui est capture)
+app.get('/eveil/brisepedia', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: caps } = await supabase.from('eveil_captures').select('*').eq('username', u);
+  const captures = {};
+  (caps || []).forEach(function(c){ captures[c.monstre_id] = c.quantite; });
+  res.json({ monstres: EVEIL_MONSTRES, zones: EVEIL_ZONES, raretes: RARETE_INFO, captures });
+});
 
 // Lancer un combat (genere un monstre sauvage)
 app.post('/eveil/combat/start', async (req, res) => {
