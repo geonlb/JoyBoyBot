@@ -1543,6 +1543,82 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 });
 
 // Fuir le combat
+// Forces des Elixiteilles (bouteilles de capture)
+const ELIXITEILLE_FORCE = {
+  bouteille_rouge: 1.0, bouteille_bleue: 1.6, bouteille_noire: 2.6, bouteille_multicolore: 5.0
+};
+const RARETE_TAUXBASE = { commun: 0.45, epique: 0.22, ultime: 0.05 };
+
+// Tenter une capture
+app.post('/eveil/combat/capture', async (req, res) => {
+  const { username, bouteille } = req.body;
+  if (!username || !bouteille) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.combat_actif) return res.status(400).json({ error: 'Pas de combat en cours !' });
+
+  const force = ELIXITEILLE_FORCE[bouteille];
+  if (!force) return res.status(400).json({ error: 'Bouteille inconnue' });
+
+  // Verifier que le joueur possede la bouteille
+  const { data: item } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', bouteille).single();
+  if (!item || item.quantite < 1) return res.status(400).json({ error: 'Tu n&#39;as pas cette Elixiteille !' });
+
+  const c = JSON.parse(j.combat_actif);
+  // On ne capture pas un monstre KO
+  if (c.enPv <= 0) return res.status(400).json({ error: 'Ce monstre est KO, impossible de le capturer !' });
+
+  // Consommer la bouteille (capture reussie ou non, on la perd)
+  const nq = item.quantite - 1;
+  await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', bouteille);
+  if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: bouteille, quantite: nq });
+
+  // Calcul du taux
+  const tauxBase = RARETE_TAUXBASE[c.enRarete] || 0.22;
+  const bonusPV = 1 + 1.5 * ((c.enPvMax - c.enPv) / c.enPvMax);
+  let taux = tauxBase * force * bonusPV;
+  taux = Math.min(0.95, taux); // plafond 95%
+  const reussi = Math.random() < taux;
+
+  // Nombre de scintillements pour l'animation (3 = capture, 1-2 = echec)
+  let scintillements;
+  if (reussi) { scintillements = 3; }
+  else {
+    // plus le taux etait haut, plus on a de scintillements (suspense)
+    const ratio = taux / 0.95;
+    scintillements = ratio > 0.6 ? 2 : (Math.random() < 0.5 ? 1 : 2);
+  }
+
+  if (reussi) {
+    // Ajouter a la Brisepedia
+    const maintenant = Date.now();
+    const { data: cap } = await supabase.from('eveil_captures').select('quantite').eq('username', u).eq('monstre_id', c.monstreId).single();
+    if (cap) {
+      await supabase.from('eveil_captures').update({ quantite: cap.quantite + 1 }).eq('username', u).eq('monstre_id', c.monstreId);
+    } else {
+      await supabase.from('eveil_captures').insert({ username: u, monstre_id: c.monstreId, quantite: 1, premiere_capture: maintenant });
+    }
+    // Fin du combat (PV joueur conserves)
+    await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
+    return res.json({ success: true, capture: true, scintillements, monstreNom: c.enNom, premiere: !cap });
+  }
+
+  // Echec : le monstre riposte (un tour perdu)
+  const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
+  const multE = multiplicateurElement(c.enElem, j.fruit);
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  c.joPv = Math.max(0, c.joPv - degE);
+
+  // Defaite ?
+  if (c.joPv <= 0) {
+    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+    return res.json({ success: true, capture: false, scintillements, fini: true, victoire: false, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
+  }
+
+  c.tour++;
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
+  res.json({ success: true, capture: false, scintillements, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
+});
 app.post('/eveil/combat/fuir', async (req, res) => {
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'Manque username' });
