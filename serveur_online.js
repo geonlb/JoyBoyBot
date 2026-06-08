@@ -2351,7 +2351,9 @@ var ATTAQUES_FRONT = {
       start:    new Audio(IMG+'/eveil/combat-start.mp3'),
       attaque:  new Audio(IMG+'/eveil/combat-attaque.mp3'),
       victoire: new Audio(IMG+'/eveil/combat-victoire.mp3'),
-      defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3')
+      defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3'),
+      lance:    new Audio(IMG+'/eveil/capture-lance.mp3'),
+      capture:  new Audio(IMG+'/eveil/capture-reussie.mp3')
     };
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
@@ -2607,7 +2609,7 @@ function ouvrirSacCombat(){
       elixi.style.animation = 'elixiVole 0.9s ease-in-out forwards';
       arene.style.position = 'relative';
       arene.appendChild(elixi);
-      jouerSon('attaque');
+      jouerSon('lance');
 
       // Le monstre est aspire dans la bouteille (retrecit + flash)
       setTimeout(function(){
@@ -2649,7 +2651,7 @@ function ouvrirSacCombat(){
         if(d.capture){
           elixi.style.color = couleurB;
           elixi.style.animation = 'captureSuccess 0.8s ease-in-out';
-          arreterSon('start'); jouerSon('victoire');
+          arreterSon('start'); jouerSon('capture'); jouerSon('victoire');
           setTimeout(function(){
             var msg = '🎉 '+d.monstreNom+' capture !';
             if(d.premiere) msg += '\\n📖 Nouvelle entree dans la Brisepedia !';
