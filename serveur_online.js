@@ -1764,14 +1764,15 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
     .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
-    @keyframes elixiVole{0%{left:45%;top:72%;transform:scale(0.7) rotate(0deg);opacity:1;}60%{left:48%;top:40%;transform:scale(1.1) rotate(360deg);opacity:1;}100%{left:48%;top:44%;transform:scale(1) rotate(540deg);opacity:1;}}
-    @keyframes elixiTombe{0%{top:44%;}100%{top:46%;}}
+    @keyframes elixiVole{0%{left:45%;top:72%;transform:scale(0.7) rotate(0deg);opacity:1;}55%{left:60%;top:8%;transform:scale(1.1) rotate(360deg);opacity:1;}100%{left:68%;top:14%;transform:scale(0.9) rotate(540deg);opacity:1;}}
+    @keyframes elixiTombe{0%{top:14%;}100%{top:18%;}}
     @keyframes elixiTremble{0%,100%{transform:scale(1) rotate(0deg);}15%{transform:scale(1) rotate(-22deg) translateX(-6px);}30%{transform:scale(1) rotate(0deg);}45%{transform:scale(1) rotate(22deg) translateX(6px);}60%{transform:scale(1) rotate(0deg);}75%{transform:scale(1) rotate(-12deg) translateX(-3px);}90%{transform:scale(1) rotate(8deg);}}
     @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
     @keyframes monstreSort{0%{transform:scale(0.05);opacity:0;}100%{transform:scale(1);opacity:1;}}
     @keyframes scintille{0%{opacity:0;transform:scale(0.3);}50%{opacity:1;transform:scale(1.3);}100%{opacity:0;transform:scale(0.8);}}
     @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(2) drop-shadow(0 0 25px #2ecc71);}100%{filter:none;}}
     .elixi-flash{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe87a,transparent 70%);pointer-events:none;animation:scintille 0.5s;}
+    @keyframes fumeeCapture{0%{opacity:0;transform:scale(0.2);}30%{opacity:1;transform:scale(1.4);}100%{opacity:0;transform:scale(2);}}
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
     .saute{animation:saute 0.8s ease-in-out !important;}
     .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
@@ -2606,8 +2607,14 @@ function ouvrirSacCombat(){
       arene.appendChild(elixi);
       jouerSon('attaque');
 
-      // Le monstre est aspire
-      setTimeout(function(){ monstreE.style.animation = 'monstreAspire 0.5s ease-in forwards'; }, 650);
+      // Le monstre est aspire avec un flash de fumee
+      setTimeout(function(){
+        monstreE.style.animation = 'monstreAspire 0.5s ease-in forwards';
+        var fumee = document.createElement('div');
+        fumee.style.cssText = 'position:absolute;left:60%;top:6%;width:160px;height:160px;border-radius:50%;z-index:62;pointer-events:none;background:radial-gradient(circle,'+(couleurB||'#fff')+',rgba(255,255,255,0.6) 40%,transparent 75%);animation:fumeeCapture 0.7s ease-out forwards;';
+        arene.appendChild(fumee);
+        setTimeout(function(){ if(fumee.parentNode) fumee.remove(); }, 700);
+      }, 650);
 
       // L'elixiteille tombe et tremble selon les scintillements
       setTimeout(function(){
@@ -2625,7 +2632,7 @@ function ouvrirSacCombat(){
             jouerSon('attaque');
             // petit flash
             var fl = document.createElement('div');
-            fl.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;width:80px;height:80px;z-index:61;left:48%;top:44%;background:radial-gradient(circle,'+couleurB+',transparent 70%);animation:scintille 0.6s;';
+            fl.style.cssText = 'position:absolute;border-radius:50%;pointer-events:none;width:90px;height:90px;z-index:61;left:66%;top:16%;background:radial-gradient(circle,'+couleurB+',transparent 70%);animation:scintille 0.6s;';
             arene.appendChild(fl);
             setTimeout(function(){ if(fl.parentNode) fl.remove(); }, 600);
           }, delai + idx*700);
