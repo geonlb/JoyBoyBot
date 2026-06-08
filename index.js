@@ -744,12 +744,12 @@ if (msg === '!moncode') {
   }
  
   // !addberrys (streamer seulement)
-  if (msg.startsWith('!addberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+  if (msg.startsWith('!addbrise') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
     const parts = msg.split(' ');
     const targetUser = parts[1];
     const nombre = parseInt(parts[2]) || 0;
     if (!targetUser || nombre <= 0) {
-      client.say(channel, 'Usage: !addberrys [username] [nombre]');
+      client.say(channel, 'Usage: !addbrise [username] [nombre]');
       return;
     }
     db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
@@ -763,12 +763,12 @@ if (msg === '!moncode') {
   }
  
   // !removeberrys (streamer seulement)
-  if (msg.startsWith('!removeberrys') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
+  if (msg.startsWith('!removebrise') && username.toLowerCase() === config.STREAMER.toLowerCase()) {
     const parts = msg.split(' ');
     const targetUser = parts[1];
     const nombre = parseInt(parts[2]) || 0;
     if (!targetUser || nombre <= 0) {
-      client.say(channel, 'Usage: !removeberrys [username] [nombre]');
+      client.say(channel, 'Usage: !removebrise [username] [nombre]');
       return;
     }
     db.prepare('INSERT OR IGNORE INTO primes (username, berrys, dernierMessage, dernierePrime) VALUES (?, 0, 0, 0)').run(targetUser.toLowerCase());
