@@ -2340,6 +2340,87 @@ var ATTAQUES_FRONT = {
         .catch(function(){ hub(); });
     }
 
+var brisepediaZone = 0; // 0 = toutes les zones
+
+    function brisepedia(){
+      fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var monstres = d.monstres, zones = d.zones, raretes = d.raretes, captures = d.captures;
+
+          // Compteur de completion
+          var total = Object.keys(monstres).length;
+          var decouverts = Object.keys(captures).length;
+
+          // Onglets de zones
+          var onglets = '<button onclick="setZoneBrise(0)" style="border:none;cursor:pointer;border-radius:20px;font-size:12px;padding:7px 16px;margin:3px;background:'+(brisepediaZone===0?'#f39c12':'rgba(0,0,0,0.5)')+';color:'+(brisepediaZone===0?'#000':'#fff')+';font-weight:bold;">Toutes</button>';
+          for(var z in zones){
+            var actif = (brisepediaZone == z);
+            onglets += '<button onclick="setZoneBrise('+z+')" style="border:none;cursor:pointer;border-radius:20px;font-size:12px;padding:7px 16px;margin:3px;background:'+(actif?zones[z].couleur:'rgba(0,0,0,0.5)')+';color:'+(actif?'#000':'#fff')+';font-weight:bold;">'+zones[z].nom+'</button>';
+          }
+
+          // Grille des monstres
+          var cases = '';
+          for(var id in monstres){
+            var m = monstres[id];
+            if(brisepediaZone !== 0 && m.zone != brisepediaZone) continue;
+            var capture = captures[id] != null;
+            var rar = raretes[m.rarete];
+            if(capture){
+              cases += '<div onclick="ficheMonstre(&#39;'+id+'&#39;)" style="background:linear-gradient(160deg, color-mix(in srgb, '+rar.couleur+' 18%, rgba(0,0,0,0.7)), rgba(0,0,0,0.85));border:2px solid '+rar.couleur+';border-radius:14px;padding:10px;text-align:center;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform=&#39;translateY(-4px)&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;">'
+                + '<img src="'+IMG+'/monstres/'+m.img+'.png" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 10px '+rar.couleur+'aa);">'
+                + '<div style="font-family:Cinzel,serif;font-size:13px;color:#fff;margin-top:5px;">'+m.nom+'</div>'
+                + '<div style="display:inline-block;margin-top:4px;background:'+rar.couleur+';color:#000;font-size:9px;font-weight:bold;padding:2px 10px;border-radius:10px;">'+rar.nom+'</div>'
+                + (captures[id]>1 ? '<div style="font-size:10px;color:#aaa;margin-top:3px;">x'+captures[id]+'</div>' : '')
+                + '</div>';
+            } else {
+              cases += '<div style="background:rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center;">'
+                + '<img src="'+IMG+'/monstres/'+m.img+'.png" style="width:80px;height:80px;object-fit:contain;filter:brightness(0) drop-shadow(0 0 6px rgba(255,255,255,0.2));">'
+                + '<div style="font-family:Cinzel,serif;font-size:13px;color:#666;margin-top:5px;">???</div>'
+                + '<div style="display:inline-block;margin-top:4px;background:rgba(255,255,255,0.1);color:#666;font-size:9px;font-weight:bold;padding:2px 10px;border-radius:10px;">?????</div>'
+                + '</div>';
+            }
+          }
+
+          var html = '<div style="max-width:720px;margin:0 auto;">'
+            + '<div style="text-align:center;margin-bottom:8px;">'
+            + '<div style="font-family:Cinzel,serif;font-size:28px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">&#x1F4D6; BRISEPEDIA</div>'
+            + '<div style="font-size:13px;color:#aaa;margin-top:5px;">'+decouverts+' / '+total+' monstres decouverts</div>'
+            + '</div>'
+            + '<div style="text-align:center;margin-bottom:18px;">'+onglets+'</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;">'+cases+'</div>'
+            + '<div style="text-align:center;margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function setZoneBrise(z){ brisepediaZone = z; brisepedia(); }
+
+    function ficheMonstre(id){
+      fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var m = d.monstres[id];
+          var rar = d.raretes[m.rarete];
+          var zone = d.zones[m.zone];
+          var qte = d.captures[id] || 0;
+          var overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99998;display:flex;align-items:center;justify-content:center;';
+          overlay.innerHTML = '<div style="background:linear-gradient(160deg,rgba(0,0,0,0.95),'+rar.couleur+'22);border:2px solid '+rar.couleur+';border-radius:20px;padding:30px;max-width:360px;text-align:center;box-shadow:0 0 40px '+rar.couleur+'66;">'
+            + '<img src="'+IMG+'/monstres/'+m.img+'.png" style="width:140px;height:140px;object-fit:contain;filter:drop-shadow(0 0 18px '+rar.couleur+'aa);">'
+            + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+rar.couleur+';margin:10px 0 4px;">'+m.nom+'</div>'
+            + '<div style="display:inline-block;background:'+rar.couleur+';color:#000;font-size:11px;font-weight:bold;padding:3px 14px;border-radius:12px;margin-bottom:10px;">'+rar.nom+'</div>'
+            + '<div style="font-size:13px;color:#ddd;margin:4px 0;">Element : '+m.element+'</div>'
+            + '<div style="font-size:13px;color:#ddd;margin:4px 0;">Zone : '+zone.nom+'</div>'
+            + '<div style="font-size:13px;color:#ddd;margin:4px 0;">Captures : '+qte+'</div>'
+            + '<button onclick="this.parentNode.parentNode.remove()" style="margin-top:16px;background:'+rar.couleur+';border:none;border-radius:25px;color:#000;font-weight:bold;padding:9px 28px;cursor:pointer;">Fermer</button>'
+            + '</div>';
+          overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+          document.body.appendChild(overlay);
+        });
+    }
+
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -2355,7 +2436,7 @@ function hub(){
           var sections = [
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
             { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
-            { id:'explo',   emoji:'&#x1F9ED;', titre:'EXPLORATION', desc:'Parcours les iles du Grand Line', actif:false },
+            {{ id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
             { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
             { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
             { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:true }
@@ -2365,7 +2446,7 @@ function hub(){
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : 'bateau()')));
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : 'bateau()'))));
               cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
