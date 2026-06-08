@@ -1386,21 +1386,23 @@ const EVEIL_ELEMENTS = ['lave','marin','nuage','roche','givre','neant'];
 // rarete : 'commun', 'epique', 'ultime'  |  img : fichier dans monstres/ (sans .png)
 // PLACEHOLDER : on utilise tes 6 creatures comme images temporaires, a remplacer par tes vrais monstres
 const EVEIL_MONSTRES = {
-  // Zone 1 - debutant
-  m_crabo:    { nom:'Crabo', img:'watame-no-nlb', element:'marin', rarete:'commun', zone:1 },
-  m_flamy:    { nom:'Flamy', img:'laviana-no-nlb', element:'lave', rarete:'commun', zone:1 },
-  m_cailloux: { nom:'Cailloux', img:'stoko-no-nlb', element:'roche', rarete:'commun', zone:1 },
-  m_brumo:    { nom:'Brumo', img:'brisa-no-nlb', element:'nuage', rarete:'epique', zone:1 },
-  // Zone 2 - intermediaire
-  m_glacius:  { nom:'Glacius', img:'arlio-no-nlb', element:'givre', rarete:'commun', zone:2 },
-  m_volkan:   { nom:'Volkan', img:'salarlo', element:'lave', rarete:'epique', zone:2 },
-  m_requious: { nom:'Requious', img:'requinounou', element:'marin', rarete:'epique', zone:2 },
-  m_voidling: { nom:'Voidling', img:'neyarole-no-nlb', element:'neant', rarete:'ultime', zone:2 },
-  // Zone 3 - avance
-  m_titanroc: { nom:'Titanroc', img:'roknar', element:'roche', rarete:'epique', zone:3 },
-  m_cyclor:   { nom:'Cyclor', img:'zephyx', element:'nuage', rarete:'epique', zone:3 },
-  m_abyssal:  { nom:'Abyssal', img:'sharkathor', element:'marin', rarete:'ultime', zone:3 },
-  m_neantis:  { nom:'Neantis', img:'neantis', element:'neant', rarete:'ultime', zone:3 }
+  // Zone 1 - debutant (communs)
+  axoflut:    { nom:'Axoflut', img:'axoflut', element:'marin', rarete:'commun', zone:1, evolution:'axolomax' },
+  crabak:     { nom:'Crabak', img:'crabak', element:'marin', rarete:'commun', zone:1, evolution:'crabamax' },
+  tortimimi:  { nom:'Tortimimi', img:'tortimimi', element:'marin', rarete:'commun', zone:1, evolution:'torturage' },
+  bricolouf:  { nom:'Bricolouf', img:'bricolouf', element:'roche', rarete:'commun', zone:1, evolution:'costarpaing' },
+  gladuc:     { nom:'Gladuc', img:'gladuc', element:'givre', rarete:'commun', zone:1, evolution:'glagroduc' },
+  fumoir:     { nom:'Fumoir', img:'fumoir', element:'neant', rarete:'commun', zone:1, evolution:'celestion' },
+  // Zone 2 - intermediaire (epiques)
+  axolomax:   { nom:'Axolomax', img:'axolomax', element:'marin', rarete:'epique', zone:2 },
+  crabamax:   { nom:'Crabamax', img:'crabamax', element:'marin', rarete:'epique', zone:2 },
+  torturage:  { nom:'Torturage', img:'torturage', element:'marin', rarete:'epique', zone:2 },
+  costarpaing:{ nom:'Costarpaing', img:'costarpaing', element:'roche', rarete:'epique', zone:2 },
+  daphir:     { nom:'Daphir', img:'daphir', element:'roche', rarete:'epique', zone:2 },
+  dubis:      { nom:'Dubis', img:'dubis', element:'roche', rarete:'epique', zone:2 },
+  // Zone 3 - avance (ultimes)
+  glagroduc:  { nom:'Glagroduc', img:'glagroduc', element:'givre', rarete:'ultime', zone:3 },
+  celestion:  { nom:'Celestion', img:'celestion', element:'neant', rarete:'ultime', zone:3 }
 };
 const EVEIL_ZONES = {
   1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:6, couleur:'#2ecc71' },
