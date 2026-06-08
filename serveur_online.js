@@ -2436,7 +2436,7 @@ function hub(){
           var sections = [
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
             { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
-            {{ id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
+            { id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
             { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
             { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
             { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:true }
