@@ -1951,28 +1951,50 @@ var BOUTIQUE = {
         });
     }
 
-          // Sequence d'animation
-          setTimeout(function(){ // l'objet apparait et descend vers le monstre
-            var im = document.getElementById('popup-img');
-            im.style.opacity = '1'; im.style.top = '50px';
-          }, 200);
-          setTimeout(function(){ // l'objet disparait (consomme), le gain s'affiche
-            var im = document.getElementById('popup-img');
-            im.style.opacity = '0'; im.style.transform = 'translateX(-50%) scale(1.5)';
+          function popupUtilisation(o, d){
+      fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(res){
+          var j = res.joueur;
+          var lig = LIGNEES[j.fruit];
+          var stadeAv = d.stadeAvant;
+          var imgAvant = lig.stades[stadeAv-1];
+          var nomAff = j.surnom || lig.noms[stadeAv-1];
+          var pctAvant = Math.min(100, Math.round((d.xpAvant / d.prochainNiveauXpAvant) * 100));
+          var pctApres = Math.min(100, Math.round((d.xp / d.prochainNiveauXp) * 100));
+          var aEvolue = d.events && (d.events.indexOf('eclosion')>=0 || d.events.indexOf('evo3')>=0 || d.events.indexOf('evo4')>=0);
+          var aMonte = d.events && d.events.indexOf('niveau')>=0;
+
+          var overlay = document.createElement('div');
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99998;display:flex;align-items:center;justify-content:center;';
+          overlay.innerHTML =
+            '<div style="background:linear-gradient(160deg,rgba(0,0,0,0.95),'+lig.couleur+'22);border:2px solid '+lig.couleur+';border-radius:20px;padding:35px 30px;max-width:420px;text-align:center;box-shadow:0 0 40px '+lig.couleur+'66;">'
+            + '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:15px;">UTILISATION</div>'
+            + '<div style="position:relative;display:inline-block;">'
+            + '<img id="popup-img" src="'+IMG+'/objets/'+o.img+'.png" style="width:70px;height:70px;object-fit:contain;position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2;opacity:0;transition:all 0.6s;">'
+            + '<img id="popup-monstre" src="'+IMG+'/monstres/'+imgAvant+'.png" style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 0 20px '+lig.couleur+'aa);">'
+            + '</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+lig.couleur+';margin:10px 0 4px;">'+nomAff+'</div>'
+            + '<div id="popup-niv" style="font-size:14px;color:#fff;margin-bottom:10px;">Niveau '+d.niveauAvant+'</div>'
+            + '<div style="max-width:300px;margin:0 auto;">'
+            + '<div style="background:rgba(0,0,0,0.5);border:1px solid '+lig.couleur+';border-radius:12px;height:18px;overflow:hidden;"><div id="popup-barre" style="height:100%;width:'+pctAvant+'%;background:'+lig.couleur+';transition:width 1s ease-out;"></div></div></div>'
+            + '<div id="popup-gain" style="font-size:18px;color:#2ecc71;font-weight:bold;margin-top:12px;opacity:0;transition:opacity 0.4s;">+'+d.gainXp+' XP</div>'
+            + '<div id="popup-event" style="font-size:15px;color:#ffd479;margin-top:6px;min-height:20px;"></div>'
+            + '<button id="popup-close" style="margin-top:18px;background:'+lig.couleur+';border:none;border-radius:25px;color:#000;font-weight:bold;padding:10px 30px;cursor:pointer;opacity:0;transition:opacity 0.4s;">Super !</button>'
+            + '</div>';
+          document.body.appendChild(overlay);
+
+          setTimeout(function(){ var im = document.getElementById('popup-img'); im.style.opacity = '1'; im.style.top = '50px'; }, 200);
+          setTimeout(function(){
+            var im = document.getElementById('popup-img'); im.style.opacity = '0'; im.style.transform = 'translateX(-50%) scale(1.5)';
             document.getElementById('popup-gain').style.opacity = '1';
           }, 900);
-          setTimeout(function(){ // la barre se remplit
+          setTimeout(function(){
             var barre = document.getElementById('popup-barre');
-            if(aEvolue || aMonte){
-              // si level up : barre pleine, puis on bascule
-              barre.style.width = '100%';
-            } else {
-              barre.style.width = pctApres + '%';
-            }
+            if(aEvolue || aMonte){ barre.style.width = '100%'; } else { barre.style.width = pctApres + '%'; }
           }, 1200);
-          setTimeout(function(){ // gestion level up / evolution
+          setTimeout(function(){
             if(aEvolue){
-              // recharge l'image au nouveau stade + message
               var newImg = lig.stades[d.stade-1];
               document.getElementById('popup-monstre').src = IMG + '/monstres/' + newImg + '.png';
               document.getElementById('popup-monstre').style.animation = 'saute 0.8s ease-in-out';
@@ -1990,9 +2012,7 @@ var BOUTIQUE = {
             document.getElementById('popup-close').style.opacity = '1';
           }, 2300);
 
-          // Fermeture
           document.getElementById('popup-close').onclick = function(){
-            // Si c'etait une eclosion, on va nommer le monstre
             if(d.events && d.events.indexOf('eclosion')>=0){ document.body.removeChild(overlay); ecranNommer(); return; }
             document.body.removeChild(overlay);
             sac();
