@@ -2595,7 +2595,7 @@ function ouvrirSacCombat(){
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
-    function animationCapture(bouteille, d){
+    function animationCapture(bouteille, d, couleurB){
       var arene = document.getElementById('cbt-arene');
       var monstreE = document.getElementById('cbt-ennemi');
       if(!arene || !monstreE){ finCapture(d); return; }
