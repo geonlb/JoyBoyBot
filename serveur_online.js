@@ -1764,6 +1764,14 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
     .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
+    @keyframes elixiVole{0%{left:18%;top:62%;transform:scale(0.6) rotate(0deg);opacity:1;}60%{left:62%;top:18%;transform:scale(1) rotate(360deg);opacity:1;}100%{left:66%;top:24%;transform:scale(0.85) rotate(540deg);opacity:1;}}
+    @keyframes elixiTombe{0%{top:24%;}100%{top:42%;}}
+    @keyframes elixiTremble{0%,100%{transform:scale(0.85) rotate(0deg);}25%{transform:scale(0.85) rotate(-18deg);}75%{transform:scale(0.85) rotate(18deg);}}
+    @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
+    @keyframes monstreSort{0%{transform:scale(0.05);opacity:0;}100%{transform:scale(1);opacity:1;}}
+    @keyframes scintille{0%,100%{filter:none;transform:scale(0.85);}50%{filter:brightness(2.2) drop-shadow(0 0 18px #ffe87a);transform:scale(1);}}
+    @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(2) drop-shadow(0 0 25px #2ecc71);}100%{filter:none;}}
+    .elixi-flash{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe87a,transparent 70%);pointer-events:none;animation:scintille 0.5s;}
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
     .saute{animation:saute 0.8s ease-in-out !important;}
     .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
@@ -2434,7 +2442,10 @@ var ATTAQUES_FRONT = {
         // Log
         + '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:10px;padding:12px;margin:12px 0;min-height:50px;font-size:13px;color:#ddd;">'+logHTML+'</div>'
         + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
-        + '<div style="margin-top:12px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button></div>'
+        + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">'
+        + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(155,89,182,0.3);border:1px solid #9b59b6;font-size:12px;padding:8px 20px;" onclick="ouvrirSacCombat()">&#x1F392; Sac</button>'
+        + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>'
+        + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
     }
@@ -2500,6 +2511,156 @@ var ATTAQUES_FRONT = {
         .then(function(r){return r.json();})
         .then(function(){ hub(); })
         .catch(function(){ hub(); });
+    }
+function ouvrirSacCombat(){
+      fetch('/eveil/sac?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var items = d.sac || [];
+          var qte = {};
+          items.forEach(function(it){ qte[it.objet] = it.quantite; });
+
+          // Elixiteilles
+          var bouteilles = [
+            { id:'bouteille_rouge', nom:'Rouge', couleur:'#e74c3c' },
+            { id:'bouteille_bleue', nom:'Bleue', couleur:'#3498db' },
+            { id:'bouteille_noire', nom:'Noire', couleur:'#2c3e50' },
+            { id:'bouteille_multicolore', nom:'Multico', couleur:'#9b59b6' }
+          ];
+          var potions = [
+            { id:'potion', nom:'Potion', couleur:'#2ecc71' },
+            { id:'elixir', nom:'Elixir', couleur:'#1abc9c' }
+          ];
+
+          var htmlBout = '';
+          bouteilles.forEach(function(b){
+            var q = qte[b.id] || 0;
+            var dispo = q > 0;
+            htmlBout += '<button '+(dispo?'':'disabled')+' onclick="'+(dispo?'tenterCapture(&#39;'+b.id+'&#39;)':'')+'" style="border:none;border-radius:12px;cursor:'+(dispo?'pointer':'not-allowed')+';opacity:'+(dispo?'1':'0.4')+';background:rgba(0,0,0,0.6);border:1px solid '+b.couleur+';color:#fff;padding:10px 14px;margin:4px;font-size:12px;"><img src="'+IMG+'/objets/'+b.id+'.png" style="width:36px;height:36px;object-fit:contain;display:block;margin:0 auto 4px;">'+b.nom+'<br><span style="font-size:10px;color:'+b.couleur+';">x'+q+'</span></button>';
+          });
+          var htmlPot = '';
+          potions.forEach(function(p){
+            var q = qte[p.id] || 0;
+            var dispo = q > 0;
+            htmlPot += '<button '+(dispo?'':'disabled')+' onclick="'+(dispo?'utiliserObjetCombat(&#39;'+p.id+'&#39;)':'')+'" style="border:none;border-radius:12px;cursor:'+(dispo?'pointer':'not-allowed')+';opacity:'+(dispo?'1':'0.4')+';background:rgba(0,0,0,0.6);border:1px solid '+p.couleur+';color:#fff;padding:10px 14px;margin:4px;font-size:12px;"><img src="'+IMG+'/objets/'+p.id+'.png" style="width:36px;height:36px;object-fit:contain;display:block;margin:0 auto 4px;">'+p.nom+'<br><span style="font-size:10px;color:'+p.couleur+';">x'+q+'</span></button>';
+          });
+
+          var overlay = document.createElement('div');
+          overlay.id = 'sac-combat';
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99997;display:flex;align-items:center;justify-content:center;';
+          overlay.innerHTML = '<div style="background:linear-gradient(160deg,#2a1d10,#1a1109);border:3px solid #6b4f2e;border-radius:18px;padding:25px;max-width:380px;text-align:center;">'
+            + '<div style="font-family:Cinzel,serif;font-size:18px;color:#f5d98a;letter-spacing:2px;margin-bottom:14px;">&#x1F392; SAC</div>'
+            + '<div style="font-size:12px;color:#9b59b6;margin-bottom:6px;">&#x1F376; Elixiteilles (capture)</div>'
+            + '<div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">'+(htmlBout||'<span style="font-size:11px;color:#888;">Aucune bouteille</span>')+'</div>'
+            + '<div style="font-size:12px;color:#2ecc71;margin-bottom:6px;">&#x1F9EA; Soins</div>'
+            + '<div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">'+(htmlPot||'<span style="font-size:11px;color:#888;">Aucune potion</span>')+'</div>'
+            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:12px;padding:8px 22px;" onclick="document.getElementById(&#39;sac-combat&#39;).remove()">Retour</button>'
+            + '</div>';
+          overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+          document.body.appendChild(overlay);
+        });
+    }
+
+    function utiliserObjetCombat(objetId){
+      var sc = document.getElementById('sac-combat'); if(sc) sc.remove();
+      fetch('/eveil/combat/objet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:objetId})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          combatEtat.combat = d.combat;
+          var lignes = ['💚 +'+d.gainPv+' PV !', 'Le '+combatEtat.combat.enNom+' riposte ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats'];
+          if(d.fini && !d.victoire){
+            afficherCombat(lignes);
+            arreterSon('start'); jouerSon('defaite');
+            setTimeout(function(){ alert('💀 Ton monstre est KO !'); hub(); }, 1000);
+          } else {
+            afficherCombat(lignes);
+          }
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function tenterCapture(bouteille){
+      var sc = document.getElementById('sac-combat'); if(sc) sc.remove();
+      fetch('/eveil/combat/capture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,bouteille:bouteille})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          animationCapture(bouteille, d);
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function animationCapture(bouteille, d){
+      var arene = document.getElementById('cbt-arene');
+      var monstreE = document.getElementById('cbt-ennemi');
+      if(!arene || !monstreE){ finCapture(d); return; }
+
+      // Cree l'elixiteille volante
+      var elixi = document.createElement('img');
+      elixi.src = IMG+'/objets/'+bouteille+'.png';
+      elixi.style.cssText = 'position:absolute;width:55px;height:55px;object-fit:contain;z-index:60;left:18%;top:62%;';
+      elixi.style.animation = 'elixiVole 0.9s ease-in-out forwards';
+      arene.style.position = 'relative';
+      arene.appendChild(elixi);
+      jouerSon('attaque');
+
+      // Le monstre est aspire
+      setTimeout(function(){ monstreE.style.animation = 'monstreAspire 0.5s ease-in forwards'; }, 650);
+
+      // L'elixiteille tombe et tremble selon les scintillements
+      setTimeout(function(){
+        elixi.style.animation = 'elixiTombe 0.4s ease-out forwards';
+      }, 950);
+
+      var scint = d.scintillements || 1;
+      var delai = 1400;
+      for(var s=0; s<scint; s++){
+        (function(idx){
+          setTimeout(function(){
+            elixi.style.animation = 'elixiTremble 0.5s ease-in-out';
+            jouerSon('attaque');
+            // petit flash
+            var fl = document.createElement('div');
+            fl.className = 'elixi-flash';
+            fl.style.cssText += 'width:40px;height:40px;z-index:61;';
+            fl.style.left = elixi.style.left; fl.style.top = elixi.style.top;
+            arene.appendChild(fl);
+            setTimeout(function(){ if(fl.parentNode) fl.remove(); }, 500);
+          }, delai + idx*700);
+        })(s);
+      }
+
+      // Resultat final
+      setTimeout(function(){
+        if(d.capture){
+          elixi.style.animation = 'captureSuccess 0.8s ease-in-out';
+          arreterSon('start'); jouerSon('victoire');
+          setTimeout(function(){
+            var msg = '🎉 '+d.monstreNom+' capture !';
+            if(d.premiere) msg += '\\n📖 Nouvelle entree dans la Brisepedia !';
+            alert(msg);
+            hub();
+          }, 700);
+        } else {
+          // Echec : le monstre ressort
+          if(elixi.parentNode) elixi.remove();
+          monstreE.style.animation = 'monstreSort 0.5s ease-out forwards';
+          finCapture(d);
+        }
+      }, delai + scint*700 + 200);
+    }
+
+    function finCapture(d){
+      // Apres un echec de capture
+      if(d.fini && !d.victoire){
+        arreterSon('start'); jouerSon('defaite');
+        afficherCombat(['Capture echouee ! Le '+combatEtat.combat.enNom+' riposte : '+d.degatsRiposte+' degats.']);
+        setTimeout(function(){ alert('💀 Ton monstre est KO !'); hub(); }, 1000);
+      } else {
+        combatEtat.combat = d.combat;
+        afficherCombat(['Mince, il s&#39;est echappe ! Le '+combatEtat.combat.enNom+' riposte ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats.']);
+      }
     }
 
 var brisepediaZone = 0; // 0 = toutes les zones
