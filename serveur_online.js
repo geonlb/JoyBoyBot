@@ -2135,6 +2135,7 @@ var ATTAQUES_FRONT = {
       defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3')
     };
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
+    function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
 
     function combat(){
       fetch('/eveil/combat/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
@@ -2230,6 +2231,7 @@ var ATTAQUES_FRONT = {
             setTimeout(function(){
               afficherCombat(d.log);
               if(d.victoire){
+                arreterSon('start');
                 jouerSon('victoire');
                 var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBerrys+' Berrys';
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
