@@ -2616,9 +2616,11 @@ function ouvrirSacCombat(){
         setTimeout(function(){ if(fumee.parentNode) fumee.remove(); }, 700);
       }, 650);
 
-      // L'elixiteille tombe et tremble selon les scintillements
+      // L'elixiteille se fige a l'emplacement du monstre
       setTimeout(function(){
-        elixi.style.animation = 'elixiTombe 0.4s ease-out forwards';
+        elixi.style.animation = 'none';
+        elixi.style.left = '66%';
+        elixi.style.top = '16%';
       }, 950);
 
       var scint = d.scintillements || 1;
