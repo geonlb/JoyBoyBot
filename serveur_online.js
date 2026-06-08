@@ -1205,12 +1205,28 @@ app.post('/eveil/utiliser', async (req, res) => {
   const { data: item } = await supabase.from('eveil_sac').select('quantite').eq('username', u).eq('objet', objetId).single();
   if (!item || item.quantite < 1) return res.status(400).json({ error: 'Tu n&#39;as pas cet objet !' });
 
-  // Pour l'instant, seuls les objets de type 'xp' sont utilisables
-  if (objet.type !== 'xp') return res.status(400).json({ error: 'Cet objet ne peut pas encore etre utilise (bientot !)' });
+  // Les objets de capture ne sont pas encore utilisables
+  if (objet.type === 'capture') return res.status(400).json({ error: 'Les Elixiteilles arrivent bientot !' });
 
   // Recuperer le monstre
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+
+  // --- SOIN (potions/elixirs) : rend des PV ---
+  if (objet.type === 'soin') {
+    if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant !' });
+    const sj = statsCalc(j.fruit, j.niveau);
+    const pvAvant = (j.pv_actuels != null) ? j.pv_actuels : sj.pvMax;
+    if (pvAvant >= sj.pvMax) return res.status(400).json({ error: 'Ton monstre a deja tous ses PV !' });
+    const soin = (objet.valeur >= 9999) ? sj.pvMax : objet.valeur;
+    const pvApres = Math.min(sj.pvMax, pvAvant + soin);
+    await supabase.from('eveil_joueurs').update({ pv_actuels: pvApres }).eq('username', u);
+    // Retirer 1 de l'objet
+    const nq = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
+    return res.json({ success: true, soin: true, pvAvant, pvApres, pvMax: sj.pvMax, gainPv: pvApres - pvAvant, nom: objet.nom });
+  }
 
   // Appliquer l'XP (meme logique que gagner-xp)
   let xp = (j.xp || 0) + objet.valeur;
@@ -1841,11 +1857,12 @@ var BOUTIQUE = {
               if(q < 1) continue; // on n'affiche que ce qu'on possede
               compte++;
               var estXp = o.categorie === 'XP';
+              var estSoin = o.categorie === 'Soin';
               cases += '<div style="position:relative;background:linear-gradient(160deg,#3a2a18,#2a1d10);border:2px solid #6b4f2e;border-radius:8px;padding:8px;width:88px;text-align:center;box-shadow:inset 0 2px 6px rgba(0,0,0,0.5);">'
                 + '<div style="position:absolute;top:-6px;right:-6px;background:'+cat.couleur+';color:#000;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;border:2px solid #2a1d10;">'+q+'</div>'
                 + '<img src="'+IMG+'/objets/'+o.img+'.png" style="width:46px;height:46px;object-fit:contain;">'
                 + '<div style="font-size:9px;color:#e8d5a3;margin-top:4px;line-height:1.1;min-height:22px;">'+o.nom+'</div>'
-                + (estXp ? '<button onclick="utiliser(&#39;'+id+'&#39;)" style="margin-top:4px;background:'+cat.couleur+';border:none;border-radius:6px;color:#000;font-size:9px;font-weight:bold;padding:3px 6px;cursor:pointer;width:100%;">Utiliser</button>' : '')
+                + ((estXp || estSoin) ? '<button onclick="utiliser(&#39;'+id+'&#39;)" style="margin-top:4px;background:'+cat.couleur+';border:none;border-radius:6px;color:#000;font-size:9px;font-weight:bold;padding:3px 6px;cursor:pointer;width:100%;">Utiliser</button>' : '')
                 + '</div>';
             }
             if(compte === 0){
@@ -1880,6 +1897,7 @@ var BOUTIQUE = {
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
+          if(d.soin){ alert('💚 '+o.nom+' utilise ! +'+d.gainPv+' PV ('+d.pvApres+'/'+d.pvMax+')'); sac(); return; }
           popupUtilisation(o, d);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
