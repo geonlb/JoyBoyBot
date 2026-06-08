@@ -1332,6 +1332,155 @@ const EVEIL_LIGNEES = {
   givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'] },
   neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'] }
 };
+
+// Stats par element (base + gain par niveau)
+const EVEIL_STATS = {
+  lave:  { pvB:75,  pvN:8,  atkB:34, atkN:6, defB:12, defN:2 },
+  marin: { pvB:90,  pvN:10, atkB:28, atkN:5, defB:18, defN:3 },
+  nuage: { pvB:65,  pvN:7,  atkB:28, atkN:5, defB:26, defN:4 },
+  roche: { pvB:110, pvN:14, atkB:14, atkN:2, defB:30, defN:5 },
+  givre: { pvB:100, pvN:12, atkB:20, atkN:3, defB:28, defN:5 },
+  neant: { pvB:90,  pvN:10, atkB:38, atkN:7, defB:8,  defN:1 }
+};
+// Attaques par element : [base, chargee, ultime] avec multiplicateur de degats
+const EVEIL_ATTAQUES = {
+  lave:  [{nom:'Morsure Ardente',mult:1.0},{nom:'Souffle de Lave',mult:1.6},{nom:'Apocalypse Volcanique',mult:2.5}],
+  marin: [{nom:'Morsure deferlante',mult:1.0},{nom:'Charge tourbillon',mult:1.6},{nom:'Gueule de l\'Ocean',mult:2.5}],
+  nuage: [{nom:'Bourrasque',mult:1.0},{nom:'Serres foudroyantes',mult:1.6},{nom:'Oeil du Cyclone',mult:2.5}],
+  roche: [{nom:'Coup de poing rocheux',mult:1.0},{nom:'Charge devastatrice',mult:1.6},{nom:'Effondrement de Montagne',mult:2.5}],
+  givre: [{nom:'Morsure gelee',mult:1.0},{nom:'Souffle de blizzard',mult:1.6},{nom:'Ere Glaciaire',mult:2.5}],
+  neant: [{nom:'Griffe du vide',mult:1.0},{nom:'Engloutissement',mult:1.6},{nom:'Trou Noir',mult:2.5}]
+};
+// Roue des forces : qui est fort contre qui (cle bat valeur)
+const EVEIL_FORCES = { lave:'givre', givre:'marin', marin:'nuage', nuage:'roche', roche:'lave' };
+// Neant : fort contre marin et roche, faible contre les 4 autres
+function multiplicateurElement(attaquant, defenseur) {
+  if (attaquant === 'neant') return (defenseur === 'marin' || defenseur === 'roche') ? 2 : 0.5;
+  if (defenseur === 'neant') return (attaquant === 'marin' || attaquant === 'roche') ? 0.5 : 2;
+  if (EVEIL_FORCES[attaquant] === defenseur) return 2;       // super efficace
+  if (EVEIL_FORCES[defenseur] === attaquant) return 0.5;     // pas efficace
+  return 1;                                                   // neutre
+}
+function statsCalc(fruit, niveau) {
+  const s = EVEIL_STATS[fruit];
+  return { pvMax: s.pvB + niveau*s.pvN, atk: s.atkB + niveau*s.atkN, def: s.defB + niveau*s.defN };
+}
+const EVEIL_ELEMENTS = ['lave','marin','nuage','roche','givre','neant'];
+
+// Lancer un combat (genere un monstre sauvage)
+app.post('/eveil/combat/start', async (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+  if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
+
+  // Stats du joueur
+  const sj = statsCalc(j.fruit, j.niveau);
+  let pvJoueur = (j.pv_actuels != null && j.pv_actuels > 0) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
+  if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avec une potion avant de combattre.' });
+
+  // Genere un monstre sauvage : element aleatoire, niveau proche du joueur
+  const elemEnnemi = EVEIL_ELEMENTS[Math.floor(Math.random()*EVEIL_ELEMENTS.length)];
+  const nivEnnemi = Math.max(1, j.niveau + (Math.floor(Math.random()*5) - 2)); // niveau joueur +/- 2
+  const stadeEnnemi = calculerStade(true, nivEnnemi);
+  const se = statsCalc(elemEnnemi, nivEnnemi);
+
+  const combat = {
+    enElem: elemEnnemi, enNiv: nivEnnemi, enStade: stadeEnnemi,
+    enPvMax: se.pvMax, enPv: se.pvMax, enAtk: se.atk, enDef: se.def,
+    joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+    tour: 1
+  };
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
+
+  res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade });
+});
+
+// Jouer un tour (attaque)
+app.post('/eveil/combat/attaque', async (req, res) => {
+  const { username, attaqueIndex } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.combat_actif) return res.status(400).json({ error: 'Pas de combat en cours !' });
+
+  const c = JSON.parse(j.combat_actif);
+  const idx = Math.max(0, Math.min(2, parseInt(attaqueIndex) || 0));
+  // L'ultime (idx 2) n'est dispo qu'au stade 4
+  if (idx === 2 && j.stade < 4) return res.status(400).json({ error: 'Ultime debloquee au stade final !' });
+
+  const log = [];
+
+  // --- Attaque du joueur ---
+  const atkJoueur = EVEIL_ATTAQUES[j.fruit][idx];
+  const multJ = multiplicateurElement(j.fruit, c.enElem);
+  let degJ = Math.max(1, Math.round((c.joAtk * atkJoueur.mult - c.enDef * 0.5) * multJ));
+  const critJ = Math.random() < 0.1 ? 2 : 1; // 10% crit
+  degJ = Math.round(degJ * critJ);
+  c.enPv = Math.max(0, c.enPv - degJ);
+  let msgJ = 'Ton monstre utilise ' + atkJoueur.nom + ' ! ' + degJ + ' degats';
+  if (multJ === 2) msgJ += ' (super efficace !)';
+  if (multJ === 0.5) msgJ += ' (pas tres efficace...)';
+  if (critJ === 2) msgJ += ' CRITIQUE !';
+  log.push(msgJ);
+
+  // Victoire ?
+  if (c.enPv <= 0) {
+    const gainXp = 20 + c.enNiv * 8;
+    const gainBerrys = 30 + c.enNiv * 5;
+    // Applique XP
+    let xp = (j.xp || 0) + gainXp, niveau = j.niveau, events = [];
+    while (xp >= xpPourNiveau(niveau)) { xp -= xpPourNiveau(niveau); niveau++; events.push('niveau'); if(niveau===EVEIL_EVO_ADO)events.push('evo3'); if(niveau===EVEIL_EVO_FINAL)events.push('evo4'); }
+    const stade = calculerStade(true, niveau);
+    // Applique Berrys
+    const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
+    const newBerrys = (prime ? prime.berrys : 0) + gainBerrys;
+    await supabase.from('primes').upsert({ username: u, berrys: newBerrys, derniermessage: 0, derniereprime: 0 });
+    // Sauve (PV joueur conserves, combat fini)
+    await supabase.from('eveil_joueurs').update({ xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBerrys, events, niveau, stade, combat: c });
+  }
+
+  // --- Riposte de l'ennemi ---
+  const atkEnnemi = EVEIL_ATTAQUES[c.enElem][c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2)];
+  const multE = multiplicateurElement(c.enElem, j.fruit);
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  const critE = Math.random() < 0.08 ? 2 : 1;
+  degE = Math.round(degE * critE);
+  c.joPv = Math.max(0, c.joPv - degE);
+  let msgE = 'Le ' + c.enElem + ' sauvage riposte avec ' + atkEnnemi.nom + ' ! ' + degE + ' degats';
+  if (multE === 2) msgE += ' (super efficace !)';
+  if (multE === 0.5) msgE += ' (pas tres efficace...)';
+  if (critE === 2) msgE += ' CRITIQUE !';
+  log.push(msgE);
+
+  // Defaite ?
+  if (c.joPv <= 0) {
+    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+    return res.json({ success: true, fini: true, victoire: false, log, combat: c });
+  }
+
+  // Combat continue
+  c.tour++;
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
+  res.json({ success: true, fini: false, log, combat: c });
+});
+
+// Fuir le combat
+app.post('/eveil/combat/fuir', async (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('combat_actif').eq('username', u).single();
+  if (j && j.combat_actif) {
+    const c = JSON.parse(j.combat_actif);
+    await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
+  }
+  res.json({ success: true });
+});
+
 const EVEIL_ECLOSION_XP = 50;        // XP pour faire eclore l'oeuf
 const EVEIL_EVO_ADO = 15;            // niveau pour passer ado (stade 3)
 const EVEIL_EVO_FINAL = 35;          // niveau pour la forme finale (stade 4)
