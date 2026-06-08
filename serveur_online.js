@@ -1768,7 +1768,7 @@ app.get('/eveil', (req, res) => {
     @keyframes elixiTombe{0%{top:14%;}100%{top:18%;}}
     @keyframes elixiTremble{0%,100%{transform:scale(1) rotate(0deg);}15%{transform:scale(1) rotate(-22deg) translateX(-6px);}30%{transform:scale(1) rotate(0deg);}45%{transform:scale(1) rotate(22deg) translateX(6px);}60%{transform:scale(1) rotate(0deg);}75%{transform:scale(1) rotate(-12deg) translateX(-3px);}90%{transform:scale(1) rotate(8deg);}}
     @keyframes monstreAspire{0%{transform:scale(1);opacity:1;filter:none;}100%{transform:scale(0.05) translateY(40px);opacity:0;filter:brightness(3) hue-rotate(60deg);}}
-    @keyframes monstreSort{0%{transform:scale(0.05);opacity:0;}100%{transform:scale(1);opacity:1;}}
+    @keyframes monstreSort{0%{transform:scale(0.02);opacity:0;filter:brightness(4) saturate(0);}50%{opacity:1;filter:brightness(3) saturate(0);}100%{transform:scale(1);opacity:1;filter:none;}}
     @keyframes scintille{0%{opacity:0;transform:scale(0.3);}50%{opacity:1;transform:scale(1.3);}100%{opacity:0;transform:scale(0.8);}}
     @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(2) drop-shadow(0 0 25px #2ecc71);}100%{filter:none;}}
     .elixi-flash{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe87a,transparent 70%);pointer-events:none;animation:scintille 0.5s;}
@@ -2609,15 +2609,16 @@ function ouvrirSacCombat(){
       arene.appendChild(elixi);
       jouerSon('attaque');
 
-      // Le monstre est aspire avec un flash de fumee
+      // Le monstre est aspire dans la bouteille (retrecit + flash)
       setTimeout(function(){
-        monstreE.style.animation = 'monstreAspire 0.5s ease-in forwards';
+        monstreE.style.transformOrigin = 'center center';
+        monstreE.style.animation = 'monstreAspire 0.6s ease-in forwards';
+        // Flash lumineux sur le monstre
         var fumee = document.createElement('div');
-        fumee.style.cssText = 'position:absolute;left:60%;top:6%;width:160px;height:160px;border-radius:50%;z-index:62;pointer-events:none;background:radial-gradient(circle,'+(couleurB||'#fff')+',rgba(255,255,255,0.6) 40%,transparent 75%);animation:fumeeCapture 0.7s ease-out forwards;';
+        fumee.style.cssText = 'position:absolute;left:62%;top:8%;width:180px;height:180px;border-radius:50%;z-index:62;pointer-events:none;background:radial-gradient(circle,#fff,'+(couleurB||'#fff')+' 35%,transparent 70%);animation:fumeeCapture 0.7s ease-out forwards;';
         arene.appendChild(fumee);
         setTimeout(function(){ if(fumee.parentNode) fumee.remove(); }, 700);
-      }, 650);
-
+      }, 800);
       // L'elixiteille se fige a l'emplacement du monstre
       setTimeout(function(){
         elixi.style.animation = 'none';
