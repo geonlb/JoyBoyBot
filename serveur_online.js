@@ -1563,6 +1563,13 @@ app.get('/eveil', (req, res) => {
     @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
     @keyframes monteFade{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-120px);opacity:0;}}
     @keyframes saute{0%,100%{transform:translateY(0);}25%{transform:translateY(-25px);}50%{transform:translateY(0);}75%{transform:translateY(-12px);}}
+    @keyframes cbtAvanceJ{0%,100%{transform:scaleX(-1) translateX(0);}50%{transform:scaleX(-1) translateX(40px) translateY(-10px);}}
+    @keyframes cbtAvanceE{0%,100%{transform:translateX(0);}50%{transform:translateX(-40px) translateY(10px);}}
+    @keyframes cbtTremble{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+    @keyframes cbtTrembleJ{0%,100%{transform:scaleX(-1) translateX(0);}20%{transform:scaleX(-1) translateX(-8px);}40%{transform:scaleX(-1) translateX(8px);}60%{transform:scaleX(-1) translateX(-6px);}80%{transform:scaleX(-1) translateX(6px);}}
+    @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
+    @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
+    .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
     .saute{animation:saute 0.8s ease-in-out !important;}
     .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
@@ -2103,6 +2110,13 @@ var ATTAQUES_FRONT = {
       neant: ['Griffe du vide','Engloutissement','Trou Noir']
     };
     var combatEtat = null; // garde l'etat du combat en cours cote client
+    var sonsCombat = {
+      start:    new Audio(IMG+'/eveil/combat-start.mp3'),
+      attaque:  new Audio(IMG+'/eveil/combat-attaque.mp3'),
+      victoire: new Audio(IMG+'/eveil/combat-victoire.mp3'),
+      defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3')
+    };
+    function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
 
     function combat(){
       fetch('/eveil/combat/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
@@ -2110,6 +2124,7 @@ var ATTAQUES_FRONT = {
         .then(function(d){
           if(d.error){ alert(d.error); hub(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
+          jouerSon('start');
           afficherCombat(['Un monstre sauvage apparait !']);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
@@ -2120,9 +2135,7 @@ var ATTAQUES_FRONT = {
       var c = e.combat;
       var ligJ = LIGNEES[e.joFruit];
       var imgJ = ligJ.stades[e.joStade-1];
-      var nomJ = '';
-      // on recupere le surnom via le hub plus tard ; pour l'instant nom d'espece
-      nomJ = ligJ.noms[e.joStade-1];
+      var nomJ = ligJ.noms[e.joStade-1];
       var ligE = LIGNEES[c.enElem];
       var imgE = ligE.stades[c.enStade-1];
       var nomE = ligE.noms[c.enStade-1];
@@ -2131,7 +2144,6 @@ var ATTAQUES_FRONT = {
       var pctE = Math.max(0, Math.round((c.enPv/c.enPvMax)*100));
       var couleurPv = function(p){ return p>50 ? '#2ecc71' : (p>20 ? '#f39c12' : '#e74c3c'); };
 
-      // Attaques du joueur
       var atks = ATTAQUES_FRONT[e.joFruit];
       var btnsAtk = '';
       for(var i=0;i<3;i++){
@@ -2145,30 +2157,30 @@ var ATTAQUES_FRONT = {
         }
       }
 
-      // Log de combat (les 3 dernieres lignes)
       var logHTML = '';
       for(var L=0;L<logLignes.length;L++){ logHTML += '<div style="margin:2px 0;">'+logLignes[L]+'</div>'; }
 
-      var html = '<div class="panel" style="border-color:#8a2be2;max-width:680px;">'
+      var html = '<div id="cbt-arene" class="panel" style="border-color:#8a2be2;max-width:680px;">'
         // Ennemi (en haut)
-        + '<div style="text-align:right;margin-bottom:5px;">'
-        + '<div style="display:inline-block;text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligE.couleur+';border-radius:12px;padding:8px 14px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
+        + '<div style="text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligE.couleur+';border-radius:12px;padding:8px 14px;">'
         + '<div style="font-size:13px;color:'+ligE.couleur+';">'+nomE+' <span style="color:#aaa;">Niv '+c.enNiv+'</span></div>'
-        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:180px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pctE+'%;background:'+couleurPv(pctE)+';transition:width 0.5s;"></div></div>'
+        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:160px;overflow:hidden;margin-top:4px;"><div id="cbt-pvE" style="height:100%;width:'+pctE+'%;background:'+couleurPv(pctE)+';transition:width 0.6s;"></div></div>'
         + '<div style="font-size:10px;color:#aaa;margin-top:2px;">'+c.enPv+' / '+c.enPvMax+' PV</div>'
-        + '</div></div>'
-        + '<div style="text-align:right;"><img id="cbt-ennemi" src="'+IMG+'/monstres/'+imgE+'.png" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 0 15px '+ligE.couleur+'88);"></div>'
+        + '</div>'
+        + '<img id="cbt-ennemi" src="'+IMG+'/monstres/'+imgE+'.png" style="width:210px;height:210px;object-fit:contain;filter:drop-shadow(0 0 18px '+ligE.couleur+'aa);">'
+        + '</div>'
         // Joueur (en bas)
-        + '<div style="text-align:left;"><img id="cbt-joueur" src="'+IMG+'/monstres/'+imgJ+'.png" style="width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 0 15px '+ligJ.couleur+'88);transform:scaleX(-1);"></div>'
-        + '<div style="text-align:left;margin-bottom:10px;">'
-        + '<div style="display:inline-block;text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligJ.couleur+';border-radius:12px;padding:8px 14px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:5px;">'
+        + '<img id="cbt-joueur" src="'+IMG+'/monstres/'+imgJ+'.png" style="width:240px;height:240px;object-fit:contain;filter:drop-shadow(0 0 18px '+ligJ.couleur+'aa);transform:scaleX(-1);">'
+        + '<div style="text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligJ.couleur+';border-radius:12px;padding:8px 14px;">'
         + '<div style="font-size:13px;color:'+ligJ.couleur+';">'+nomJ+' <span style="color:#aaa;">Niv '+e.joNiveau+'</span></div>'
-        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:180px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pctJ+'%;background:'+couleurPv(pctJ)+';transition:width 0.5s;"></div></div>'
+        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:160px;overflow:hidden;margin-top:4px;"><div id="cbt-pvJ" style="height:100%;width:'+pctJ+'%;background:'+couleurPv(pctJ)+';transition:width 0.6s;"></div></div>'
         + '<div style="font-size:10px;color:#aaa;margin-top:2px;">'+c.joPv+' / '+c.joPvMax+' PV</div>'
-        + '</div></div>'
-        // Log de combat
+        + '</div>'
+        + '</div>'
+        // Log
         + '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:10px;padding:12px;margin:12px 0;min-height:50px;font-size:13px;color:#ddd;">'+logHTML+'</div>'
-        // Boutons d'attaque
         + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
         + '<div style="margin-top:12px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button></div>'
         + '</div>';
@@ -2176,27 +2188,54 @@ var ATTAQUES_FRONT = {
     }
 
     function attaquer(idx){
-      // Desactive les boutons pendant le calcul
-      var btns = document.querySelectorAll('.connect-btn');
+      jouerSon('attaque');
+      var monstreJ = document.getElementById('cbt-joueur');
+      var monstreE = document.getElementById('cbt-ennemi');
+      // Animation : le joueur avance pour attaquer
+      if(monstreJ){ monstreJ.style.animation = 'cbtAvanceJ 0.4s ease-in-out'; }
+
       fetch('/eveil/combat/attaque',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,attaqueIndex:idx})})
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
           combatEtat.combat = d.combat;
+
+          // L'ennemi encaisse : flash + tremble + secousse
+          setTimeout(function(){
+            if(monstreE){ monstreE.style.animation = 'cbtFlash 0.3s, cbtTremble 0.4s'; }
+            var arene = document.getElementById('cbt-arene');
+            if(arene){ arene.classList.add('cbt-secousse'); setTimeout(function(){ arene.classList.remove('cbt-secousse'); }, 400); }
+          }, 350);
+
           if(d.fini){
-            if(d.victoire){
-              var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBerrys+' Berrys';
-              if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
-              else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
-              else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
+            // Met a jour l'affichage une derniere fois
+            setTimeout(function(){
               afficherCombat(d.log);
-              setTimeout(function(){ alert(msg); hub(); }, 800);
-            } else {
-              afficherCombat(d.log);
-              setTimeout(function(){ alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }, 800);
-            }
+              if(d.victoire){
+                jouerSon('victoire');
+                var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBerrys+' Berrys';
+                if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
+                else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
+                else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
+                setTimeout(function(){ alert(msg); hub(); }, 1200);
+              } else {
+                jouerSon('defaite');
+                setTimeout(function(){ alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }, 1200);
+              }
+            }, 800);
           } else {
-            afficherCombat(d.log);
+            // L'ennemi riposte : il avance + le joueur tremble
+            setTimeout(function(){
+              afficherCombat(d.log);
+              var mE = document.getElementById('cbt-ennemi');
+              var mJ = document.getElementById('cbt-joueur');
+              if(mE){ mE.style.animation = 'cbtAvanceE 0.4s ease-in-out'; }
+              setTimeout(function(){
+                if(mJ){ mJ.style.animation = 'cbtFlash 0.3s, cbtTrembleJ 0.4s'; }
+                var arene = document.getElementById('cbt-arene');
+                if(arene){ arene.classList.add('cbt-secousse'); setTimeout(function(){ arene.classList.remove('cbt-secousse'); }, 400); }
+              }, 350);
+            }, 850);
           }
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
