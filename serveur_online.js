@@ -2094,6 +2094,122 @@ function bateau(){
       setTimeout(function(){ if(div.parentNode) div.parentNode.removeChild(div); }, 2500);
     }
 
+var ATTAQUES_FRONT = {
+      lave:  ['Morsure Ardente','Souffle de Lave','Apocalypse Volcanique'],
+      marin: ['Morsure deferlante','Charge tourbillon','Gueule de l&#39;Ocean'],
+      nuage: ['Bourrasque','Serres foudroyantes','Oeil du Cyclone'],
+      roche: ['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'],
+      givre: ['Morsure gelee','Souffle de blizzard','Ere Glaciaire'],
+      neant: ['Griffe du vide','Engloutissement','Trou Noir']
+    };
+    var combatEtat = null; // garde l'etat du combat en cours cote client
+
+    function combat(){
+      fetch('/eveil/combat/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); hub(); return; }
+          combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
+          afficherCombat(['Un monstre sauvage apparait !']);
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function afficherCombat(logLignes){
+      var e = combatEtat;
+      var c = e.combat;
+      var ligJ = LIGNEES[e.joFruit];
+      var imgJ = ligJ.stades[e.joStade-1];
+      var nomJ = '';
+      // on recupere le surnom via le hub plus tard ; pour l'instant nom d'espece
+      nomJ = ligJ.noms[e.joStade-1];
+      var ligE = LIGNEES[c.enElem];
+      var imgE = ligE.stades[c.enStade-1];
+      var nomE = ligE.noms[c.enStade-1];
+
+      var pctJ = Math.max(0, Math.round((c.joPv/c.joPvMax)*100));
+      var pctE = Math.max(0, Math.round((c.enPv/c.enPvMax)*100));
+      var couleurPv = function(p){ return p>50 ? '#2ecc71' : (p>20 ? '#f39c12' : '#e74c3c'); };
+
+      // Attaques du joueur
+      var atks = ATTAQUES_FRONT[e.joFruit];
+      var btnsAtk = '';
+      for(var i=0;i<3;i++){
+        var ultime = (i===2);
+        var dispo = !ultime || e.joStade>=4;
+        var labels = ['Base','Chargee','Ultime'];
+        if(dispo){
+          btnsAtk += '<button class="connect-btn" style="border:none;cursor:pointer;font-size:13px;padding:10px 16px;margin:4px;" onclick="attaquer('+i+')"><b>'+atks[i]+'</b><br><span style="font-size:10px;opacity:0.8;">'+labels[i]+'</span></button>';
+        } else {
+          btnsAtk += '<button disabled style="opacity:0.4;cursor:not-allowed;border:none;border-radius:30px;font-size:13px;padding:10px 16px;margin:4px;background:rgba(0,0,0,0.5);color:#888;">'+atks[i]+' &#x1F512;<br><span style="font-size:10px;">Stade final</span></button>';
+        }
+      }
+
+      // Log de combat (les 3 dernieres lignes)
+      var logHTML = '';
+      for(var L=0;L<logLignes.length;L++){ logHTML += '<div style="margin:2px 0;">'+logLignes[L]+'</div>'; }
+
+      var html = '<div class="panel" style="border-color:#8a2be2;max-width:680px;">'
+        // Ennemi (en haut)
+        + '<div style="text-align:right;margin-bottom:5px;">'
+        + '<div style="display:inline-block;text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligE.couleur+';border-radius:12px;padding:8px 14px;">'
+        + '<div style="font-size:13px;color:'+ligE.couleur+';">'+nomE+' <span style="color:#aaa;">Niv '+c.enNiv+'</span></div>'
+        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:180px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pctE+'%;background:'+couleurPv(pctE)+';transition:width 0.5s;"></div></div>'
+        + '<div style="font-size:10px;color:#aaa;margin-top:2px;">'+c.enPv+' / '+c.enPvMax+' PV</div>'
+        + '</div></div>'
+        + '<div style="text-align:right;"><img id="cbt-ennemi" src="'+IMG+'/monstres/'+imgE+'.png" style="width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 0 15px '+ligE.couleur+'88);"></div>'
+        // Joueur (en bas)
+        + '<div style="text-align:left;"><img id="cbt-joueur" src="'+IMG+'/monstres/'+imgJ+'.png" style="width:150px;height:150px;object-fit:contain;filter:drop-shadow(0 0 15px '+ligJ.couleur+'88);transform:scaleX(-1);"></div>'
+        + '<div style="text-align:left;margin-bottom:10px;">'
+        + '<div style="display:inline-block;text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligJ.couleur+';border-radius:12px;padding:8px 14px;">'
+        + '<div style="font-size:13px;color:'+ligJ.couleur+';">'+nomJ+' <span style="color:#aaa;">Niv '+e.joNiveau+'</span></div>'
+        + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:180px;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pctJ+'%;background:'+couleurPv(pctJ)+';transition:width 0.5s;"></div></div>'
+        + '<div style="font-size:10px;color:#aaa;margin-top:2px;">'+c.joPv+' / '+c.joPvMax+' PV</div>'
+        + '</div></div>'
+        // Log de combat
+        + '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:10px;padding:12px;margin:12px 0;min-height:50px;font-size:13px;color:#ddd;">'+logHTML+'</div>'
+        // Boutons d'attaque
+        + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
+        + '<div style="margin-top:12px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button></div>'
+        + '</div>';
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function attaquer(idx){
+      // Desactive les boutons pendant le calcul
+      var btns = document.querySelectorAll('.connect-btn');
+      fetch('/eveil/combat/attaque',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,attaqueIndex:idx})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          combatEtat.combat = d.combat;
+          if(d.fini){
+            if(d.victoire){
+              var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBerrys+' Berrys';
+              if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
+              else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
+              else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
+              afficherCombat(d.log);
+              setTimeout(function(){ alert(msg); hub(); }, 800);
+            } else {
+              afficherCombat(d.log);
+              setTimeout(function(){ alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }, 800);
+            }
+          } else {
+            afficherCombat(d.log);
+          }
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function fuirCombat(){
+      if(!confirm('Fuir le combat ?')) return;
+      fetch('/eveil/combat/fuir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
+        .then(function(r){return r.json();})
+        .then(function(){ hub(); })
+        .catch(function(){ hub(); });
+    }
+
 function hub(){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -2108,7 +2224,7 @@ function hub(){
 
           var sections = [
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
-            { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:false },
+            { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
             { id:'explo',   emoji:'&#x1F9ED;', titre:'EXPLORATION', desc:'Parcours les iles du Grand Line', actif:false },
             { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
             { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
@@ -2119,7 +2235,7 @@ function hub(){
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : 'bateau()'));
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : 'bateau()')));
               cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
