@@ -1776,9 +1776,11 @@ app.get('/eveil', (req, res) => {
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
     .saute{animation:saute 0.8s ease-in-out !important;}
     .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
-    #rotate-msg{display:none;}
-    @media (max-width:850px) and (orientation:portrait){
-      #rotate-msg{display:flex;position:fixed;inset:0;z-index:99999;background:#050510;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+    #rotate-msg{display:none !important;}
+    @media (max-width:700px){
+      #cbt-joueur{width:150px !important;height:150px !important;}
+      #cbt-ennemi{width:130px !important;height:130px !important;}
+      #cbt-arene{padding:12px !important;}
     }
     @keyframes tourne{0%{transform:rotate(0deg);}50%{transform:rotate(90deg);}100%{transform:rotate(90deg);}}
   </style>
