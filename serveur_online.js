@@ -1386,28 +1386,67 @@ const EVEIL_ELEMENTS = ['lave','marin','nuage','roche','givre','neant'];
 // rarete : 'commun', 'epique', 'ultime'  |  img : fichier dans monstres/ (sans .png)
 // PLACEHOLDER : on utilise tes 6 creatures comme images temporaires, a remplacer par tes vrais monstres
 const EVEIL_MONSTRES = {
-  // Zone 1 - debutant (communs)
+  // ===== ZONE 1 (Nv 1-10) - communs faciles =====
   axoflut:    { nom:'Axoflut', img:'axoflut', element:'marin', rarete:'commun', zone:1, evolution:'axolomax' },
   crabak:     { nom:'Crabak', img:'crabak', element:'marin', rarete:'commun', zone:1, evolution:'crabamax' },
   tortimimi:  { nom:'Tortimimi', img:'tortimimi', element:'marin', rarete:'commun', zone:1, evolution:'torturage' },
-  bricolouf:  { nom:'Bricolouf', img:'bricolouf', element:'roche', rarete:'commun', zone:1, evolution:'costarpaing' },
-  gladuc:     { nom:'Gladuc', img:'gladuc', element:'givre', rarete:'commun', zone:1, evolution:'glagroduc' },
-  fumoir:     { nom:'Fumoir', img:'fumoir', element:'neant', rarete:'commun', zone:1, evolution:'celestion' },
-  // Zone 2 - intermediaire (epiques)
-  axolomax:   { nom:'Axolomax', img:'axolomax', element:'marin', rarete:'epique', zone:2 },
-  crabamax:   { nom:'Crabamax', img:'crabamax', element:'marin', rarete:'epique', zone:2 },
-  torturage:  { nom:'Torturage', img:'torturage', element:'marin', rarete:'epique', zone:2 },
-  costarpaing:{ nom:'Costarpaing', img:'costarpaing', element:'roche', rarete:'epique', zone:2 },
-  daphir:     { nom:'Daphir', img:'daphir', element:'roche', rarete:'epique', zone:2 },
-  dubis:      { nom:'Dubis', img:'dubis', element:'roche', rarete:'epique', zone:2 },
-  // Zone 3 - avance (ultimes)
-  glagroduc:  { nom:'Glagroduc', img:'glagroduc', element:'givre', rarete:'ultime', zone:3 },
-  celestion:  { nom:'Celestion', img:'celestion', element:'neant', rarete:'ultime', zone:3 }
+  tacodog:    { nom:'Tacodog', img:'tacodog', element:'lave', rarete:'commun', zone:1, evolution:'gigatacdog' },
+  vochou:     { nom:'Vochou', img:'vochou', element:'lave', rarete:'commun', zone:1, evolution:'minoto' },
+  pyronouille:{ nom:'Pyronouille', img:'pyronouille', element:'lave', rarete:'commun', zone:1, evolution:'ignifrog' },
+  // ===== ZONE 2 (Nv 11-20) - communs varies =====
+  bricolouf:  { nom:'Bricolouf', img:'bricolouf', element:'roche', rarete:'commun', zone:2, evolution:'costarpaing' },
+  gladuc:     { nom:'Gladuc', img:'gladuc', element:'givre', rarete:'commun', zone:2, evolution:'glagroduc' },
+  fumoir:     { nom:'Fumoir', img:'fumoir', element:'neant', rarete:'commun', zone:2, evolution:'celestion' },
+  croknion:   { nom:'Croknion', img:'croknion', element:'marin', rarete:'commun', zone:2, evolution:'crokoboue' },
+  scorpiou:   { nom:'Scorpiou', img:'scorpiou', element:'neant', rarete:'commun', zone:2, evolution:'ragnarscop' },
+  serchou:    { nom:'Serchou', img:'serchou', element:'neant', rarete:'commun', zone:2, evolution:'pythocro' },
+  givril:     { nom:'Givril', img:'givril', element:'givre', rarete:'commun', zone:2, evolution:'frimas' },
+  babebe:     { nom:'Babebe', img:'babebe', element:'givre', rarete:'commun', zone:2, evolution:'trompice' },
+  lezarock:   { nom:'Lezarock', img:'lezarock', element:'roche', rarete:'commun', zone:2, evolution:'lithozard' },
+  scara:      { nom:'Scara', img:'scara', element:'roche', rarete:'commun', zone:2, evolution:'scarabox' },
+  kouala:     { nom:'Kouala', img:'kouala', element:'nuage', rarete:'commun', zone:2, evolution:'branchala' },
+  mimilican:  { nom:'Mimilican', img:'mimilican', element:'nuage', rarete:'commun', zone:2, evolution:'slipelican' },
+  // ===== ZONE 3 (Nv 21-30) - epiques =====
+  axolomax:   { nom:'Axolomax', img:'axolomax', element:'marin', rarete:'epique', zone:3 },
+  crabamax:   { nom:'Crabamax', img:'crabamax', element:'marin', rarete:'epique', zone:3 },
+  torturage:  { nom:'Torturage', img:'torturage', element:'marin', rarete:'epique', zone:3 },
+  costarpaing:{ nom:'Costarpaing', img:'costarpaing', element:'roche', rarete:'epique', zone:3 },
+  daphir:     { nom:'Daphir', img:'daphir', element:'roche', rarete:'epique', zone:3 },
+  dubis:      { nom:'Dubis', img:'dubis', element:'roche', rarete:'epique', zone:3 },
+  gigatacdog: { nom:'Gigatacdog', img:'gigatacdog', element:'lave', rarete:'epique', zone:3 },
+  minoto:     { nom:'Minoto', img:'minoto', element:'lave', rarete:'epique', zone:3 },
+  crokoboue:  { nom:'Crokoboue', img:'crokoboue', element:'marin', rarete:'epique', zone:3 },
+  // ===== ZONE 4 (Nv 31-40) - epiques avances =====
+  florafeu:   { nom:'Florafeu', img:'florafeu', element:'lave', rarete:'epique', zone:4, evolution:'vegeflamme' },
+  ignifrog:   { nom:'Ignifrog', img:'ignifrog', element:'lave', rarete:'epique', zone:4, evolution:'magmapaud' },
+  woufuage:   { nom:'Woufuage', img:'woufuage', element:'neant', rarete:'epique', zone:4 },
+  pythocro:   { nom:'Pythocro', img:'pythocro', element:'neant', rarete:'epique', zone:4, evolution:'cornaconda' },
+  frimas:     { nom:'Frimas', img:'frimas', element:'givre', rarete:'epique', zone:4, evolution:'blizzoroth' },
+  trompice:   { nom:'Trompice', img:'trompice', element:'givre', rarete:'epique', zone:4, evolution:'mamotor' },
+  lithozard:  { nom:'Lithozard', img:'lithozard', element:'roche', rarete:'epique', zone:4, evolution:'dinoquartz' },
+  scarabox:   { nom:'Scarabox', img:'scarabox', element:'roche', rarete:'epique', zone:4, evolution:'scarabatte' },
+  branchala:  { nom:'Branchala', img:'branchala', element:'nuage', rarete:'epique', zone:4, evolution:'koarbre' },
+  slipelican: { nom:'Slipelican', img:'slipelican', element:'nuage', rarete:'epique', zone:4, evolution:'nuagelican' },
+  // ===== ZONE 5 (Nv 41+) - ultimes (endgame) =====
+  glagroduc:  { nom:'Glagroduc', img:'glagroduc', element:'givre', rarete:'ultime', zone:5 },
+  celestion:  { nom:'Celestion', img:'celestion', element:'neant', rarete:'ultime', zone:5 },
+  vegeflamme: { nom:'Vegeflamme', img:'vegeflamme', element:'lave', rarete:'ultime', zone:5 },
+  magmapaud:  { nom:'Magmapaud', img:'magmapaud', element:'lave', rarete:'ultime', zone:5 },
+  ragnarscop: { nom:'Ragnarscop', img:'ragnarscop', element:'neant', rarete:'ultime', zone:5 },
+  cornaconda: { nom:'Cornaconda', img:'cornaconda', element:'neant', rarete:'ultime', zone:5 },
+  blizzoroth: { nom:'Blizzoroth', img:'blizzoroth', element:'givre', rarete:'ultime', zone:5 },
+  mamotor:    { nom:'Mamotor', img:'mamotor', element:'givre', rarete:'ultime', zone:5 },
+  dinoquartz: { nom:'Dinoquartz', img:'dinoquartz', element:'roche', rarete:'ultime', zone:5 },
+  scarabatte: { nom:'Scarabatte', img:'scarabatte', element:'roche', rarete:'ultime', zone:5 },
+  koarbre:    { nom:'Koarbre', img:'koarbre', element:'nuage', rarete:'ultime', zone:5 },
+  nuagelican: { nom:'Nuagelican', img:'nuagelican', element:'nuage', rarete:'ultime', zone:5 }
 };
 const EVEIL_ZONES = {
-  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:20, couleur:'#2ecc71' },
-  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:21, nivMax:40, couleur:'#9b59b6' },
-  3: { nom:'Abysses Maudits', desc:'Le repaire des monstres les plus puissants', nivMin:41, nivMax:60, couleur:'#e74c3c' }
+  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:10, couleur:'#2ecc71' },
+  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:11, nivMax:20, couleur:'#1abc9c' },
+  3: { nom:'Cavernes Rocheuses', desc:'Un dedale mineral plein de dangers', nivMin:21, nivMax:30, couleur:'#9b59b6' },
+  4: { nom:'Pics Tempetueux', desc:'Les hauteurs ou rodent les plus feroces', nivMin:31, nivMax:40, couleur:'#e67e22' },
+  5: { nom:'Abysses Maudits', desc:'Le repaire des monstres ultimes', nivMin:41, nivMax:60, couleur:'#e74c3c' }
 };
 const RARETE_INFO = {
   commun: { nom:'Commun', couleur:'#2ecc71', tauxBase:0.45 },
