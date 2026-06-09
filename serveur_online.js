@@ -3062,20 +3062,21 @@ function carteMonde(){
             var complete = medaillons.indexOf(t.id) >= 0;
             var debloque = (i === prochainIndex);
             var etat, contenu, clickable;
+            var imgTemple = '<img src="'+IMG+'/eveil/temple_'+t.element+'.png" style="width:54px;height:54px;object-fit:contain;">';
             if(complete){
-              etat = 'background:'+t.couleur+';border:3px solid #f1c40f;box-shadow:0 0 25px '+t.couleur+'cc;';
-              contenu = '<div style="font-size:30px;">'+t.emoji+'</div><div style="position:absolute;bottom:-6px;right:-6px;font-size:22px;">&#x1F3C5;</div>';
+              etat = 'border:3px solid #f1c40f;box-shadow:0 0 25px '+t.couleur+'cc;';
+              contenu = imgTemple + '<div style="position:absolute;bottom:-6px;right:-6px;font-size:22px;">&#x1F3C5;</div>';
               clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
             } else if(debloque){
-              etat = 'background:'+t.couleur+';border:3px solid #fff;box-shadow:0 0 30px '+t.couleur+';animation:pulseTemple 1.5s infinite;cursor:pointer;';
-              contenu = '<div style="font-size:30px;">'+t.emoji+'</div>';
+              etat = 'border:3px solid #fff;box-shadow:0 0 30px '+t.couleur+';animation:pulseTemple 1.5s infinite;cursor:pointer;';
+              contenu = imgTemple;
               clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
             } else {
-              etat = 'background:rgba(40,40,50,0.85);border:3px solid rgba(255,255,255,0.15);';
-              contenu = '<div style="font-size:26px;filter:grayscale(1);opacity:0.5;">'+t.emoji+'</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
+              etat = 'border:3px solid rgba(255,255,255,0.15);';
+              contenu = '<div style="filter:grayscale(1) brightness(0.4);">'+imgTemple+'</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
               clickable = 'onclick="alert(&#39;Termine le temple precedent pour debloquer celui-ci !&#39;)"';
             }
-            iles += '<div '+clickable+' style="position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+etat+'" title="'+t.nom+'">'+contenu+'</div>';
+            iles += '<div '+clickable+' style="position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;'+etat+'" title="'+t.nom+'">'+contenu+'</div>';
           }
 
           // La Ligue des Pirates (7e ile)
