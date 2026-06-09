@@ -2633,7 +2633,7 @@ var ATTAQUES_FRONT = {
                         afficherDialogue(templeActuel.pnj, templeActuel.victoire, templeActuel.couleur, function(){
                           alert('🏅 Tu obtiens le medaillon ' + templeActuel.nom + ' !');
                           carteMonde();
-                        });
+                        }, 'pnj-' + templeActuel.element);
                       });
                   }, 1200);
                 } else {
@@ -2916,9 +2916,12 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
     var templeActuel = null;
 
     // Affiche une bulle de dialogue facon Pokemon (lettre par lettre)
-    function afficherDialogue(nomPnj, texte, couleur, callback){
+    function afficherDialogue(nomPnj, texte, couleur, callback, imgPnj){
+      var portrait = imgPnj
+        ? '<img src="'+IMG+'/eveil/'+imgPnj+'.png" style="width:140px;height:140px;object-fit:contain;filter:drop-shadow(0 0 18px '+couleur+'aa);">'
+        : '<div style="font-size:60px;">&#x1F9D1;&#x200D;&#x1F680;</div>';
       var html = '<div style="max-width:680px;margin:0 auto;padding-top:40px;">'
-        + '<div style="text-align:center;font-size:60px;margin-bottom:20px;">&#x1F9D1;&#x200D;&#x1F680;</div>'
+        + '<div style="text-align:center;margin-bottom:20px;">'+portrait+'</div>'
         + '<div style="background:rgba(0,0,0,0.9);border:3px solid '+couleur+';border-radius:16px;padding:20px 24px;min-height:120px;box-shadow:0 0 30px '+couleur+'66;">'
         + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+couleur+';margin-bottom:10px;">'+nomPnj+'</div>'
         + '<div id="dialogue-texte" style="font-size:15px;color:#fff;line-height:1.6;min-height:50px;"></div>'
@@ -2969,7 +2972,7 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
           // Dialogue d'intro, puis lance le combat
           afficherDialogue(temple.pnj, temple.avant, temple.couleur, function(){
             lancerCombatTemple(id);
-          });
+          }, 'pnj-' + temple.element);
         });
     }
 
