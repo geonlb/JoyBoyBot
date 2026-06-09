@@ -1444,13 +1444,89 @@ const EVEIL_MONSTRES = {
 // ========== TEMPLES ELEMENTAIRES (carte du monde) ==========
 // Ordre de progression. Le boss a un monstre de fruit (lignee LIGNEES) a niveau eleve.
 const EVEIL_TEMPLES = [
-  { id:'lave',  nom:'Temple du Magma', element:'lave',  emoji:'🌋', couleur:'#e74c3c', pnj:'Ignar le Forgeron', bossNiveau:15, bossFruit:'lave' },
-  { id:'marin', nom:'Temple des Marees', element:'marin', emoji:'🌊', couleur:'#3498db', pnj:'Ondine la Corsaire', bossNiveau:20, bossFruit:'marin' },
-  { id:'nuage', nom:'Temple des Cieux', element:'nuage', emoji:'☁️', couleur:'#bdc3c7', pnj:'Zephir le Vagabond', bossNiveau:25, bossFruit:'nuage' },
-  { id:'roche', nom:'Temple de la Falaise', element:'roche', emoji:'🪨', couleur:'#d4a017', pnj:'Gronk le Colosse', bossNiveau:30, bossFruit:'roche' },
-  { id:'givre', nom:'Temple du Gel', element:'givre', emoji:'❄️', couleur:'#5dade2', pnj:'Frosta la Glaciale', bossNiveau:35, bossFruit:'givre' },
-  { id:'neant', nom:'Temple des Abysses', element:'neant', emoji:'🌑', couleur:'#8e44ad', pnj:'Vyl le Spectre', bossNiveau:42, bossFruit:'neant' }
+  { id:'lave',  nom:'Temple du Magma', element:'lave',  emoji:'🌋', couleur:'#e74c3c', pnj:'Badoul le Forgeron', bossNiveau:15, bossFruit:'lave',
+    avant:'He, gamin ! Tu sens cette chaleur ? C&#39;est mon enclume qui reclame du sang neuf. Montre-moi si ta flamme vaut quelque chose !',
+    victoire:'HA ! Tu as forge ta victoire a la sueur... Le metal ne ment jamais. Ce medaillon est a toi, petit braise.',
+    defaite:'Pfff... Reviens quand tu auras cesse de jouer avec des allumettes. Le vrai feu, ca se merite !' },
+  { id:'marin', nom:'Temple des Marees', element:'marin', emoji:'🌊', couleur:'#3498db', pnj:'Azalee la Navigatrice', bossNiveau:20, bossFruit:'marin',
+    avant:'Tiens, tiens... un moussaillon qui ose defier les flots ? La mer engloutit les imprudents, mon cher. A l&#39;abordage !',
+    victoire:'Magnifique ! Tu navigues comme un vrai capitaine. La maree t&#39;appartient desormais — prends ton medaillon, corsaire.',
+    defaite:'Retourne ramer, petit poisson ! L&#39;ocean ne se laisse pas dompter par n&#39;importe qui.' },
+  { id:'nuage', nom:'Temple des Cieux', element:'nuage', emoji:'☁️', couleur:'#bdc3c7', pnj:'Arlo le Voyageur', bossNiveau:25, bossFruit:'nuage',
+    avant:'Le vent m&#39;a souffle ta venue... Mais sauras-tu seulement le suivre ? Allez, fais-moi danser, petit courant d&#39;air.',
+    victoire:'Leger... rapide... insaisissable. Tu as l&#39;ame du vent. Va, le ciel te tend les bras — et voici ton medaillon.',
+    defaite:'Tu retombes deja ? Le ciel n&#39;est pas pour ceux qui ont les pieds trop lourds. Reviens plus leger.' },
+  { id:'roche', nom:'Temple de la Falaise', element:'roche', emoji:'🪨', couleur:'#d4a017', pnj:'Louco le Colosse', bossNiveau:30, bossFruit:'roche',
+    avant:'...Toi. Petit. Vouloir passer ? La montagne ne bouge pas. Toi devoir la briser. GRRR !',
+    victoire:'...Hm. Toi solide. Plus que pierre. Louco... reconnaitre ta force. Medaillon. A toi.',
+    defaite:'...La roche tient. Toi tomber. Reviens. Plus fort. Louco attendre.' },
+  { id:'givre', nom:'Temple du Gel', element:'givre', emoji:'❄️', couleur:'#5dade2', pnj:'BigMama la Glaciale', bossNiveau:35, bossFruit:'givre',
+    avant:'Inutile de trembler, c&#39;est juste le froid... ou la peur ? Approche. Je vais geler tes ardeurs une bonne fois pour toutes.',
+    victoire:'Tu as fait fondre ma glace... C&#39;est rare. Tres rare. Tu merites ce medaillon — porte-le avec fierte, flamme tenace.',
+    defaite:'Gele sur place, comme les autres. Reviens quand ton coeur brulera assez fort pour me defier.' },
+  { id:'neant', nom:'Temple des Abysses', element:'neant', emoji:'🌑', couleur:'#8e44ad', pnj:'V-Minou le Spectre', bossNiveau:42, bossFruit:'neant',
+    avant:'Tu oses penetrer dans le neant... courageux, ou inconscient ? Peu importe. Bientot, tu ne seras plus qu&#39;une ombre parmi les miennes.',
+    victoire:'Im... possible. Tu as perce les tenebres... Toi seul as cette lumiere. Prends le dernier medaillon. La Ligue t&#39;attend, elu.',
+    defaite:'Hahaha... Le vide te reclame deja. Reviens, si tu oses... mais l&#39;ombre, elle, n&#39;oublie jamais.' }
 ];
+
+// Lancer le combat de boss d'un temple
+app.post('/eveil/temple/start', async (req, res) => {
+  const { username, templeId } = req.body;
+  if (!username || !templeId) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const temple = EVEIL_TEMPLES.find(function(t){ return t.id === templeId; });
+  if (!temple) return res.status(400).json({ error: 'Temple inconnu' });
+
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+  if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
+
+  // Verifier l'ordre des temples
+  const medaillons = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  const index = EVEIL_TEMPLES.findIndex(function(t){ return t.id === templeId; });
+  if (medaillons.indexOf(templeId) < 0 && index !== medaillons.length) {
+    return res.status(400).json({ error: 'Termine le temple precedent d&#39;abord !' });
+  }
+
+  // Stats joueur
+  const sj = statsCalc(j.fruit, j.niveau);
+  let pvJoueur = (j.pv_actuels != null && j.pv_actuels > 0) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
+  if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avant le combat.' });
+
+  // Le boss : monstre de fruit de l'element du temple, niveau eleve
+  const bossFruit = temple.bossFruit;
+  const nivBoss = temple.bossNiveau;
+  const stadeBoss = calculerStade(true, nivBoss);
+  const sb = statsCalc(bossFruit, nivBoss);
+  // Boss un peu boost (1.15x PV pour le rendre coriace)
+  const pvBossMax = Math.round(sb.pvMax * 1.15);
+
+  const combat = {
+    estBoss: true, templeId: templeId,
+    enElem: bossFruit, enNiv: nivBoss, enStade: stadeBoss,
+    enNom: temple.pnj, enImgFruit: bossFruit, enStadeFruit: stadeBoss,
+    enPvMax: pvBossMax, enPv: pvBossMax, enAtk: Math.round(sb.atk*1.1), enDef: Math.round(sb.def*1.1),
+    joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+    tour: 1
+  };
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
+  res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade, temple: temple });
+});
+
+// Gagner le medaillon (appele quand le boss est vaincu)
+app.post('/eveil/temple/medaillon', async (req, res) => {
+  const { username, templeId } = req.body;
+  if (!username || !templeId) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('medaillons').eq('username', u).single();
+  let medaillons = (j && j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  if (medaillons.indexOf(templeId) < 0) {
+    medaillons.push(templeId);
+    await supabase.from('eveil_joueurs').update({ medaillons: medaillons.join(',') }).eq('username', u);
+  }
+  res.json({ success: true, medaillons });
+});
 
 // Recuperer l'etat de la carte du joueur (medaillons obtenus + temple debloque)
 app.get('/eveil/carte', async (req, res) => {
