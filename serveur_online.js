@@ -3064,19 +3064,6 @@ function carteMonde(){
         });
     }
 
-    function ouvrirTemple(id){
-      fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
-        .then(function(r){return r.json();})
-        .then(function(d){
-          var temple = d.temples.find(function(t){ return t.id === id; });
-          if(!temple){ alert('Temple introuvable'); return; }
-          templeActuel = temple;
-          afficherDialogue(temple.pnj, temple.avant, temple.couleur, function(){
-            lancerCombatTemple(id);
-          });
-        });
-    }
-
 function hub(){
       arreterSon('start');
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
