@@ -1899,7 +1899,9 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtAvanceE{0%,100%{transform:translateX(0);}50%{transform:translateX(-40px) translateY(10px);}}
     @keyframes cbtTremble{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
     @keyframes cbtTrembleJ{0%,100%{transform:scaleX(-1) translateX(0);}20%{transform:scaleX(-1) translateX(-8px);}40%{transform:scaleX(-1) translateX(8px);}60%{transform:scaleX(-1) translateX(-6px);}80%{transform:scaleX(-1) translateX(6px);}}
-    @keyframes cbtFlash{0%,100%{filter:none;}50%{filter:brightness(3) drop-shadow(0 0 20px #fff);}}
+    @keyframes projectileVole{0%{left:25%;top:62%;opacity:0;transform:scale(0.3);}20%{opacity:1;}100%{left:62%;top:20%;opacity:1;transform:scale(1.2);}}
+    @keyframes effetPulse{0%{transform:scale(0.5);opacity:0;}40%{opacity:1;}100%{transform:scale(2.5);opacity:0;}}
+    .effet-elem{position:absolute;width:80px;height:80px;border-radius:50%;pointer-events:none;z-index:55;}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
     .cbt-secousse{animation:cbtSecousse 0.4s ease-in-out;}
     @keyframes elixiVole{0%{left:45%;top:72%;transform:scale(0.7) rotate(0deg);opacity:1;}55%{left:60%;top:8%;transform:scale(1.1) rotate(360deg);opacity:1;}100%{left:68%;top:14%;transform:scale(0.9) rotate(540deg);opacity:1;}}
@@ -2594,12 +2596,50 @@ var ATTAQUES_FRONT = {
       document.getElementById('content').innerHTML = html;
     }
 
+// Effets visuels par element pour l'attaque chargee
+    var EFFETS_ELEM = {
+      lave:  { emoji:'🔥', couleur:'#e74c3c', halo:'#ff6b35' },
+      marin: { emoji:'🌊', couleur:'#3498db', halo:'#5dade2' },
+      nuage: { emoji:'⚡', couleur:'#bdc3c7', halo:'#ecf0f1' },
+      roche: { emoji:'🪨', couleur:'#d4a017', halo:'#e8b923' },
+      givre: { emoji:'❄️', couleur:'#5dade2', halo:'#aed6f1' },
+      neant: { emoji:'🌑', couleur:'#8e44ad', halo:'#bb8fce' }
+    };
+
+    function effetElementaire(element){
+      var arene = document.getElementById('cbt-arene');
+      if(!arene) return;
+      arene.style.position = 'relative';
+      var ef = EFFETS_ELEM[element] || EFFETS_ELEM.lave;
+
+      // Le projectile qui vole vers l'ennemi
+      var proj = document.createElement('div');
+      proj.style.cssText = 'position:absolute;font-size:46px;z-index:56;pointer-events:none;left:25%;top:62%;filter:drop-shadow(0 0 12px '+ef.halo+');animation:projectileVole 0.5s ease-in forwards;';
+      proj.textContent = ef.emoji;
+      arene.appendChild(proj);
+
+      // A l'impact : halo coloré sur l'ennemi
+      setTimeout(function(){
+        var halo = document.createElement('div');
+        halo.className = 'effet-elem';
+        halo.style.left = '58%';
+        halo.style.top = '16%';
+        halo.style.background = 'radial-gradient(circle,'+ef.halo+','+ef.couleur+'88,transparent 70%)';
+        halo.style.animation = 'effetPulse 0.6s ease-out forwards';
+        arene.appendChild(halo);
+        setTimeout(function(){ if(halo.parentNode) halo.remove(); }, 600);
+        if(proj.parentNode) proj.remove();
+      }, 500);
+    }
+
     function attaquer(idx){
       jouerSon('attaque');
       var monstreJ = document.getElementById('cbt-joueur');
       var monstreE = document.getElementById('cbt-ennemi');
       // Animation : le joueur avance pour attaquer
       if(monstreJ){ monstreJ.style.animation = 'cbtAvanceJ 0.4s ease-in-out'; }
+      // Effet elementaire pour l'attaque chargee (idx 1) et ultime (idx 2)
+      if(idx >= 1 && combatEtat && combatEtat.joFruit){ effetElementaire(combatEtat.joFruit); }
 
       fetch('/eveil/combat/attaque',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,attaqueIndex:idx})})
         .then(function(r){return r.json();})
