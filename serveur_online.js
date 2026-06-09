@@ -2991,6 +2991,46 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
+function boiteMedaillons(){
+      fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var temples = d.temples;
+          var medaillons = d.medaillons || [];
+          var nbMed = medaillons.length;
+
+          var cases = '';
+          for(var i=0;i<temples.length;i++){
+            var t = temples[i];
+            var obtenu = medaillons.indexOf(t.id) >= 0;
+            if(obtenu){
+              cases += '<div style="background:linear-gradient(160deg, color-mix(in srgb, '+t.couleur+' 20%, rgba(0,0,0,0.7)), rgba(0,0,0,0.85));border:2px solid '+t.couleur+';border-radius:16px;padding:18px;text-align:center;box-shadow:0 0 20px '+t.couleur+'66;">'
+                + '<img src="'+IMG+'/eveil/medaillon-'+t.element+'.png" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 0 12px '+t.couleur+'aa);">'
+                + '<div style="font-family:Cinzel,serif;font-size:14px;color:'+t.couleur+';margin-top:8px;">'+t.nom+'</div>'
+                + '<div style="font-size:11px;color:#aaa;margin-top:3px;">Vaincu : '+t.pnj+'</div>'
+                + '</div>';
+            } else {
+              cases += '<div style="background:rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;text-align:center;">'
+                + '<img src="'+IMG+'/eveil/medaillon-'+t.element+'.png" style="width:90px;height:90px;object-fit:contain;filter:brightness(0) opacity(0.4);">'
+                + '<div style="font-family:Cinzel,serif;font-size:14px;color:#666;margin-top:8px;">???</div>'
+                + '<div style="font-size:11px;color:#555;margin-top:3px;">Temple non conquis</div>'
+                + '</div>';
+            }
+          }
+
+          var html = '<div style="max-width:680px;margin:0 auto;">'
+            + '<div style="text-align:center;margin-bottom:8px;">'
+            + '<div style="font-family:Cinzel,serif;font-size:26px;color:#f1c40f;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,0.6);">&#x1F3C5; MES MEDAILLONS</div>'
+            + '<div style="font-size:14px;color:#f1c40f;margin-top:5px;">'+nbMed+' / 6 obtenus</div>'
+            + '</div>'
+            + (nbMed>=6 ? '<div style="text-align:center;color:#f1c40f;font-size:14px;margin-bottom:15px;">&#x1F3C6; Tu as tous les medaillons ! La Ligue des Pirates t&#39;attend !</div>' : '')
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:15px;">'+cases+'</div>'
+            + '<div style="text-align:center;margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="carteMonde()">&#x2190; Retour a la carte</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
 function carteMonde(){
       fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -3061,7 +3101,10 @@ function carteMonde(){
             + '<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">'+lignes+'</svg>'
             + iles
             + '</div>'
-            + '<div style="text-align:center;margin-top:18px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '<div style="text-align:center;margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
+            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(241,196,15,0.2);border:1px solid #f1c40f;font-size:13px;padding:10px 22px;" onclick="boiteMedaillons()">&#x1F3C5; Mes medaillons</button>'
+            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 22px;" onclick="hub()">&#x2190; Retour au repaire</button>'
+            + '</div>'
             + '</div>';
           document.getElementById('content').innerHTML = html;
         });
