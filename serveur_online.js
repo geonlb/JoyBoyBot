@@ -1441,6 +1441,26 @@ const EVEIL_MONSTRES = {
   koarbre:    { nom:'Koarbre', img:'koarbre', element:'nuage', rarete:'ultime', zone:5 },
   nuagelican: { nom:'Nuagelican', img:'nuagelican', element:'nuage', rarete:'ultime', zone:5 }
 };
+// ========== TEMPLES ELEMENTAIRES (carte du monde) ==========
+// Ordre de progression. Le boss a un monstre de fruit (lignee LIGNEES) a niveau eleve.
+const EVEIL_TEMPLES = [
+  { id:'lave',  nom:'Temple du Magma', element:'lave',  emoji:'🌋', couleur:'#e74c3c', pnj:'Ignar le Forgeron', bossNiveau:15, bossFruit:'lave' },
+  { id:'marin', nom:'Temple des Marees', element:'marin', emoji:'🌊', couleur:'#3498db', pnj:'Ondine la Corsaire', bossNiveau:20, bossFruit:'marin' },
+  { id:'nuage', nom:'Temple des Cieux', element:'nuage', emoji:'☁️', couleur:'#bdc3c7', pnj:'Zephir le Vagabond', bossNiveau:25, bossFruit:'nuage' },
+  { id:'roche', nom:'Temple de la Falaise', element:'roche', emoji:'🪨', couleur:'#d4a017', pnj:'Gronk le Colosse', bossNiveau:30, bossFruit:'roche' },
+  { id:'givre', nom:'Temple du Gel', element:'givre', emoji:'❄️', couleur:'#5dade2', pnj:'Frosta la Glaciale', bossNiveau:35, bossFruit:'givre' },
+  { id:'neant', nom:'Temple des Abysses', element:'neant', emoji:'🌑', couleur:'#8e44ad', pnj:'Vyl le Spectre', bossNiveau:42, bossFruit:'neant' }
+];
+
+// Recuperer l'etat de la carte du joueur (medaillons obtenus + temple debloque)
+app.get('/eveil/carte', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('medaillons, fruit, niveau, stade').eq('username', u).single();
+  const medaillons = (j && j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  res.json({ temples: EVEIL_TEMPLES, medaillons, joueur: j || null });
+});
 const EVEIL_ZONES = {
   1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:10, couleur:'#2ecc71' },
   2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:11, nivMax:20, couleur:'#1abc9c' },
@@ -1794,6 +1814,7 @@ app.get('/eveil', (req, res) => {
     .genre-nom{font-family:'Cinzel',serif;font-size:20px;letter-spacing:3px;color:#87ceeb;margin-top:12px;}
     .loading{font-size:16px;color:#87ceeb;}
     @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+    @keyframes pulseTemple{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.12);}}
     @keyframes monteFade{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-120px);opacity:0;}}
     @keyframes saute{0%,100%{transform:translateY(0);}25%{transform:translateY(-25px);}50%{transform:translateY(0);}75%{transform:translateY(-12px);}}
     @keyframes cbtAvanceJ{0%,100%{transform:scaleX(-1) translateX(0);}50%{transform:scaleX(-1) translateX(40px) translateY(-10px);}}
@@ -2799,6 +2820,86 @@ var brisepediaZone = 0; // 0 = toutes les zones
         });
     }
 
+function carteMonde(){
+      fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var temples = d.temples;
+          var medaillons = d.medaillons || [];
+          var nbMed = medaillons.length;
+
+          // Determine quel temple est debloque (le premier non complete)
+          var prochainIndex = nbMed; // 0 = premier temple, etc.
+
+          // Positions des iles en serpentin (en %)
+          var positions = [
+            {x:15, y:78}, {x:38, y:64}, {x:22, y:46}, {x:52, y:40}, {x:38, y:22}, {x:65, y:14}
+          ];
+          var ligue = {x:84, y:8};
+
+          var iles = '';
+          // Chemin pointille (lignes SVG entre les iles)
+          var pts = positions.concat([ligue]);
+          var lignes = '';
+          for(var p=0;p<pts.length-1;p++){
+            lignes += '<line x1="'+pts[p].x+'%" y1="'+pts[p].y+'%" x2="'+pts[p+1].x+'%" y2="'+pts[p+1].y+'%" stroke="#f1c40f" stroke-width="3" stroke-dasharray="8,8" opacity="0.5"/>';
+          }
+
+          for(var i=0;i<temples.length;i++){
+            var t = temples[i];
+            var pos = positions[i];
+            var complete = medaillons.indexOf(t.id) >= 0;
+            var debloque = (i === prochainIndex);
+            var etat, contenu, clickable;
+            if(complete){
+              etat = 'background:'+t.couleur+';border:3px solid #f1c40f;box-shadow:0 0 25px '+t.couleur+'cc;';
+              contenu = '<div style="font-size:30px;">'+t.emoji+'</div><div style="position:absolute;bottom:-6px;right:-6px;font-size:22px;">&#x1F3C5;</div>';
+              clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
+            } else if(debloque){
+              etat = 'background:'+t.couleur+';border:3px solid #fff;box-shadow:0 0 30px '+t.couleur+';animation:pulseTemple 1.5s infinite;cursor:pointer;';
+              contenu = '<div style="font-size:30px;">'+t.emoji+'</div>';
+              clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
+            } else {
+              etat = 'background:rgba(40,40,50,0.85);border:3px solid rgba(255,255,255,0.15);';
+              contenu = '<div style="font-size:26px;filter:grayscale(1);opacity:0.5;">'+t.emoji+'</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
+              clickable = 'onclick="alert(&#39;Termine le temple precedent pour debloquer celui-ci !&#39;)"';
+            }
+            iles += '<div '+clickable+' style="position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+etat+'" title="'+t.nom+'">'+contenu+'</div>';
+          }
+
+          // La Ligue des Pirates (7e ile)
+          var ligueDebloque = nbMed >= 6;
+          var ligueEtat, ligueClick, ligueContenu;
+          if(ligueDebloque){
+            ligueEtat = 'background:linear-gradient(135deg,#f1c40f,#e67e22);border:3px solid #fff;box-shadow:0 0 35px #f1c40f;animation:pulseTemple 1.5s infinite;cursor:pointer;';
+            ligueContenu = '<div style="font-size:32px;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div>';
+            ligueClick = 'onclick="alert(&#39;La Ligue des Pirates arrive bientot ! Tu as tous les medaillons, champion ! &#x1F3C6;&#39;)"';
+          } else {
+            ligueEtat = 'background:rgba(40,40,50,0.85);border:3px solid rgba(241,196,15,0.3);';
+            ligueContenu = '<div style="font-size:28px;filter:grayscale(1);opacity:0.5;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
+            ligueClick = 'onclick="alert(&#39;Obtiens les 6 medaillons pour acceder a la Ligue des Pirates !&#39;)"';
+          }
+          iles += '<div '+ligueClick+' style="position:absolute;left:'+ligue.x+'%;top:'+ligue.y+'%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+ligueEtat+'" title="Ligue des Pirates">'+ligueContenu+'</div>';
+
+          var html = '<div style="max-width:720px;margin:0 auto;">'
+            + '<div style="text-align:center;margin-bottom:12px;">'
+            + '<div style="font-family:Cinzel,serif;font-size:28px;color:#f1c40f;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,0.6);">&#x1F5FA;&#xFE0F; LE GRAND LINE</div>'
+            + '<div style="font-size:14px;color:#f1c40f;margin-top:5px;">&#x1F3C5; '+nbMed+' / 6 medaillons</div>'
+            + '</div>'
+            + '<div style="position:relative;width:100%;height:480px;background:radial-gradient(ellipse at 30% 20%, rgba(52,152,219,0.15), transparent 60%), linear-gradient(160deg,#0a1628,#0d1f3c,#0a1020);border:2px solid rgba(241,196,15,0.3);border-radius:20px;overflow:hidden;">'
+            + '<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">'+lignes+'</svg>'
+            + iles
+            + '</div>'
+            + '<div style="text-align:center;margin-top:18px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function ouvrirTemple(id){
+      alert('&#x1F3DB;&#xFE0F; Le temple ouvre bientot ! (prochaine etape : le PNJ et le combat de boss)'.replace(/&#x1F3DB;&#xFE0F;/g,'🏛️'));
+    }
+
 function hub(){
       arreterSon('start');
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
@@ -2815,6 +2916,7 @@ function hub(){
           var sections = [
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
             { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
+            { id:'carte',   emoji:'&#x1F5FA;&#xFE0F;', titre:'LE GRAND LINE', desc:'La carte et les temples', actif:true },
             { id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
             { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
             { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
@@ -2825,7 +2927,7 @@ function hub(){
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : 'bateau()'))));
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : (s.id==='carte' ? 'carteMonde()' : 'bateau()')))));
               cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
