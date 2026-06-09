@@ -1649,7 +1649,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
     // Sauve (PV joueur conserves, combat fini)
     await supabase.from('eveil_joueurs').update({ xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c });
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null });
   }
 
   // --- Riposte de l'ennemi ---
@@ -2538,7 +2538,7 @@ var ATTAQUES_FRONT = {
       var imgJ = ligJ.stades[e.joStade-1];
       var nomJ = ligJ.noms[e.joStade-1];
       var ligE = LIGNEES[c.enElem];
-      var imgE = c.enImg || ligE.stades[c.enStade-1];
+      var imgE = c.estBoss ? ligE.stades[c.enStadeFruit-1] : (c.enImg || ligE.stades[c.enStade-1]);
       var nomE = c.enNom || ligE.noms[c.enStade-1];
 
       var pctJ = Math.max(0, Math.round((c.joPv/c.joPvMax)*100));
@@ -2622,7 +2622,22 @@ var ATTAQUES_FRONT = {
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
-                setTimeout(function(){ alert(msg); hub(); }, 1200);
+                if(d.estBoss && d.templeId){
+                  // Victoire de boss : dialogue + medaillon
+                  setTimeout(function(){
+                    alert(msg);
+                    fetch('/eveil/temple/medaillon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,templeId:d.templeId})})
+                      .then(function(r){return r.json();})
+                      .then(function(){
+                        afficherDialogue(templeActuel.pnj, templeActuel.victoire, templeActuel.couleur, function(){
+                          alert('🏅 Tu obtiens le medaillon ' + templeActuel.nom + ' !');
+                          carteMonde();
+                        });
+                      });
+                  }, 1200);
+                } else {
+                  setTimeout(function(){ alert(msg); hub(); }, 1200);
+                }
               } else {
                 jouerSon('defaite');
                 setTimeout(function(){ alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }, 1200);
@@ -2894,6 +2909,79 @@ var brisepediaZone = 0; // 0 = toutes les zones
           overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
           document.body.appendChild(overlay);
         });
+    }
+
+var dialogueEnCours = null; // pour gerer le texte lettre par lettre
+    var templeActuel = null;
+
+    // Affiche une bulle de dialogue facon Pokemon (lettre par lettre)
+    function afficherDialogue(nomPnj, texte, couleur, callback){
+      var html = '<div style="max-width:680px;margin:0 auto;padding-top:40px;">'
+        + '<div style="text-align:center;font-size:60px;margin-bottom:20px;">&#x1F9D1;&#x200D;&#x1F680;</div>'
+        + '<div style="background:rgba(0,0,0,0.9);border:3px solid '+couleur+';border-radius:16px;padding:20px 24px;min-height:120px;box-shadow:0 0 30px '+couleur+'66;">'
+        + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+couleur+';margin-bottom:10px;">'+nomPnj+'</div>'
+        + '<div id="dialogue-texte" style="font-size:15px;color:#fff;line-height:1.6;min-height:50px;"></div>'
+        + '<div id="dialogue-suite" style="text-align:right;font-size:12px;color:#aaa;margin-top:10px;opacity:0;">&#x25BC; cliquer pour continuer</div>'
+        + '</div></div>';
+      document.getElementById('content').innerHTML = html;
+
+      // Texte lettre par lettre
+      var txt = texte.replace(/&#39;/g, "'");
+      var i = 0;
+      var zone = document.getElementById('dialogue-texte');
+      var suite = document.getElementById('dialogue-suite');
+      if(dialogueEnCours) clearInterval(dialogueEnCours);
+      dialogueEnCours = setInterval(function(){
+        if(i < txt.length){
+          zone.textContent += txt.charAt(i);
+          i++;
+          try{ jouerSon('attaque'); }catch(e){} // petit son de frappe (optionnel)
+        } else {
+          clearInterval(dialogueEnCours);
+          dialogueEnCours = null;
+          suite.style.opacity = '1';
+        }
+      }, 35);
+
+      // Clic pour avancer (ou accelerer)
+      document.getElementById('content').onclick = function(){
+        if(dialogueEnCours){
+          // accelerer : afficher tout
+          clearInterval(dialogueEnCours);
+          dialogueEnCours = null;
+          zone.textContent = txt;
+          suite.style.opacity = '1';
+        } else {
+          document.getElementById('content').onclick = null;
+          callback();
+        }
+      };
+    }
+
+    function ouvrirTemple(id){
+      fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var temple = d.temples.find(function(t){ return t.id === id; });
+          if(!temple){ alert('Temple introuvable'); return; }
+          templeActuel = temple;
+          // Dialogue d'intro, puis lance le combat
+          afficherDialogue(temple.pnj, temple.avant, temple.couleur, function(){
+            lancerCombatTemple(id);
+          });
+        });
+    }
+
+    function lancerCombatTemple(id){
+      fetch('/eveil/temple/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,templeId:id})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); carteMonde(); return; }
+          combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
+          jouerSon('start');
+          afficherCombat(['&#x1F3DB;&#xFE0F; '+d.temple.pnj+' envoie son monstre !']);
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
 function carteMonde(){
