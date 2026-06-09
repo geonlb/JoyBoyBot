@@ -2406,7 +2406,7 @@ var ATTAQUES_FRONT = {
           var cards = '';
           for(var z in zones){
             var zo = zones[z];
-            cards += '<div onclick="lancerCombatZone('+z+')" style="position:relative;background:linear-gradient(rgba(5,5,16,0.45),rgba(5,5,16,0.75)), url('+IMG+'/eveil/zone'+z+'.png?v=2') center/cover;border:2px solid '+zo.couleur+';border-radius:16px;padding:25px 20px;cursor:pointer;transition:transform 0.2s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;" onmouseover="this.style.transform=&#39;scale(1.03)&#39;;" onmouseout="this.style.transform=&#39;scale(1)&#39;;">'
+            cards += '<div onclick="lancerCombatZone('+z+')" style="position:relative;background:linear-gradient(rgba(5,5,16,0.45),rgba(5,5,16,0.75)), url('+IMG+'/eveil/zone'+z+'.png?v=2) center/cover;border:2px solid '+zo.couleur+';border-radius:16px;padding:25px 20px;cursor:pointer;transition:transform 0.2s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;" onmouseover="this.style.transform=&#39;scale(1.03)&#39;;" onmouseout="this.style.transform=&#39;scale(1)&#39;;">'
               + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+zo.couleur+';text-shadow:0 2px 4px rgba(0,0,0,0.8);">'+zo.nom+'</div>'
               + '<div style="font-size:12px;color:#ddd;text-shadow:0 1px 3px rgba(0,0,0,0.9);margin-top:4px;">'+zo.desc+'</div>'
               + '<div style="font-size:11px;color:'+zo.couleur+';margin-top:6px;">Niveaux '+zo.nivMin+' - '+zo.nivMax+'</div>'
