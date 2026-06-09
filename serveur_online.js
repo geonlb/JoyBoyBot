@@ -3061,8 +3061,9 @@ function carteMonde(){
     }
 
     function ouvrirTemple(id){
-      alert('&#x1F3DB;&#xFE0F; Le temple ouvre bientot ! (prochaine etape : le PNJ et le combat de boss)'.replace(/&#x1F3DB;&#xFE0F;/g,'🏛️'));
-    }
+      fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        ...
 
 function hub(){
       arreterSon('start');
