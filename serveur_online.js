@@ -1806,6 +1806,7 @@ app.post('/eveil/combat/fuir', async (req, res) => {
   const { data: j } = await supabase.from('eveil_joueurs').select('combat_actif').eq('username', u).single();
   if (j && j.combat_actif) {
     const c = JSON.parse(j.combat_actif);
+    if (c.estBoss) return res.status(400).json({ error: 'Impossible de fuir un combat de temple !' });
     await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
   }
   res.json({ success: true });
@@ -2490,7 +2491,8 @@ var ATTAQUES_FRONT = {
       victoire: new Audio(IMG+'/eveil/combat-victoire.mp3'),
       defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3'),
       lance:    new Audio(IMG+'/eveil/capture-lance.mp3'),
-      capture:  new Audio(IMG+'/eveil/capture-reussie.mp3')
+      capture:  new Audio(IMG+'/eveil/capture-reussie.mp3'),
+      boss:     new Audio(IMG+'/eveil/combat-boss.mp3')
     };
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
@@ -2586,7 +2588,7 @@ var ATTAQUES_FRONT = {
         + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
         + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">'
         + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(155,89,182,0.3);border:1px solid #9b59b6;font-size:12px;padding:8px 20px;" onclick="ouvrirSacCombat()">&#x1F392; Sac</button>'
-        + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>'
+        + (c.estBoss ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
         + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
@@ -2624,6 +2626,7 @@ var ATTAQUES_FRONT = {
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
                 if(d.estBoss && d.templeId){
+                  arreterSon('boss');
                   // Victoire de boss : dialogue + medaillon
                   setTimeout(function(){
                     alert(msg);
@@ -2982,7 +2985,7 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
         .then(function(d){
           if(d.error){ alert(d.error); carteMonde(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
-          jouerSon('start');
+          arreterSon('start'); jouerSon('boss');
           afficherCombat(['&#x1F3DB;&#xFE0F; '+d.temple.pnj+' envoie son monstre !']);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
@@ -3066,6 +3069,7 @@ function carteMonde(){
 
 function hub(){
       arreterSon('start');
+      arreterSon('boss');
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
