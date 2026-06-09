@@ -3100,11 +3100,9 @@ function carteMonde(){
             + '<div style="position:relative;width:100%;height:480px;background:radial-gradient(ellipse at 30% 20%, rgba(52,152,219,0.15), transparent 60%), linear-gradient(160deg,#0a1628,#0d1f3c,#0a1020);border:2px solid rgba(241,196,15,0.3);border-radius:20px;overflow:hidden;">'
             + '<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">'+lignes+'</svg>'
             + iles
+            + '<div onclick="boiteMedaillons()" style="position:absolute;top:12px;right:12px;z-index:20;background:rgba(0,0,0,0.7);border:2px solid #f1c40f;border-radius:50%;width:54px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 15px rgba(241,196,15,0.5);" title="Mes medaillons"><div style="font-size:24px;">&#x1F3C5;</div></div>'
             + '</div>'
-            + '<div style="text-align:center;margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
-            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(241,196,15,0.2);border:1px solid #f1c40f;font-size:13px;padding:10px 22px;" onclick="boiteMedaillons()">&#x1F3C5; Mes medaillons</button>'
-            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 22px;" onclick="hub()">&#x2190; Retour au repaire</button>'
-            + '</div>'
+            + '<div style="text-align:center;margin-top:18px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
             + '</div>';
           document.getElementById('content').innerHTML = html;
         });
