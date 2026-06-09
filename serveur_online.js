@@ -1500,13 +1500,13 @@ app.post('/eveil/temple/start', async (req, res) => {
   const stadeBoss = calculerStade(true, nivBoss);
   const sb = statsCalc(bossFruit, nivBoss);
   // Boss un peu boost (1.15x PV pour le rendre coriace)
-  const pvBossMax = Math.round(sb.pvMax * 1.15);
+  const pvBossMax = sb.pvMax;
 
   const combat = {
     estBoss: true, templeId: templeId,
     enElem: bossFruit, enNiv: nivBoss, enStade: stadeBoss,
     enNom: temple.pnj, enImgFruit: bossFruit, enStadeFruit: stadeBoss,
-    enPvMax: pvBossMax, enPv: pvBossMax, enAtk: Math.round(sb.atk*1.1), enDef: Math.round(sb.def*1.1),
+    enPvMax: pvBossMax, enPv: pvBossMax, enAtk: sb.atk, enDef: sb.def,
     joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
     tour: 1
   };
@@ -1654,7 +1654,8 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 
   // --- Riposte de l'ennemi ---
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2)];
-  const multE = multiplicateurElement(c.enElem, j.fruit);
+  let multE = multiplicateurElement(c.enElem, j.fruit);
+  if (c.estBoss && multE === 2) multE = 1.5; // super-efficace adouci pour les boss
   let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
   const critE = Math.random() < 0.08 ? 2 : 1;
   degE = Math.round(degE * critE);
