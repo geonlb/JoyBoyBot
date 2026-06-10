@@ -1622,6 +1622,28 @@ app.post('/eveil/combat/start', async (req, res) => {
   let pvJoueur = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
   if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avec une potion avant de combattre.' });
 
+  // ===== RIVAL : 20% de chance, ou force si le joueur a perdu contre lui dans cette zone =====
+  const rivalCampe = (j.rival_zone === z); // le rival attend dans cette zone (joueur a perdu avant)
+  const rivalApparait = j.rival_element && (rivalCampe || Math.random() < 0.20);
+  if (rivalApparait) {
+    const genreRival = j.genre === 'homme' ? 'femme' : 'homme';
+    const RIVAL_NOMS2 = { femme:'Louiise', homme:'Patrick' };
+    // Niveau du rival : suit le joueur, toujours un peu au-dessus (+2)
+    const nivRival = Math.max(j.rival_niveau || 5, j.niveau + 2);
+    const sr = statsCalc(j.rival_element, nivRival);
+    const stadeRival = calculerStade(true, nivRival);
+    const combatR = {
+      estRival: true, rivalElem: j.rival_element,
+      enElem: j.rival_element, enNiv: nivRival, enStade: stadeRival, enStadeFruit: stadeRival,
+      enNom: RIVAL_NOMS2[genreRival] || 'Rival', zone: z,
+      enPvMax: sr.pvMax, enPv: sr.pvMax, enAtk: sr.atk, enDef: sr.def,
+      joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+      tour: 1
+    };
+    await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combatR), rival_niveau: nivRival }).eq('username', u);
+    return res.json({ success: true, combat: combatR, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade, rival: true, imgRival: 'rival-'+genreRival });
+  }
+  
   // Choisir un monstre AU HASARD parmi ceux de la zone
   const monstresZone = Object.keys(EVEIL_MONSTRES).filter(function(id){ return EVEIL_MONSTRES[id].zone === z; });
   // Ponderation par rarete : commun plus frequent, ultime rare
@@ -1680,8 +1702,10 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 
   // Victoire ?
   if (c.enPv <= 0) {
-    const gainXp = 20 + c.enNiv * 8;
-    const gainBrise = 30 + c.enNiv * 5;
+    let gainXp = 20 + c.enNiv * 8;
+    let gainBrise = 30 + c.enNiv * 5;
+    // Bonus si c'est le rival : belle recompense
+    if (c.estRival) { gainXp = Math.round(gainXp * 2); gainBrise = Math.round(gainBrise * 2.5); }
     // Applique XP
     let xp = (j.xp || 0) + gainXp, niveau = j.niveau, events = [];
     while (xp >= xpPourNiveau(niveau)) { xp -= xpPourNiveau(niveau); niveau++; events.push('niveau'); if(niveau===EVEIL_EVO_ADO)events.push('evo3'); if(niveau===EVEIL_EVO_FINAL)events.push('evo4'); }
@@ -1691,8 +1715,10 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     const newBrise = (prime ? prime.berrys : 0) + gainBrise;
     await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
     // Sauve (PV joueur conserves, combat fini)
-    await supabase.from('eveil_joueurs').update({ xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null });
+    const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
+    if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; } // le rival quitte la zone
+    await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false });
   }
 
   // --- Riposte de l'ennemi ---
@@ -1712,8 +1738,10 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 
   // Defaite ?
   if (c.joPv <= 0) {
-    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: false, log, combat: c, enAtkIdx: idxEnnemi, enElem: c.enElem });
+    const majDefaite = { pv_actuels: 0, combat_actif: '' };
+    if (c.estRival) majDefaite.rival_zone = c.zone; // le rival campe dans cette zone
+    await supabase.from('eveil_joueurs').update(majDefaite).eq('username', u);
+    return res.json({ success: true, fini: true, victoire: false, log, combat: c, estRival: c.estRival || false });
   }
 
   // Combat continue
@@ -1851,6 +1879,7 @@ app.post('/eveil/combat/fuir', async (req, res) => {
   if (j && j.combat_actif) {
     const c = JSON.parse(j.combat_actif);
     if (c.estBoss) return res.status(400).json({ error: 'Impossible de fuir un combat de temple !' });
+    if (c.estRival) return res.status(400).json({ error: 'Ton rival ne te laissera pas fuir !' });
     await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
   }
   res.json({ success: true });
