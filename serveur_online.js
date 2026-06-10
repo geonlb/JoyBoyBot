@@ -3106,14 +3106,14 @@ function carteMonde(){
 
           // Positions des temples sur les iles dessinees (en %)
           var positions = [
-            {x:16, y:30},  // 1 Lave - ile crane (haut-gauche)
-            {x:43, y:33},  // 2 Marin - recifs roses (haut-centre)
-            {x:83, y:30},  // 3 Nuage - ile montagne (haut-droite)
+            {x:33, y:87},  // 1 Lave - petite ile palmiers (bas-centre, pres boussole)
+            {x:16, y:68},  // 2 Marin - ile falaise (bas-gauche)
+            {x:40, y:56},  // 3 Nuage - ile croissant (centre)
             {x:67, y:50},  // 4 Roche - grande ile volcan (centre-droite)
-            {x:40, y:56},  // 5 Givre - ile croissant (centre-gauche)
-            {x:16, y:68}   // 6 Neant - ile falaise (bas-gauche)
+            {x:83, y:30},  // 5 Givre - ile montagne (haut-droite)
+            {x:43, y:33}   // 6 Neant - recifs roses (haut-centre)
           ];
-          var ligue = {x:90, y:62}; // lagon magique (droite-bas)
+          var ligue = {x:16, y:30}; // ile crane doberman (haut-gauche) = LIGUE
 
           // Le chemin en courbe douce reliant les iles
           var pts = positions.concat([ligue]);
