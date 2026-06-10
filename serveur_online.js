@@ -1420,6 +1420,35 @@ function multiplicateurElement(attaquant, defenseur) {
   if (EVEIL_FORCES[defenseur] === attaquant) return 0.5;     // pas efficace
   return 1;                                                   // neutre
 }
+// Charge l'equipe de combat du joueur : [fruit, ...monstres captures dans l'equipe]
+async function chargerEquipe(j, u) {
+  const equipe = [];
+  // Position 0 : le fruit eveille (le partenaire)
+  const sj = statsCalc(j.fruit, j.niveau);
+  let pvFruit = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
+  equipe.push({
+    type: 'fruit', monstreId: null, elem: j.fruit, niveau: j.niveau, stade: j.stade,
+    nom: null, img: null, // le frontend resout via LIGNEES
+    pvMax: sj.pvMax, pv: pvFruit, atk: sj.atk, def: sj.def
+  });
+  // Positions 1-2 : les monstres captures dans l'equipe
+  const { data: caps } = await supabase.from('eveil_captures').select('*').eq('username', u).eq('dans_equipe', 1).order('slot_equipe', { ascending: true });
+  (caps || []).forEach(function(c){
+    const m = EVEIL_MONSTRES[c.monstre_id];
+    if (!m) return;
+    const niv = c.niveau || 1;
+    const st = statsCalc(m.element, niv); // meme formule de stats, par element
+    const stade = c.stade || 1;
+    let pv = (c.pv_actuels != null && c.pv_actuels >= 0) ? Math.min(c.pv_actuels, st.pvMax) : st.pvMax;
+    equipe.push({
+      type: 'capture', monstreId: c.monstre_id, elem: m.element, niveau: niv, stade: stade,
+      nom: m.nom, img: m.img,
+      pvMax: st.pvMax, pv: pv, atk: st.atk, def: st.def
+    });
+  });
+  return equipe;
+}
+
 function statsCalc(fruit, niveau) {
   const s = EVEIL_STATS[fruit];
   return { pvMax: s.pvB + niveau*s.pvN, atk: s.atkB + niveau*s.atkN, def: s.defB + niveau*s.defN };
@@ -1709,11 +1738,13 @@ app.post('/eveil/combat/start', async (req, res) => {
   const nivEnnemi = Math.max(1, zoneInfo.nivMin + Math.floor(Math.random()*(zoneInfo.nivMax - zoneInfo.nivMin + 1)));
   const se = statsCalc(monstre.element, nivEnnemi);
 
+  const equipe = await chargerEquipe(j, u);
   const combat = {
     monstreId: monstreId, enElem: monstre.element, enNiv: nivEnnemi, enStade: 2,
     enNom: monstre.nom, enImg: monstre.img, enRarete: monstre.rarete, zone: z,
     enPvMax: se.pvMax, enPv: se.pvMax, enAtk: se.atk, enDef: se.def,
     joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+    equipe: equipe, actif: 0,
     tour: 1
   };
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
