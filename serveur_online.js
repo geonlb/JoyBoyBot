@@ -3165,12 +3165,15 @@ function carteMonde(){
           // Le bateau : navigue entre la derniere ile validee et la prochaine
           var bateauHtml = '';
           var depart, arrivee;
-          if(nbMed === 0){ depart = {x:8, y:50}; arrivee = positions[0]; }
+          if(nbMed === 0){ depart = {x:33, y:97}; arrivee = positions[0]; }
           else if(nbMed >= 6){ depart = positions[5]; arrivee = ligue; }
           else { depart = positions[nbMed-1]; arrivee = positions[nbMed]; }
           var bx = (depart.x + arrivee.x)/2;
           var by = (depart.y + arrivee.y)/2;
-          bateauHtml = '<img src="'+IMG+'/eveil/bateau-map.png" style="position:absolute;left:'+bx+'%;top:'+by+'%;transform:translate(-50%,-50%);width:50px;height:50px;object-fit:contain;z-index:15;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));animation:bateauFlotte 2s ease-in-out infinite;" title="Ton navire">';
+          // Image regarde a gauche par defaut : on inverse si on va vers la droite
+          var versLaDroite = arrivee.x > depart.x;
+          var flipBateau = versLaDroite ? ' scaleX(-1)' : '';
+          bateauHtml = '<img src="'+IMG+'/eveil/BATEAU_PLACEHOLDER.png" style="position:absolute;left:'+bx+'%;top:'+by+'%;transform:translate(-50%,-50%)'+flipBateau+';width:50px;height:50px;object-fit:contain;z-index:15;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));" title="Ton navire">';
 
           var html = '<div style="max-width:760px;margin:0 auto;">'
             + '<div style="text-align:center;margin-bottom:10px;">'
