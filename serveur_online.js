@@ -2607,8 +2607,15 @@ var ATTAQUES_FRONT = {
         .then(function(d){
           if(d.error){ alert(d.error); hub(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
-          jouerSon('start');
-          afficherCombat([d.combat.enNom + ' sauvage apparait !']);
+          if(d.rival){
+            // Rencontre du rival : intro speciale
+            combatEtat.imgRival = d.imgRival;
+            jouerSon('boss');
+            afficherCombat(['&#x2694;&#xFE0F; '+d.combat.enNom+' surgit pour te defier ! Pas moyen de fuir !']);
+          } else {
+            jouerSon('start');
+            afficherCombat([d.combat.enNom + ' sauvage apparait !']);
+          }
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -2620,7 +2627,7 @@ var ATTAQUES_FRONT = {
       var imgJ = ligJ.stades[e.joStade-1];
       var nomJ = ligJ.noms[e.joStade-1];
       var ligE = LIGNEES[c.enElem];
-      var imgE = c.estBoss ? ligE.stades[c.enStadeFruit-1] : (c.enImg || ligE.stades[c.enStade-1]);
+      var imgE = (c.estBoss || c.estRival) ? ligE.stades[c.enStadeFruit-1] : (c.enImg || ligE.stades[c.enStade-1]);
       var nomE = c.enNom || ligE.noms[c.enStade-1];
 
       var pctJ = Math.max(0, Math.round((c.joPv/c.joPvMax)*100));
@@ -2667,7 +2674,7 @@ var ATTAQUES_FRONT = {
         + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
         + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">'
         + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(155,89,182,0.3);border:1px solid #9b59b6;font-size:12px;padding:8px 20px;" onclick="ouvrirSacCombat()">&#x1F392; Sac</button>'
-        + (c.estBoss ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
+        + ((c.estBoss || c.estRival) ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
         + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
@@ -2764,6 +2771,15 @@ function effetElementaireEnnemi(element){
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
+                if(d.estRival){
+                  arreterSon('boss');
+                  jouerSon('fuite');
+                  setTimeout(function(){
+                    alert(msg + '\\n\\n&#x1F3C3; Ton rival prend la fuite, humilie ! &#x2694;&#xFE0F;'.replace(/&#x1F3C3;/g,'🏃').replace(/&#x2694;&#xFE0F;/g,'⚔️'));
+                    hub();
+                  }, 1200);
+                } else if(d.estBoss && d.templeId){
+                  arreterSon('boss');
                 if(d.estBoss && d.templeId){
                   arreterSon('boss');
                   // Victoire de boss : dialogue + medaillon
@@ -2783,7 +2799,11 @@ function effetElementaireEnnemi(element){
                 }
               } else {
                 jouerSon('defaite');
-                setTimeout(function(){ alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }, 1200);
+                setTimeout(function(){
+                  if(d.estRival){ alert('💀 Ton rival t&#39;a vaincu ! Il campe dans cette zone... Soigne ton monstre et reviens te venger !'.replace(/&#39;/g,"'")); }
+                  else { alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); }
+                  hub();
+                }, 1200);
               }
             }, 800);
           } else {
