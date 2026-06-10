@@ -1937,6 +1937,8 @@ app.get('/eveil', (req, res) => {
     .loading{font-size:16px;color:#87ceeb;}
     @keyframes flotte{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
     @keyframes pulseTemple{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.12);}}
+    @keyframes rivalEntre{0%{transform:translateX(200px);opacity:0;}100%{transform:translateX(0);opacity:1;}}
+    @keyframes oeufVole{0%{transform:scale(1) translateY(0);}50%{transform:scale(1.2) translateY(-20px) rotate(180deg);}100%{transform:scale(0.8) translateY(0) rotate(360deg);opacity:0.6;}}
     @keyframes monteFade{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-120px);opacity:0;}}
     @keyframes saute{0%,100%{transform:translateY(0);}25%{transform:translateY(-25px);}50%{transform:translateY(0);}75%{transform:translateY(-12px);}}
     @keyframes cbtAvanceJ{0%,100%{transform:scaleX(-1) translateX(0);}50%{transform:scaleX(-1) translateX(40px) translateY(-10px);}}
@@ -2101,7 +2103,7 @@ function ecranNommer(){
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
-          monMonstre();
+          sceneRival(function(){ monMonstre(); });
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -3137,6 +3139,51 @@ function boiteMedaillons(){
           document.getElementById('content').innerHTML = html;
         });
     }
+
+function sceneRival(callback){
+      fetch('/eveil/rival?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(!d.rivalElement){ callback(); return; }
+          var ligR = LIGNEES[d.rivalElement];
+          var couleurR = ligR ? ligR.couleur : '#8e44ad';
+          var oeufImg = IMG + '/monstres/' + d.rivalElement + '-no-nlb.png';
+
+          // Ecran : le rival apparait et prend l'oeuf oppose
+          var html = '<div style="max-width:680px;margin:0 auto;padding-top:30px;text-align:center;">'
+            + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+couleurR+';letter-spacing:2px;margin-bottom:20px;">UN RIVAL APPARAIT !</div>'
+            + '<img src="'+IMG+'/eveil/'+d.imgRival+'.png" style="width:150px;height:200px;object-fit:contain;filter:drop-shadow(0 0 20px '+couleurR+'aa);animation:rivalEntre 0.8s ease-out;">'
+            + '<div style="margin-top:15px;background:rgba(0,0,0,0.9);border:3px solid '+couleurR+';border-radius:16px;padding:20px 24px;min-height:90px;box-shadow:0 0 30px '+couleurR+'66;">'
+            + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+couleurR+';margin-bottom:10px;">'+d.nomRival+'</div>'
+            + '<div id="rival-texte" style="font-size:15px;color:#fff;line-height:1.6;min-height:50px;"></div>'
+            + '<div id="rival-suite" style="text-align:right;font-size:12px;color:#aaa;margin-top:10px;opacity:0;">&#x25BC; cliquer pour continuer</div>'
+            + '</div></div>';
+          document.getElementById('content').innerHTML = html;
+
+          var txt = (d.dialogue||'').replace(/&#39;/g, "'");
+          var i = 0;
+          var zone = document.getElementById('rival-texte');
+          var suite = document.getElementById('rival-suite');
+          if(dialogueEnCours) clearInterval(dialogueEnCours);
+          dialogueEnCours = setInterval(function(){
+            if(i < txt.length){ zone.textContent += txt.charAt(i); i++; try{jouerSon('attaque');}catch(e){} }
+            else { clearInterval(dialogueEnCours); dialogueEnCours = null; suite.style.opacity='1'; }
+          }, 35);
+
+          document.getElementById('content').onclick = function(){
+            if(dialogueEnCours){ clearInterval(dialogueEnCours); dialogueEnCours=null; zone.textContent=txt; suite.style.opacity='1'; }
+            else {
+              document.getElementById('content').onclick = null;
+              // 2e ecran : le rival s'empare de l'oeuf
+              var html2 = '<div style="max-width:680px;margin:0 auto;padding-top:60px;text-align:center;">'
+                + '<img src="'+oeufImg+'" style="width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 20px '+couleurR+');animation:oeufVole 1.2s ease-in-out;">'
+                + '<div style="font-family:Cinzel,serif;font-size:18px;color:'+couleurR+';margin-top:25px;">'+d.nomRival+' s&#39;empare de l&#39;oeuf '+(ligR?ligR.noms[0]:'')+' !</div>'
+                + '<div style="font-size:14px;color:#aaa;margin-top:12px;">Vous etes desormais rivaux... Il rodera sur ta route.</div>'
+                + '<div style="margin-top:30px;"><button class="connect-btn" style="border:none;cursor:pointer;background:'+couleurR+';color:#fff;font-size:14px;padding:12px 30px;border-radius:25px;font-weight:bold;" onclick="(' + 'function(){' + '})()">Commencer l&#39;aventure !</button></div>'
+                + '</div>';
+              document.getElementById('content').innerHTML = html2;
+              // Le bouton declenche le callback
+              document.querySe
 
 function carteMonde(){
       fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
