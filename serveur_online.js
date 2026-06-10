@@ -1157,7 +1157,7 @@ app.post('/eveil/genre', async (req, res) => {
 });
 
 // Noms des rivals selon le genre (oppose au joueur)
-const RIVAL_NOMS = { homme:'Kaela', femme:'Drako' };
+const RIVAL_NOMS = { homme:'Patriick', femme:'Louiise' };
 // Dialogues d'intro du rival selon l'element qu'il prend
 const RIVAL_DIALOGUES = {
   lave:  'Alors c&#39;est toi le nouveau ? Pfff. Moi je prends celui-la — le feu reduira ta petite bestiole en cendres. On se reverra... et tu perdras.',
