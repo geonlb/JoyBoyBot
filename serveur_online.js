@@ -3147,12 +3147,12 @@ function sceneRival(callback){
           if(!d.rivalElement){ callback(); return; }
           var ligR = LIGNEES[d.rivalElement];
           var couleurR = ligR ? ligR.couleur : '#8e44ad';
-          var oeufImg = IMG + '/monstres/' + d.rivalElement + '-no-nlb.png';
+          var oeufImg = IMG + '/monstres/' + (ligR ? ligR.stades[0] : d.rivalElement) + '.png';
 
           // Ecran : le rival apparait et prend l'oeuf oppose
           var html = '<div style="max-width:680px;margin:0 auto;padding-top:30px;text-align:center;">'
             + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+couleurR+';letter-spacing:2px;margin-bottom:20px;">UN RIVAL APPARAIT !</div>'
-            + '<img src="'+IMG+'/eveil/'+d.imgRival+'.png" style="width:150px;height:200px;object-fit:contain;filter:drop-shadow(0 0 20px '+couleurR+'aa);animation:rivalEntre 0.8s ease-out;">'
+            + '<div style="width:200px;height:200px;margin:0 auto;overflow:hidden;border-radius:16px;display:flex;justify-content:center;animation:rivalEntre 0.8s ease-out;"><img src="'+IMG+'/eveil/'+d.imgRival+'.png" style="width:300px;object-fit:cover;object-position:top;filter:drop-shadow(0 0 20px '+couleurR+'aa);"></div>'
             + '<div style="margin-top:15px;background:rgba(0,0,0,0.9);border:3px solid '+couleurR+';border-radius:16px;padding:20px 24px;min-height:90px;box-shadow:0 0 30px '+couleurR+'66;">'
             + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+couleurR+';margin-bottom:10px;">'+d.nomRival+'</div>'
             + '<div id="rival-texte" style="font-size:15px;color:#fff;line-height:1.6;min-height:50px;"></div>'
