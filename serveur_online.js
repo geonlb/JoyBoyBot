@@ -1653,7 +1653,8 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   }
 
   // --- Riposte de l'ennemi ---
-  const atkEnnemi = EVEIL_ATTAQUES[c.enElem][c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2)];
+  const idxEnnemi = c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2);
+  const atkEnnemi = EVEIL_ATTAQUES[c.enElem][idxEnnemi];
   let multE = multiplicateurElement(c.enElem, j.fruit);
   if (c.estBoss && multE === 2) multE = 1.5; // super-efficace adouci pour les boss
   let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
@@ -1669,13 +1670,13 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   // Defaite ?
   if (c.joPv <= 0) {
     await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: false, log, combat: c });
+    return res.json({ success: true, fini: true, victoire: false, log, combat: c, enAtkIdx: idxEnnemi, enElem: c.enElem });
   }
 
   // Combat continue
   c.tour++;
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
-  res.json({ success: true, fini: false, log, combat: c });
+  res.json({ success: true, fini: false, log, combat: c, enAtkIdx: idxEnnemi, enElem: c.enElem });
 });
 
 // Fuir le combat
@@ -1900,6 +1901,7 @@ app.get('/eveil', (req, res) => {
     @keyframes cbtTremble{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
     @keyframes cbtTrembleJ{0%,100%{transform:scaleX(-1) translateX(0);}20%{transform:scaleX(-1) translateX(-8px);}40%{transform:scaleX(-1) translateX(8px);}60%{transform:scaleX(-1) translateX(-6px);}80%{transform:scaleX(-1) translateX(6px);}}
     @keyframes projectileVole{0%{left:25%;top:62%;opacity:0;transform:scale(0.3);}20%{opacity:1;}100%{left:62%;top:20%;opacity:1;transform:scale(1.2);}}
+    @keyframes projectileVoleE{0%{left:62%;top:20%;opacity:0;transform:scale(0.3);}20%{opacity:1;}100%{left:25%;top:62%;opacity:1;transform:scale(1.2);}}
     @keyframes effetPulse{0%{transform:scale(0.5);opacity:0;}40%{opacity:1;}100%{transform:scale(2.5);opacity:0;}}
     .effet-elem{position:absolute;width:80px;height:80px;border-radius:50%;pointer-events:none;z-index:55;}
     @keyframes cbtSecousse{0%,100%{transform:translate(0,0);}10%{transform:translate(-6px,4px);}30%{transform:translate(6px,-4px);}50%{transform:translate(-5px,-3px);}70%{transform:translate(5px,3px);}90%{transform:translate(-3px,2px);}}
@@ -2606,6 +2608,28 @@ var ATTAQUES_FRONT = {
       neant: { emoji:'🌑', couleur:'#8e44ad', halo:'#bb8fce' }
     };
 
+function effetElementaireEnnemi(element){
+      var arene = document.getElementById('cbt-arene');
+      if(!arene) return;
+      arene.style.position = 'relative';
+      var ef = EFFETS_ELEM[element] || EFFETS_ELEM.lave;
+      var proj = document.createElement('div');
+      proj.style.cssText = 'position:absolute;font-size:46px;z-index:56;pointer-events:none;left:62%;top:20%;filter:drop-shadow(0 0 12px '+ef.halo+');animation:projectileVoleE 0.5s ease-in forwards;';
+      proj.textContent = ef.emoji;
+      arene.appendChild(proj);
+      setTimeout(function(){
+        var halo = document.createElement('div');
+        halo.className = 'effet-elem';
+        halo.style.left = '22%';
+        halo.style.top = '58%';
+        halo.style.background = 'radial-gradient(circle,'+ef.halo+','+ef.couleur+'88,transparent 70%)';
+        halo.style.animation = 'effetPulse 0.6s ease-out forwards';
+        arene.appendChild(halo);
+        setTimeout(function(){ if(halo.parentNode) halo.remove(); }, 600);
+        if(proj.parentNode) proj.remove();
+      }, 500);
+    }
+
     function effetElementaire(element){
       var arene = document.getElementById('cbt-arene');
       if(!arene) return;
@@ -2653,6 +2677,10 @@ var ATTAQUES_FRONT = {
             var arene = document.getElementById('cbt-arene');
             if(arene){ arene.classList.add('cbt-secousse'); setTimeout(function(){ arene.classList.remove('cbt-secousse'); }, 400); }
           }, 350);
+          // Si l'ennemi riposte avec une attaque chargee/ultime : effet elementaire vers le joueur
+          if(!d.fini && d.enAtkIdx >= 1 && d.enElem){
+            setTimeout(function(){ effetElementaireEnnemi(d.enElem); }, 800);
+          }
 
           if(d.fini){
             // Met a jour l'affichage une derniere fois
