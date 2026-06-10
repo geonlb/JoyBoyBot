@@ -1274,7 +1274,7 @@ app.post('/eveil/utiliser', async (req, res) => {
       const nq = item.quantite - 1;
       await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
       if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
-      return res.json({ success: true, soin: true, pvAvant, pvApres, pvMax: statsCap.pvMax, gainPv: pvApres - pvAvant, nom: objet.nom, surCapture: true });
+      return res.json({ success: true, soin: true, pvAvant, pvApres, pvMax: statsCap.pvMax, gainPv: pvApres - pvAvant, nom: objet.nom, surCapture: true, monstreImg: mDef.img, monstreNom: mDef.nom, monstreElem: mDef.element });
     }
 
     // XP sur un capture
@@ -2613,7 +2613,7 @@ var BOUTIQUE = {
         .then(function(d){
           if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
           if(d.surCapture){
-            if(d.soin){ alert('💚 +'+d.gainPv+' PV rendus !'); sac(); }
+            if(d.soin){ popupSoinCapture(o, d); }
             else { popupUtilisationCapture(o, d); }
             return;
           }
@@ -2705,7 +2705,46 @@ var BOUTIQUE = {
           document.getElementById('soin-close').onclick = function(){ document.body.removeChild(overlay); sac(); };
         });
     }
+function popupSoinCapture(o, d){
+      var ligM = LIGNEES[d.monstreElem];
+      var couleurM = ligM ? ligM.couleur : '#2ecc71';
+      var img = d.monstreImg;
+      var nomAff = d.monstreNom;
+      var pctAvant = Math.max(0, Math.round((d.pvAvant / d.pvMax) * 100));
+      var pctApres = Math.max(0, Math.round((d.pvApres / d.pvMax) * 100));
 
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99998;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML =
+        '<div style="background:linear-gradient(160deg,rgba(0,0,0,0.95),#2ecc7122);border:2px solid #2ecc71;border-radius:20px;padding:35px 30px;max-width:420px;text-align:center;box-shadow:0 0 40px rgba(46,204,113,0.4);">'
+        + '<div style="font-size:13px;color:#2ecc71;letter-spacing:2px;margin-bottom:15px;">SOIN</div>'
+        + '<div style="position:relative;display:inline-block;">'
+        + '<img id="soinc-img" src="'+IMG+'/objets/'+o.img+'.png" style="width:70px;height:70px;object-fit:contain;position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2;opacity:0;transition:all 0.6s;">'
+        + '<img id="soinc-monstre" src="'+IMG+'/monstres/'+img+'.png" style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 0 20px '+couleurM+'aa);">'
+        + '</div>'
+        + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+couleurM+';margin:10px 0 4px;">'+nomAff+'</div>'
+        + '<div style="max-width:300px;margin:10px auto 0;">'
+        + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:3px;"><span>&#x2764;&#xFE0F; PV</span><span id="soinc-pvtxt" style="color:#fff;">'+d.pvAvant+' / '+d.pvMax+'</span></div>'
+        + '<div style="background:rgba(0,0,0,0.5);border:1px solid #2ecc71;border-radius:12px;height:18px;overflow:hidden;"><div id="soinc-barre" style="height:100%;width:'+pctAvant+'%;background:linear-gradient(90deg,#27ae60,#2ecc71);transition:width 1s ease-out;"></div></div></div>'
+        + '<div id="soinc-gain" style="font-size:18px;color:#2ecc71;font-weight:bold;margin-top:12px;opacity:0;transition:opacity 0.4s;">+'+d.gainPv+' PV</div>'
+        + '<button id="soinc-close" style="margin-top:18px;background:#2ecc71;border:none;border-radius:25px;color:#000;font-weight:bold;padding:10px 30px;cursor:pointer;opacity:0;transition:opacity 0.4s;">Super !</button>'
+        + '</div>';
+      document.body.appendChild(overlay);
+
+      setTimeout(function(){ var im=document.getElementById('soinc-img'); im.style.opacity='1'; im.style.top='50px'; }, 200);
+      setTimeout(function(){
+        var im=document.getElementById('soinc-img'); im.style.opacity='0'; im.style.transform='translateX(-50%) scale(1.5)';
+        document.getElementById('soinc-gain').style.opacity='1';
+        document.getElementById('soinc-monstre').style.animation='saute 0.8s ease-in-out';
+      }, 900);
+      setTimeout(function(){
+        document.getElementById('soinc-barre').style.width = pctApres + '%';
+        document.getElementById('soinc-pvtxt').textContent = d.pvApres + ' / ' + d.pvMax;
+      }, 1200);
+      setTimeout(function(){ document.getElementById('soinc-close').style.opacity='1'; }, 1600);
+
+      document.getElementById('soinc-close').onclick = function(){ document.body.removeChild(overlay); sac(); };
+    }
 function popupUtilisationCapture(o, d){
       // On utilise les images directes des monstres (id = nom de fichier)
       var imgAvant = d.idAvant;
