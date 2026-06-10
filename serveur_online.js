@@ -1885,6 +1885,55 @@ app.post('/eveil/combat/objet', async (req, res) => {
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
   res.json({ success: true, fini: false, gainPv, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
 });
+// Changer de monstre actif (coute un tour : l'ennemi riposte)
+app.post('/eveil/combat/switch', async (req, res) => {
+  const { username, index } = req.body;
+  if (!username || index == null) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.combat_actif) return res.status(400).json({ error: 'Pas de combat en cours !' });
+
+  const c = JSON.parse(j.combat_actif);
+  if (!c.equipe || !c.equipe[index]) return res.status(400).json({ error: 'Monstre invalide' });
+  if (index === c.actif) return res.status(400).json({ error: 'Ce monstre est deja au combat !' });
+  if (c.equipe[index].pv <= 0) return res.status(400).json({ error: 'Ce monstre est K.O. !' });
+
+  // Sauvegarder les PV du monstre actuel dans l'equipe
+  c.equipe[c.actif].pv = c.joPv;
+  // Changer de monstre actif
+  c.actif = index;
+  const nouveau = c.equipe[index];
+  // Mettre a jour les stats de combat avec le nouveau monstre
+  c.joPvMax = nouveau.pvMax;
+  c.joPv = nouveau.pv;
+  c.joAtk = nouveau.atk;
+  c.joDef = nouveau.def;
+
+  const nomNouveau = nouveau.type === 'capture' ? nouveau.nom : 'ton partenaire';
+
+  // L'ennemi en profite pour attaquer (le switch coute un tour)
+  const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
+  const multE = multiplicateurElement(c.enElem, nouveau.elem);
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  c.joPv = Math.max(0, c.joPv - degE);
+  c.equipe[c.actif].pv = c.joPv;
+
+  // Le nouveau monstre est-il KO direct ?
+  let fini = false, koSwitch = false;
+  if (c.joPv <= 0) {
+    const tousKO = c.equipe.every(function(m){ return m.pv <= 0; });
+    if (tousKO) {
+      await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+      return res.json({ success: true, fini: true, victoire: false, koTous: true, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c });
+    }
+    koSwitch = true;
+  }
+
+  c.tour++;
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c) }).eq('username', u);
+  res.json({ success: true, fini: false, koSwitch: koSwitch, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c });
+});
+
 app.post('/eveil/combat/capture', async (req, res) => {
   const { username, bouteille } = req.body;
   if (!username || !bouteille) return res.status(400).json({ error: 'Manque des infos' });
@@ -2975,9 +3024,25 @@ function ouvrirSwitch(){
     }
 
     function faireSwitch(index){
-      // (mecanique reelle en etape 3c) pour l'instant juste fermer
       var sw = document.getElementById('switch-combat'); if(sw) sw.remove();
-      alert('Le switch sera actif a la prochaine etape !');
+      fetch('/eveil/combat/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,index:index})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
+          combatEtat.combat = d.combat;
+          var lignes = ['&#x1F501; '+d.nomNouveau+' entre en jeu !', 'Le '+combatEtat.combat.enNom+' attaque ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats'];
+          if(d.fini && d.koTous){
+            afficherCombat(lignes);
+            arreterSon('start'); arreterSon('boss'); arreterSon('rival'); jouerSon('defaite');
+            setTimeout(function(){ alert('💀 Toute ton equipe est K.O. !'); hub(); }, 1200);
+          } else if(d.koSwitch){
+            afficherCombat(lignes);
+            setTimeout(function(){ alert('💀 '+d.nomNouveau+' est tombe ! Choisis un autre monstre.'); ouvrirSwitch(); }, 800);
+          } else {
+            afficherCombat(lignes);
+          }
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
     function ouvrirSacCombat(){
