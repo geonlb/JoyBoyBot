@@ -2668,7 +2668,6 @@ var BOUTIQUE = {
     }
 
 function popupUtilisationCapture(o, d){
-      var mAvant = EVEIL_MONSTRES_FRONT ? EVEIL_MONSTRES_FRONT[d.idAvant] : null;
       // On utilise les images directes des monstres (id = nom de fichier)
       var imgAvant = d.idAvant;
       var imgApres = d.idApres;
