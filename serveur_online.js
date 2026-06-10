@@ -2614,20 +2614,16 @@ function effetElementaireEnnemi(element){
       arene.style.position = 'relative';
       var ef = EFFETS_ELEM[element] || EFFETS_ELEM.lave;
       var proj = document.createElement('div');
-      proj.style.cssText = 'position:absolute;font-size:46px;z-index:56;pointer-events:none;left:62%;top:20%;filter:drop-shadow(0 0 12px '+ef.halo+');animation:projectileVoleE 0.5s ease-in forwards;';
+      proj.style.cssText = 'position:absolute;font-size:64px;z-index:56;pointer-events:none;left:62%;top:20%;filter:drop-shadow(0 0 18px '+ef.halo+');animation:projectileVoleE 0.7s ease-in forwards;';
       proj.textContent = ef.emoji;
       arene.appendChild(proj);
       setTimeout(function(){
         var halo = document.createElement('div');
-        halo.className = 'effet-elem';
-        halo.style.left = '22%';
-        halo.style.top = '58%';
-        halo.style.background = 'radial-gradient(circle,'+ef.halo+','+ef.couleur+'88,transparent 70%)';
-        halo.style.animation = 'effetPulse 0.6s ease-out forwards';
+        halo.style.cssText = 'position:absolute;width:120px;height:120px;border-radius:50%;pointer-events:none;z-index:55;left:18%;top:52%;background:radial-gradient(circle,'+ef.halo+','+ef.couleur+'88,transparent 70%);animation:effetPulse 0.7s ease-out forwards;';
         arene.appendChild(halo);
-        setTimeout(function(){ if(halo.parentNode) halo.remove(); }, 600);
+        setTimeout(function(){ if(halo.parentNode) halo.remove(); }, 700);
         if(proj.parentNode) proj.remove();
-      }, 500);
+      }, 700);
     }
 
     function effetElementaire(element){
@@ -2679,7 +2675,7 @@ function effetElementaireEnnemi(element){
           }, 350);
           // Si l'ennemi riposte avec une attaque chargee/ultime : effet elementaire vers le joueur
           if(!d.fini && d.enAtkIdx >= 1 && d.enElem){
-            setTimeout(function(){ effetElementaireEnnemi(d.enElem); }, 800);
+            setTimeout(function(){ effetElementaireEnnemi(d.enElem); }, 900);
           }
 
           if(d.fini){
