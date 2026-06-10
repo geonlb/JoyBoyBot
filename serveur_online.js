@@ -2082,6 +2082,8 @@ app.post('/eveil/combat/switch', async (req, res) => {
 
   const nomNouveau = nouveau.type === 'capture' ? nouveau.nom : 'ton partenaire';
 
+  // PV du nouveau monstre AVANT la riposte (pour l'animation)
+  const pvAvantRiposte = c.joPv;
   // L'ennemi en profite pour attaquer (le switch coute un tour)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, nouveau.elem);
@@ -2095,14 +2097,14 @@ app.post('/eveil/combat/switch', async (req, res) => {
     const tousKO = c.equipe.every(function(m){ return m.pv <= 0; });
     if (tousKO) {
       await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
-      return res.json({ success: true, fini: true, victoire: false, koTous: true, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c });
+      return res.json({ success: true, fini: true, victoire: false, koTous: true, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c, pvAvantRiposte: pvAvantRiposte, enAtkElem: c.enElem });
     }
     koSwitch = true;
   }
 
   c.tour++;
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c) }).eq('username', u);
-  res.json({ success: true, fini: false, koSwitch: koSwitch, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c });
+  res.json({ success: true, fini: false, koSwitch: koSwitch, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c, pvAvantRiposte: pvAvantRiposte, enAtkElem: c.enElem });
 });
 
 app.post('/eveil/combat/capture', async (req, res) => {
@@ -3358,18 +3360,38 @@ function ouvrirSwitch(){
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
-          combatEtat.combat = d.combat;
-          var lignes = ['&#x1F501; '+d.nomNouveau+' entre en jeu !', 'Le '+combatEtat.combat.enNom+' attaque ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats'];
-          if(d.fini && d.koTous){
-            afficherCombat(lignes);
-            arreterSon('start'); arreterSon('boss'); arreterSon('rival'); jouerSon('defaite');
-            setTimeout(function(){ alert('💀 Toute ton equipe est K.O. !'); hub(); }, 1200);
-          } else if(d.koSwitch){
-            afficherCombat(lignes);
-            setTimeout(function(){ alert('💀 '+d.nomNouveau+' est tombe ! Choisis un autre monstre.'); ouvrirSwitch(); }, 800);
-          } else {
-            afficherCombat(lignes);
-          }
+          // 1) Afficher le nouveau monstre A PV PLEINS (avant riposte)
+          var cAffiche = JSON.parse(JSON.stringify(d.combat));
+          cAffiche.joPv = d.pvAvantRiposte;
+          if(cAffiche.equipe && cAffiche.equipe[cAffiche.actif]) cAffiche.equipe[cAffiche.actif].pv = d.pvAvantRiposte;
+          combatEtat.combat = cAffiche;
+          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre en jeu !']);
+
+          // 2) Apres un court delai : l'ennemi attaque (animation)
+          setTimeout(function(){
+            var mE = document.getElementById('cbt-ennemi');
+            if(mE){ mE.style.animation = 'cbtAvanceE 0.4s ease-in-out'; }
+            if(d.enAtkElem){ effetElementaireEnnemi(d.enAtkElem); }
+            // 3) Le joueur encaisse : flash + on bascule sur les vrais PV
+            setTimeout(function(){
+              var mJ = document.getElementById('cbt-joueur');
+              if(mJ){ mJ.style.animation = 'cbtFlash 0.3s, cbtTrembleJ 0.4s'; }
+              var arene = document.getElementById('cbt-arene');
+              if(arene){ arene.classList.add('cbt-secousse'); setTimeout(function(){ arene.classList.remove('cbt-secousse'); }, 400); }
+              combatEtat.combat = d.combat;
+              afficherCombat(['Le '+d.combat.enNom+' attaque ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats']);
+
+              // 4) Gerer KO / suite
+              setTimeout(function(){
+                if(d.fini && d.koTous){
+                  arreterSon('start'); arreterSon('boss'); arreterSon('rival'); jouerSon('defaite');
+                  alert('💀 Toute ton equipe est K.O. !'); hub();
+                } else if(d.koSwitch){
+                  alert('💀 '+d.nomNouveau+' est tombe ! Choisis un autre monstre.'); ouvrirSwitchForce();
+                }
+              }, 700);
+            }, 550);
+          }, 700);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
