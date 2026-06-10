@@ -1156,7 +1156,35 @@ app.post('/eveil/genre', async (req, res) => {
   res.json({ success: true });
 });
 
-// Choisir son fruit (definitif)
+// Noms des rivals selon le genre (oppose au joueur)
+const RIVAL_NOMS = { homme:'Kaela', femme:'Drako' };
+// Dialogues d'intro du rival selon l'element qu'il prend
+const RIVAL_DIALOGUES = {
+  lave:  'Alors c&#39;est toi le nouveau ? Pfff. Moi je prends celui-la — le feu reduira ta petite bestiole en cendres. On se reverra... et tu perdras.',
+  givre: 'Tiens, un bleu. Je prends cet oeuf, le givre gelera tes espoirs. Prepare-toi a ramper, rival.',
+  marin: 'Ha ! Tu crois avoir choisi le bon ? Moi je prends la mer. Elle engloutira ton reve avant meme qu&#39;il commence.',
+  nuage: 'Hmph. Cet oeuf sera le mien. Le vent soufflera sur tes ambitions comme un fetu de paille. A bientot, perdant.',
+  roche: 'Toi ? Mon rival ? Laisse-moi rire. Je prends la roche — solide, inebranlable. Tu te briseras dessus.',
+  neant: 'Interessant... Je sens en toi une proie. Je prends cet oeuf des tenebres. Bientot, tu sombreras dans le neant.'
+};
+
+// Recuperer les infos du rival du joueur
+app.get('/eveil/rival', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('genre, rival_element, rival_niveau, rival_vaincu, rival_zone').eq('username', u).single();
+  if (!j) return res.json({ rival: null });
+  const genreRival = j.genre === 'homme' ? 'femme' : 'homme';
+  res.json({
+    rivalElement: j.rival_element, rivalNiveau: j.rival_niveau,
+    rivalVaincu: j.rival_vaincu, rivalZone: j.rival_zone,
+    genreRival: genreRival, imgRival: 'perso-' + genreRival,
+    nomRival: RIVAL_NOMS[genreRival] || 'Rival',
+    dialogue: RIVAL_DIALOGUES[j.rival_element] || ''
+  });
+});
+
 app.post('/eveil/fruit', async (req, res) => {
   const { username, fruit } = req.body;
   if (!username || !fruit) return res.status(400).json({ error: 'Manque des infos' });
@@ -1164,8 +1192,23 @@ app.post('/eveil/fruit', async (req, res) => {
   const { data: joueur } = await supabase.from('eveil_joueurs').select('fruit').eq('username', u).single();
   if (!joueur) return res.status(400).json({ error: 'Cree ton personnage d\'abord !' });
   if (joueur.fruit) return res.status(400).json({ error: 'Tu as deja choisi ton fruit !' });
-  await supabase.from('eveil_joueurs').update({ fruit, stade: 1, niveau: 1, xp: 0, pv_actuels: 100 }).eq('username', u);
-  res.json({ success: true });
+
+  // Determiner l'element du rival = celui qui BAT le fruit du joueur
+  // Cycle : lave bat givre, givre bat marin, marin bat nuage, nuage bat roche, roche bat lave
+  const QUI_ME_BAT = { lave:'roche', givre:'lave', marin:'givre', nuage:'marin', roche:'nuage' };
+  let rivalElem;
+  if (fruit === 'neant') {
+    const faiblesses = ['lave','givre','nuage','roche'];
+    rivalElem = faiblesses[Math.floor(Math.random()*faiblesses.length)];
+  } else {
+    rivalElem = QUI_ME_BAT[fruit] || 'lave';
+  }
+
+  await supabase.from('eveil_joueurs').update({
+    fruit, stade: 1, niveau: 1, xp: 0, pv_actuels: 100,
+    rival_element: rivalElem, rival_niveau: 5, rival_vaincu: 0, rival_zone: 0
+  }).eq('username', u);
+  res.json({ success: true, rivalElement: rivalElem });
 });
 
 // Nommer son monstre (a l'eclosion, definitif)
