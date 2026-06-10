@@ -3173,7 +3173,7 @@ function carteMonde(){
           // Image regarde a gauche par defaut : on inverse si on va vers la droite
           var versLaDroite = arrivee.x > depart.x;
           var flipBateau = versLaDroite ? ' scaleX(-1)' : '';
-          bateauHtml = '<img src="'+IMG+'/eveil/BATEAU_PLACEHOLDER.png" style="position:absolute;left:'+bx+'%;top:'+by+'%;transform:translate(-50%,-50%)'+flipBateau+';width:50px;height:50px;object-fit:contain;z-index:15;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));" title="Ton navire">';
+          bateauHtml = '<img src="'+IMG+'/eveil/bateau-map.png" style="position:absolute;left:'+bx+'%;top:'+by+'%;transform:translate(-50%,-50%)'+flipBateau+';width:50px;height:50px;object-fit:contain;z-index:15;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));" title="Ton navire">';
 
           var html = '<div style="max-width:760px;margin:0 auto;">'
             + '<div style="text-align:center;margin-bottom:10px;">'
