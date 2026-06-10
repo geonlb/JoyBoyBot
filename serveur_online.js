@@ -1491,7 +1491,7 @@ app.post('/eveil/temple/start', async (req, res) => {
 
   // Stats joueur
   const sj = statsCalc(j.fruit, j.niveau);
-  let pvJoueur = (j.pv_actuels != null && j.pv_actuels > 0) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
+  let pvJoueur = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
   if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avant le combat.' });
 
   // Le boss : monstre de fruit de l'element du temple, niveau eleve
@@ -1576,7 +1576,7 @@ app.post('/eveil/combat/start', async (req, res) => {
 
   // Stats du joueur
   const sj = statsCalc(j.fruit, j.niveau);
-  let pvJoueur = (j.pv_actuels != null && j.pv_actuels > 0) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
+  let pvJoueur = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
   if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avec une potion avant de combattre.' });
 
   // Choisir un monstre AU HASARD parmi ceux de la zone
