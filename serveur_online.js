@@ -2780,8 +2780,6 @@ function effetElementaireEnnemi(element){
                   }, 1200);
                 } else if(d.estBoss && d.templeId){
                   arreterSon('boss');
-                if(d.estBoss && d.templeId){
-                  arreterSon('boss');
                   // Victoire de boss : dialogue + medaillon
                   setTimeout(function(){
                     alert(msg);
