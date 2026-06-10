@@ -2570,7 +2570,8 @@ var ATTAQUES_FRONT = {
       defaite:  new Audio(IMG+'/eveil/combat-defaite.mp3'),
       lance:    new Audio(IMG+'/eveil/capture-lance.mp3'),
       capture:  new Audio(IMG+'/eveil/capture-reussie.mp3'),
-      boss:     new Audio(IMG+'/eveil/combat-boss.mp3')
+      boss:     new Audio(IMG+'/eveil/combat-boss.mp3'),
+      fuite:    new Audio(IMG+'/eveil/fuite.mp3')
     };
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
@@ -2805,6 +2806,7 @@ function effetElementaireEnnemi(element){
 
     function fuirCombat(){
       if(!confirm('Fuir le combat ?')) return;
+      jouerSon('fuite');
       fetch('/eveil/combat/fuir',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser})})
         .then(function(r){return r.json();})
         .then(function(){ hub(); })
