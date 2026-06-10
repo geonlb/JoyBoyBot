@@ -2909,7 +2909,9 @@ function effetElementaireEnnemi(element){
       // Animation : le joueur avance pour attaquer
       if(monstreJ){ monstreJ.style.animation = 'cbtAvanceJ 0.4s ease-in-out'; }
       // Effet elementaire pour l'attaque chargee (idx 1) et ultime (idx 2)
-      if(idx >= 1 && combatEtat && combatEtat.joFruit){ effetElementaire(combatEtat.joFruit); }
+      var cbt = combatEtat.combat;
+      var elemActifAtk = (cbt && cbt.equipe && cbt.equipe[cbt.actif]) ? cbt.equipe[cbt.actif].elem : combatEtat.joFruit;
+      if(idx >= 1 && elemActifAtk){ effetElementaire(elemActifAtk); }
 
       fetch('/eveil/combat/attaque',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,attaqueIndex:idx})})
         .then(function(r){return r.json();})
