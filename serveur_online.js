@@ -2720,9 +2720,20 @@ var ATTAQUES_FRONT = {
     function afficherCombat(logLignes){
       var e = combatEtat;
       var c = e.combat;
-      var ligJ = LIGNEES[e.joFruit];
-      var imgJ = ligJ.stades[e.joStade-1];
-      var nomJ = ligJ.noms[e.joStade-1];
+      // Monstre actif (fruit ou capture)
+      var actif = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+      var ligJ, imgJ, nomJ, nivJ;
+      if(actif && actif.type === 'capture'){
+        ligJ = LIGNEES[actif.elem];
+        imgJ = actif.img; // image directe du monstre capture
+        nomJ = actif.nom;
+        nivJ = actif.niveau;
+      } else {
+        ligJ = LIGNEES[e.joFruit];
+        imgJ = ligJ.stades[(actif?actif.stade:e.joStade)-1];
+        nomJ = ligJ.noms[(actif?actif.stade:e.joStade)-1];
+        nivJ = actif ? actif.niveau : e.joNiveau;
+      }
       var ligE = LIGNEES[c.enElem];
       var imgE = (c.estBoss || c.estRival) ? ligE.stades[c.enStadeFruit-1] : (c.enImg || ligE.stades[c.enStade-1]);
       var nomE = c.enNom || ligE.noms[c.enStade-1];
@@ -2761,7 +2772,7 @@ var ATTAQUES_FRONT = {
         + '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:5px;">'
         + '<img id="cbt-joueur" src="'+IMG+'/monstres/'+imgJ+'.png" style="width:240px;height:240px;object-fit:contain;filter:drop-shadow(0 0 18px '+ligJ.couleur+'aa);transform:scaleX(-1);">'
         + '<div style="text-align:left;background:rgba(0,0,0,0.5);border:1px solid '+ligJ.couleur+';border-radius:12px;padding:8px 14px;">'
-        + '<div style="font-size:13px;color:'+ligJ.couleur+';">'+nomJ+' <span style="color:#aaa;">Niv '+e.joNiveau+'</span></div>'
+        + '<div style="font-size:13px;color:'+ligJ.couleur+';">'+nomJ+' <span style="color:#aaa;">Niv '+nivJ+'</span></div>'
         + '<div style="background:rgba(0,0,0,0.5);border-radius:8px;height:12px;width:160px;overflow:hidden;margin-top:4px;"><div id="cbt-pvJ" style="height:100%;width:'+pctJ+'%;background:'+couleurPv(pctJ)+';transition:width 0.6s;"></div></div>'
         + '<div style="font-size:10px;color:#aaa;margin-top:2px;">'+c.joPv+' / '+c.joPvMax+' PV</div>'
         + '</div>'
@@ -2769,8 +2780,9 @@ var ATTAQUES_FRONT = {
         // Log
         + '<div style="background:rgba(0,0,0,0.6);border:1px solid rgba(138,43,226,0.4);border-radius:10px;padding:12px;margin:12px 0;min-height:50px;font-size:13px;color:#ddd;">'+logHTML+'</div>'
         + '<div style="display:flex;flex-wrap:wrap;justify-content:center;">'+btnsAtk+'</div>'
-        + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;">'
+        + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
         + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(155,89,182,0.3);border:1px solid #9b59b6;font-size:12px;padding:8px 20px;" onclick="ouvrirSacCombat()">&#x1F392; Sac</button>'
+        + ((c.equipe && c.equipe.length > 1) ? '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(46,204,113,0.3);border:1px solid #2ecc71;font-size:12px;padding:8px 20px;" onclick="ouvrirSwitch()">&#x1F501; Changer</button>' : '')
         + ((c.estBoss || c.estRival) ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
         + '</div>'
         + '</div>';
@@ -2927,7 +2939,48 @@ function effetElementaireEnnemi(element){
         .then(function(){ hub(); })
         .catch(function(){ hub(); });
     }
-function ouvrirSacCombat(){
+function ouvrirSwitch(){
+      var c = combatEtat.combat;
+      if(!c.equipe || c.equipe.length < 2){ return; }
+      var cards = '';
+      for(var i=0;i<c.equipe.length;i++){
+        var m = c.equipe[i];
+        var ligM = LIGNEES[m.elem];
+        var imgM = (m.type === 'capture') ? m.img : ligM.stades[m.stade-1];
+        var nomM = (m.type === 'capture') ? m.nom : ligM.noms[m.stade-1];
+        var pct = Math.max(0, Math.round((m.pv/m.pvMax)*100));
+        var estActif = (i === c.actif);
+        var ko = (m.pv <= 0);
+        var couleurB = pct>50?'#2ecc71':(pct>20?'#f39c12':'#e74c3c');
+        cards += '<div style="background:rgba(0,0,0,0.6);border:2px solid '+(estActif?ligM.couleur:(ko?'#555':'rgba(255,255,255,0.2)'))+';border-radius:14px;padding:12px;text-align:center;width:130px;'+(ko?'opacity:0.5;':'')+'">'
+          + '<img src="'+IMG+'/monstres/'+imgM+'.png" style="width:60px;height:60px;object-fit:contain;'+(ko?'filter:grayscale(1);':'')+'">'
+          + '<div style="font-size:12px;color:#fff;margin-top:4px;">'+nomM+'</div>'
+          + '<div style="font-size:10px;color:#aaa;">Niv '+m.niveau+'</div>'
+          + '<div style="background:rgba(0,0,0,0.5);border-radius:6px;height:8px;width:100%;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pct+'%;background:'+couleurB+';"></div></div>'
+          + '<div style="font-size:9px;color:#aaa;margin-top:2px;">'+m.pv+'/'+m.pvMax+'</div>'
+          + (estActif ? '<div style="font-size:10px;color:'+ligM.couleur+';margin-top:5px;">Au combat</div>' : (ko ? '<div style="font-size:10px;color:#e74c3c;margin-top:5px;">K.O.</div>' : '<button onclick="faireSwitch('+i+')" style="margin-top:5px;background:rgba(46,204,113,0.3);border:1px solid #2ecc71;border-radius:10px;color:#fff;font-size:10px;padding:4px 12px;cursor:pointer;">Envoyer</button>'))
+          + '</div>';
+      }
+      var overlay = document.createElement('div');
+      overlay.id = 'switch-combat';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99997;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = '<div style="background:linear-gradient(160deg,#1a2a1a,#0d150d);border:3px solid #2ecc71;border-radius:18px;padding:25px;max-width:460px;text-align:center;">'
+        + '<div style="font-family:Cinzel,serif;font-size:18px;color:#2ecc71;letter-spacing:2px;margin-bottom:14px;">&#x1F501; CHANGER DE MONSTRE</div>'
+        + '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;">'+cards+'</div>'
+        + '<div style="font-size:11px;color:#888;margin-top:12px;">Changer de monstre coute un tour</div>'
+        + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:12px;padding:8px 22px;margin-top:12px;" onclick="document.getElementById(&#39;switch-combat&#39;).remove()">Retour</button>'
+        + '</div>';
+      overlay.onclick = function(ev){ if(ev.target===overlay) overlay.remove(); };
+      document.body.appendChild(overlay);
+    }
+
+    function faireSwitch(index){
+      // (mecanique reelle en etape 3c) pour l'instant juste fermer
+      var sw = document.getElementById('switch-combat'); if(sw) sw.remove();
+      alert('Le switch sera actif a la prochaine etape !');
+    }
+
+    function ouvrirSacCombat(){
       fetch('/eveil/sac?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
