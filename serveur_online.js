@@ -3183,7 +3183,11 @@ function sceneRival(callback){
                 + '</div>';
               document.getElementById('content').innerHTML = html2;
               // Le bouton declenche le callback
-              document.querySe
+              document.querySelector('#content button').onclick = function(){ callback(); };
+            }
+          };
+        });
+    }
 
 function carteMonde(){
       fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
