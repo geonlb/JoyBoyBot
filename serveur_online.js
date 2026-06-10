@@ -1950,12 +1950,25 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   if (critE === 2) msgE += ' CRITIQUE !';
   log.push(msgE);
 
-  // Defaite ?
+  // Le monstre actif est-il KO ?
   if (c.joPv <= 0) {
+    // Sauver les PV du monstre actif (0) dans l'equipe
+    if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = 0;
+
+    // Reste-t-il des monstres vivants dans l'equipe ?
+    const vivants = (c.equipe || []).filter(function(m){ return m.pv > 0; });
+    if (c.equipe && vivants.length > 0) {
+      // Switch force : le combat continue, le joueur doit choisir un autre monstre
+      c.tour++;
+      await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c) }).eq('username', u);
+      return res.json({ success: true, fini: false, koActif: true, log, combat: c });
+    }
+
+    // Tous KO (ou pas d'equipe) : defaite totale
     const majDefaite = { pv_actuels: 0, combat_actif: '' };
-    if (c.estRival) majDefaite.rival_zone = c.zone; // le rival campe dans cette zone
+    if (c.estRival) majDefaite.rival_zone = c.zone;
     await supabase.from('eveil_joueurs').update(majDefaite).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: false, log, combat: c, estRival: c.estRival || false });
+    return res.json({ success: true, fini: true, victoire: false, log, combat: c, estRival: c.estRival || false, koTous: true });
   }
 
   // Combat continue
@@ -2018,6 +2031,30 @@ app.post('/eveil/combat/objet', async (req, res) => {
   c.tour++;
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
   res.json({ success: true, fini: false, gainPv, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
+});
+// Switch FORCE (apres KO) : pas de riposte ennemie, juste remplacer le monstre KO
+app.post('/eveil/combat/switchforce', async (req, res) => {
+  const { username, index } = req.body;
+  if (!username || index == null) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.combat_actif) return res.status(400).json({ error: 'Pas de combat en cours !' });
+
+  const c = JSON.parse(j.combat_actif);
+  if (!c.equipe || !c.equipe[index]) return res.status(400).json({ error: 'Monstre invalide' });
+  if (c.equipe[index].pv <= 0) return res.status(400).json({ error: 'Ce monstre est K.O. !' });
+
+  // Changer de monstre actif (sans riposte, c'est un remplacement)
+  c.actif = index;
+  const nouveau = c.equipe[index];
+  c.joPvMax = nouveau.pvMax;
+  c.joPv = nouveau.pv;
+  c.joAtk = nouveau.atk;
+  c.joDef = nouveau.def;
+  const nomNouveau = nouveau.type === 'capture' ? nouveau.nom : 'ton partenaire';
+
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c) }).eq('username', u);
+  res.json({ success: true, nomNouveau: nomNouveau, combat: c });
 });
 // Changer de monstre actif (coute un tour : l'ennemi riposte)
 app.post('/eveil/combat/switch', async (req, res) => {
@@ -3201,6 +3238,18 @@ function effetElementaireEnnemi(element){
                 }, 1200);
               }
             }, 800);
+          } else if(d.koActif){
+            // Le monstre actif est KO mais il reste des vivants : switch force
+            combatEtat.combat = d.combat;
+            setTimeout(function(){
+              afficherCombat(d.log);
+              var mJ = document.getElementById('cbt-joueur');
+              if(mJ){ mJ.style.animation = 'cbtFlash 0.3s'; }
+              setTimeout(function(){
+                alert('💀 Ton monstre est K.O. ! Choisis un autre combattant.');
+                ouvrirSwitchForce();
+              }, 900);
+            }, 850);
           } else {
             // L'ennemi riposte : il avance + le joueur tremble
             setTimeout(function(){
@@ -3226,6 +3275,47 @@ function effetElementaireEnnemi(element){
         .then(function(r){return r.json();})
         .then(function(){ hub(); })
         .catch(function(){ hub(); });
+    }
+        function ouvrirSwitchForce(){
+      var c = combatEtat.combat;
+      var cards = '';
+      for(var i=0;i<c.equipe.length;i++){
+        var m = c.equipe[i];
+        if(m.pv <= 0) continue; // on ne montre que les vivants
+        var ligM = LIGNEES[m.elem];
+        var imgM = (m.type === 'capture') ? m.img : ligM.stades[m.stade-1];
+        var nomM = (m.type === 'capture') ? m.nom : ligM.noms[m.stade-1];
+        var pct = Math.max(0, Math.round((m.pv/m.pvMax)*100));
+        var couleurB = pct>50?'#2ecc71':(pct>20?'#f39c12':'#e74c3c');
+        cards += '<div style="background:rgba(0,0,0,0.6);border:2px solid '+ligM.couleur+';border-radius:14px;padding:12px;text-align:center;width:130px;">'
+          + '<img src="'+IMG+'/monstres/'+imgM+'.png" style="width:60px;height:60px;object-fit:contain;">'
+          + '<div style="font-size:12px;color:#fff;margin-top:4px;">'+nomM+'</div>'
+          + '<div style="font-size:10px;color:#aaa;">Niv '+m.niveau+'</div>'
+          + '<div style="background:rgba(0,0,0,0.5);border-radius:6px;height:8px;width:100%;overflow:hidden;margin-top:4px;"><div style="height:100%;width:'+pct+'%;background:'+couleurB+';"></div></div>'
+          + '<button onclick="faireSwitchForce('+i+')" style="margin-top:5px;background:rgba(46,204,113,0.3);border:1px solid #2ecc71;border-radius:10px;color:#fff;font-size:10px;padding:4px 12px;cursor:pointer;">Envoyer</button>'
+          + '</div>';
+      }
+      var overlay = document.createElement('div');
+      overlay.id = 'switch-force';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99997;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = '<div style="background:linear-gradient(160deg,#2a1a1a,#150d0d);border:3px solid #e74c3c;border-radius:18px;padding:25px;max-width:460px;text-align:center;">'
+        + '<div style="font-family:Cinzel,serif;font-size:18px;color:#e74c3c;letter-spacing:2px;margin-bottom:14px;">&#x1F480; MONSTRE K.O. !</div>'
+        + '<div style="font-size:12px;color:#aaa;margin-bottom:14px;">Envoie un autre combattant !</div>'
+        + '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;">'+cards+'</div>'
+        + '</div>';
+      document.body.appendChild(overlay);
+    }
+
+    function faireSwitchForce(index){
+      var sf = document.getElementById('switch-force'); if(sf) sf.remove();
+      fetch('/eveil/combat/switchforce',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,index:index})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
+          combatEtat.combat = d.combat;
+          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre dans l&#39;arene !']);
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
     }
 function ouvrirSwitch(){
       var c = combatEtat.combat;
