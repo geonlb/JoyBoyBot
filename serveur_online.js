@@ -1420,6 +1420,66 @@ function multiplicateurElement(attaquant, defenseur) {
   if (EVEIL_FORCES[defenseur] === attaquant) return 0.5;     // pas efficace
   return 1;                                                   // neutre
 }
+// Paliers d'evolution des monstres captures
+const CAPTURE_EVO_STADE2 = 15; // stade 1 -> 2 au niveau 15
+const CAPTURE_EVO_STADE3 = 30; // stade 2 -> 3 au niveau 30
+
+// Applique l'XP a un monstre capture (le monstre actif) + gere niveau et evolution
+async function appliquerXpCapture(u, monstreId, gainXp) {
+  const { data: cap } = await supabase.from('eveil_captures').select('*').eq('username', u).eq('monstre_id', monstreId).single();
+  if (!cap) return { events: [] };
+  let niveau = cap.niveau || 1;
+  let xp = (cap.xp || 0) + gainXp;
+  let monstreActuel = monstreId;
+  let stade = cap.stade || 1;
+  const events = [];
+
+  // Monter de niveau
+  while (xp >= xpPourNiveau(niveau)) {
+    xp -= xpPourNiveau(niveau);
+    niveau++;
+    events.push('niveau');
+  }
+
+  // Evolution selon les paliers (suit le champ evolution de EVEIL_MONSTRES)
+  // On peut evoluer plusieurs fois si on a saute des paliers
+  let aEvolue = true;
+  while (aEvolue) {
+    aEvolue = false;
+    const mDef = EVEIL_MONSTRES[monstreActuel];
+    if (mDef && mDef.evolution) {
+      const palier = (stade === 1) ? CAPTURE_EVO_STADE2 : CAPTURE_EVO_STADE3;
+      if (niveau >= palier) {
+        monstreActuel = mDef.evolution;
+        stade++;
+        events.push('evolution');
+        aEvolue = true;
+      }
+    }
+  }
+
+  // Recalcul des PV max au nouveau niveau (on remet full PV a l'evolution/montee)
+  const mFinal = EVEIL_MONSTRES[monstreActuel];
+  const stats = statsCalc(mFinal.element, niveau);
+
+  if (monstreActuel !== monstreId) {
+    // Le monstre a evolue : changer son monstre_id. Gerer le cas ou la forme evoluee existe deja en capture
+    const { data: existeEvo } = await supabase.from('eveil_captures').select('id').eq('username', u).eq('monstre_id', monstreActuel).single();
+    if (existeEvo) {
+      // La forme evoluee existe deja : on supprime l'ancienne ligne et on met a jour l'evoluee
+      await supabase.from('eveil_captures').delete().eq('username', u).eq('monstre_id', monstreId);
+      await supabase.from('eveil_captures').update({ niveau, xp, stade, pv_actuels: stats.pvMax }).eq('username', u).eq('monstre_id', monstreActuel);
+    } else {
+      // Transformer la ligne : nouveau monstre_id, garde dans_equipe/slot
+      await supabase.from('eveil_captures').update({ monstre_id: monstreActuel, niveau, xp, stade, pv_actuels: stats.pvMax }).eq('username', u).eq('monstre_id', monstreId);
+    }
+  } else {
+    await supabase.from('eveil_captures').update({ niveau, xp, pv_actuels: Math.min(cap.pv_actuels >= 0 ? cap.pv_actuels : stats.pvMax, stats.pvMax) }).eq('username', u).eq('monstre_id', monstreId);
+  }
+
+  return { events, niveau, stade, nouveauMonstre: monstreActuel, aEvolueVers: (monstreActuel !== monstreId ? monstreActuel : null) };
+}
+
 // Charge l'equipe de combat du joueur : [fruit, ...monstres captures dans l'equipe]
 async function chargerEquipe(j, u) {
   const equipe = [];
@@ -1793,19 +1853,38 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   if (c.enPv <= 0) {
     let gainXp = 20 + c.enNiv * 8;
     let gainBrise = 30 + c.enNiv * 5;
-    // Bonus si c'est le rival : belle recompense
     if (c.estRival) { gainXp = Math.round(gainXp * 2); gainBrise = Math.round(gainBrise * 2.5); }
-    // Applique XP
-    let xp = (j.xp || 0) + gainXp, niveau = j.niveau, events = [];
+
+    const actifVic = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+    let xp = j.xp, niveau = j.niveau, stade = j.stade, events = [];
+    let evoCapture = null;
+
+    if (actifVic && actifVic.type === 'capture') {
+      // L'XP va au monstre capture actif
+      const resCap = await appliquerXpCapture(u, actifVic.monstreId, gainXp);
+      events = resCap.events || [];
+      evoCapture = resCap.aEvolueVers;
+      // Le fruit ne gagne rien, on garde ses valeurs et on sauve juste ses PV si besoin
+      const majV = { combat_actif: '' };
+      if (c.equipe[0] && c.equipe[0].type === 'fruit') majV.pv_actuels = c.equipe[0].pv;
+      // Brise
+      const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
+      const newBrise = (prime ? prime.berrys : 0) + gainBrise;
+      await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
+      if (c.estRival) { majV.rival_zone = 0; majV.rival_vaincu = (j.rival_vaincu || 0) + 1; }
+      await supabase.from('eveil_joueurs').update(majV).eq('username', u);
+      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom });
+    }
+
+    // Sinon : l'XP va au fruit (comportement normal)
+    xp = (j.xp || 0) + gainXp; niveau = j.niveau; events = [];
     while (xp >= xpPourNiveau(niveau)) { xp -= xpPourNiveau(niveau); niveau++; events.push('niveau'); if(niveau===EVEIL_EVO_ADO)events.push('evo3'); if(niveau===EVEIL_EVO_FINAL)events.push('evo4'); }
-    const stade = calculerStade(true, niveau);
-    // Applique Brise
+    stade = calculerStade(true, niveau);
     const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
     const newBrise = (prime ? prime.berrys : 0) + gainBrise;
     await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
-    // Sauve (PV joueur conserves, combat fini)
     const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
-    if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; } // le rival quitte la zone
+    if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
     return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false });
   }
