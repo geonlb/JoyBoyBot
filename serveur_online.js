@@ -3105,7 +3105,7 @@ function carteMonde(){
           var prochainIndex = nbMed;
 
           // Positions des temples sur les iles dessinees (en %)
-          vvar positions = [
+          var positions = [
             {x:16, y:30},  // 1 Lave - ile crane (haut-gauche)
             {x:43, y:33},  // 2 Marin - recifs roses (haut-centre)
             {x:83, y:30},  // 3 Nuage - ile montagne (haut-droite)
