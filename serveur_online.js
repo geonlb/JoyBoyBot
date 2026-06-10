@@ -3102,72 +3102,88 @@ function carteMonde(){
           var temples = d.temples;
           var medaillons = d.medaillons || [];
           var nbMed = medaillons.length;
+          var prochainIndex = nbMed;
 
-          // Determine quel temple est debloque (le premier non complete)
-          var prochainIndex = nbMed; // 0 = premier temple, etc.
-
-          // Positions des iles en serpentin (en %)
+          // Positions des temples sur les iles dessinees (en %)
           var positions = [
-            {x:15, y:78}, {x:38, y:64}, {x:22, y:46}, {x:52, y:40}, {x:38, y:22}, {x:65, y:14}
+            {x:16, y:32},  // 1 Lave - ile crane (haut-gauche)
+            {x:43, y:35},  // 2 Marin - recifs roses (haut-centre)
+            {x:83, y:31},  // 3 Nuage - ile montagne (haut-droite)
+            {x:44, y:54},  // 4 Roche - ile croissant (centre-gauche)
+            {x:67, y:48},  // 5 Givre - grande ile volcan (centre-droite)
+            {x:16, y:65}   // 6 Neant - ile falaise (bas-gauche)
           ];
-          var ligue = {x:84, y:8};
+          var ligue = {x:91, y:48}; // lagon magique (droite)
 
-          var iles = '';
-          // Chemin pointille (lignes SVG entre les iles)
+          // Le chemin en courbe douce reliant les iles
           var pts = positions.concat([ligue]);
-          var lignes = '';
-          for(var p=0;p<pts.length-1;p++){
-            lignes += '<line x1="'+pts[p].x+'%" y1="'+pts[p].y+'%" x2="'+pts[p+1].x+'%" y2="'+pts[p+1].y+'%" stroke="#f1c40f" stroke-width="3" stroke-dasharray="8,8" opacity="0.5"/>';
+          var pathD = 'M '+pts[0].x+' '+pts[0].y;
+          for(var p=1;p<pts.length;p++){
+            var prev = pts[p-1], cur = pts[p];
+            var cx = (prev.x + cur.x)/2;
+            pathD += ' Q '+cx+' '+prev.y+' '+cur.x+' '+cur.y;
           }
 
+          var iles = '';
           for(var i=0;i<temples.length;i++){
             var t = temples[i];
             var pos = positions[i];
             var complete = medaillons.indexOf(t.id) >= 0;
             var debloque = (i === prochainIndex);
+            var imgTemple = '<img src="'+IMG+'/eveil/temple_'+t.element+'.png" style="width:48px;height:48px;object-fit:contain;">';
             var etat, contenu, clickable;
-            var imgTemple = '<img src="'+IMG+'/eveil/temple_'+t.element+'.png" style="width:54px;height:54px;object-fit:contain;">';
             if(complete){
-              etat = 'border:3px solid #f1c40f;box-shadow:0 0 25px '+t.couleur+'cc;';
-              contenu = imgTemple + '<div style="position:absolute;bottom:-6px;right:-6px;font-size:22px;">&#x1F3C5;</div>';
+              etat = 'border:3px solid #f1c40f;box-shadow:0 0 22px '+t.couleur+'cc;';
+              contenu = imgTemple + '<div style="position:absolute;bottom:-6px;right:-6px;font-size:20px;">&#x1F3C5;</div>';
               clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
             } else if(debloque){
-              etat = 'border:3px solid #fff;box-shadow:0 0 30px '+t.couleur+';animation:pulseTemple 1.5s infinite;cursor:pointer;';
+              etat = 'border:3px solid #fff;box-shadow:0 0 28px '+t.couleur+';animation:pulseTemple 1.5s infinite;cursor:pointer;';
               contenu = imgTemple;
               clickable = 'onclick="ouvrirTemple(&#39;'+t.id+'&#39;)"';
             } else {
               etat = 'border:3px solid rgba(255,255,255,0.15);';
-              contenu = '<div style="filter:grayscale(1) brightness(0.4);">'+imgTemple+'</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
+              contenu = '<div style="filter:grayscale(1) brightness(0.4);">'+imgTemple+'</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:16px;">&#x1F512;</div>';
               clickable = 'onclick="alert(&#39;Termine le temple precedent pour debloquer celui-ci !&#39;)"';
             }
-            iles += '<div '+clickable+' style="position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;'+etat+'" title="'+t.nom+'">'+contenu+'</div>';
+            iles += '<div '+clickable+' style="position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;'+etat+'" title="'+t.nom+'">'+contenu+'</div>';
           }
 
-          // La Ligue des Pirates (7e ile)
+          // La Ligue des Pirates (7e ile - lagon)
           var ligueDebloque = nbMed >= 6;
           var ligueEtat, ligueClick, ligueContenu;
           if(ligueDebloque){
-            ligueEtat = 'background:linear-gradient(135deg,#f1c40f,#e67e22);border:3px solid #fff;box-shadow:0 0 35px #f1c40f;animation:pulseTemple 1.5s infinite;cursor:pointer;';
-            ligueContenu = '<div style="font-size:32px;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div>';
+            ligueEtat = 'border:3px solid #fff;box-shadow:0 0 30px #f1c40f;animation:pulseTemple 1.5s infinite;cursor:pointer;background:linear-gradient(135deg,rgba(241,196,15,0.5),rgba(230,126,34,0.5));';
+            ligueContenu = '<div style="font-size:30px;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div>';
             ligueClick = 'onclick="alert(&#39;La Ligue des Pirates arrive bientot ! Tu as tous les medaillons, champion ! &#x1F3C6;&#39;)"';
           } else {
-            ligueEtat = 'background:rgba(40,40,50,0.85);border:3px solid rgba(241,196,15,0.3);';
-            ligueContenu = '<div style="font-size:28px;filter:grayscale(1);opacity:0.5;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:18px;">&#x1F512;</div>';
+            ligueEtat = 'border:3px solid rgba(241,196,15,0.3);background:rgba(0,0,0,0.4);';
+            ligueContenu = '<div style="font-size:26px;filter:grayscale(1);opacity:0.5;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:16px;">&#x1F512;</div>';
             ligueClick = 'onclick="alert(&#39;Obtiens les 6 medaillons pour acceder a la Ligue des Pirates !&#39;)"';
           }
-          iles += '<div '+ligueClick+' style="position:absolute;left:'+ligue.x+'%;top:'+ligue.y+'%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+ligueEtat+'" title="Ligue des Pirates">'+ligueContenu+'</div>';
+          iles += '<div '+ligueClick+' style="position:absolute;left:'+ligue.x+'%;top:'+ligue.y+'%;transform:translate(-50%,-50%);width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;'+ligueEtat+'" title="Ligue des Pirates">'+ligueContenu+'</div>';
 
-          var html = '<div style="max-width:720px;margin:0 auto;">'
-            + '<div style="text-align:center;margin-bottom:12px;">'
-            + '<div style="font-family:Cinzel,serif;font-size:28px;color:#f1c40f;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,0.6);">&#x1F5FA;&#xFE0F; LE GRAND LINE</div>'
-            + '<div style="font-size:14px;color:#f1c40f;margin-top:5px;">&#x1F3C5; '+nbMed+' / 6 medaillons</div>'
+          // Le bateau : navigue entre la derniere ile validee et la prochaine
+          var bateauHtml = '';
+          var depart, arrivee;
+          if(nbMed === 0){ depart = {x:8, y:50}; arrivee = positions[0]; }
+          else if(nbMed >= 6){ depart = positions[5]; arrivee = ligue; }
+          else { depart = positions[nbMed-1]; arrivee = positions[nbMed]; }
+          var bx = (depart.x + arrivee.x)/2;
+          var by = (depart.y + arrivee.y)/2;
+          bateauHtml = '<img src="'+IMG+'/eveil/bateau-map.png" style="position:absolute;left:'+bx+'%;top:'+by+'%;transform:translate(-50%,-50%);width:50px;height:50px;object-fit:contain;z-index:15;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6));animation:bateauFlotte 2s ease-in-out infinite;" title="Ton navire">';
+
+          var html = '<div style="max-width:760px;margin:0 auto;">'
+            + '<div style="text-align:center;margin-bottom:10px;">'
+            + '<div style="font-family:Cinzel,serif;font-size:26px;color:#f1c40f;letter-spacing:3px;text-shadow:0 0 20px rgba(241,196,15,0.6);">&#x1F5FA;&#xFE0F; LE GRAND LINE</div>'
             + '</div>'
-            + '<div style="position:relative;width:100%;height:480px;background:radial-gradient(ellipse at 30% 20%, rgba(52,152,219,0.15), transparent 60%), linear-gradient(160deg,#0a1628,#0d1f3c,#0a1020);border:2px solid rgba(241,196,15,0.3);border-radius:20px;overflow:hidden;">'
-            + '<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">'+lignes+'</svg>'
+            + '<div style="position:relative;width:100%;aspect-ratio:3/2;background:url('+IMG+'/eveil/carte-fond.png) center/cover;border-radius:14px;overflow:hidden;box-shadow:0 0 30px rgba(0,0,0,0.5);">'
+            + '<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="'+pathD+'" stroke="#f1c40f" stroke-width="0.6" stroke-dasharray="2,2" fill="none" opacity="0.6"/></svg>'
             + iles
-            + '<div onclick="boiteMedaillons()" style="position:absolute;top:12px;right:12px;z-index:20;background:rgba(0,0,0,0.7);border:2px solid #f1c40f;border-radius:50%;width:54px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 15px rgba(241,196,15,0.5);" title="Mes medaillons"><div style="font-size:24px;">&#x1F3C5;</div></div>'
+            + bateauHtml
+            + '<div onclick="boiteMedaillons()" style="position:absolute;top:10px;right:10px;z-index:20;background:rgba(0,0,0,0.7);border:2px solid #f1c40f;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 15px rgba(241,196,15,0.5);" title="Mes medaillons"><div style="font-size:22px;">&#x1F3C5;</div></div>'
+            + '<div style="position:absolute;top:10px;left:10px;z-index:20;background:rgba(0,0,0,0.7);border:2px solid #f1c40f;border-radius:14px;padding:5px 12px;font-size:13px;color:#f1c40f;">&#x1F3C5; '+nbMed+' / 6</div>'
             + '</div>'
-            + '<div style="text-align:center;margin-top:18px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '<div style="text-align:center;margin-top:16px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
             + '</div>';
           document.getElementById('content').innerHTML = html;
         });
