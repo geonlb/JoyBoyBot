@@ -1593,6 +1593,58 @@ const RARETE_INFO = {
   ultime: { nom:'Ultime', couleur:'#e74c3c', tauxBase:0.08 }
 };
 
+// ===== SYSTEME D'EQUIPE =====
+// Recuperer l'equipe du joueur (fruit + monstres captures recrutables)
+app.get('/eveil/equipe', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('fruit, niveau, stade, pv_actuels').eq('username', u).single();
+  if (!j) return res.status(400).json({ error: 'Pas de joueur' });
+
+  // Toutes les captures du joueur
+  const { data: caps } = await supabase.from('eveil_captures').select('*').eq('username', u);
+  const captures = caps || [];
+
+  // Monstres recrutables = ceux capturables qui sont des FORMES 1 (ont une evolution)
+  const recrutables = captures.filter(function(c){
+    const m = EVEIL_MONSTRES[c.monstre_id];
+    return m && m.evolution; // forme 1 = a une evolution
+  }).map(function(c){
+    const m = EVEIL_MONSTRES[c.monstre_id];
+    return {
+      monstreId: c.monstre_id, nom: m.nom, img: m.img, element: m.element,
+      niveau: c.niveau || 1, stade: c.stade || 1, xp: c.xp || 0,
+      dansEquipe: c.dans_equipe === 1, slot: c.slot_equipe || 0
+    };
+  });
+
+  res.json({ fruit: j.fruit, fruitNiveau: j.niveau, fruitStade: j.stade, recrutables });
+});
+
+// Modifier l'equipe (ajouter/retirer un monstre d'un slot)
+app.post('/eveil/equipe/set', async (req, res) => {
+  const { username, monstreId, slot } = req.body;
+  if (!username) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+
+  if (slot === 0) {
+    // Retirer ce monstre de l'equipe
+    await supabase.from('eveil_captures').update({ dans_equipe: 0, slot_equipe: 0 }).eq('username', u).eq('monstre_id', monstreId);
+    return res.json({ success: true });
+  }
+
+  // Verifier que c'est bien une forme 1
+  const m = EVEIL_MONSTRES[monstreId];
+  if (!m || !m.evolution) return res.status(400).json({ error: 'Seules les formes de base peuvent rejoindre l&#39;equipe !' });
+
+  // Liberer ce slot si un autre monstre l'occupe
+  await supabase.from('eveil_captures').update({ dans_equipe: 0, slot_equipe: 0 }).eq('username', u).eq('slot_equipe', slot);
+  // Placer ce monstre dans le slot
+  await supabase.from('eveil_captures').update({ dans_equipe: 1, slot_equipe: slot }).eq('username', u).eq('monstre_id', monstreId);
+  res.json({ success: true });
+});
+
 // Recuperer la Brisepedia d'un joueur (tous les monstres + ce qui est capture)
 app.get('/eveil/brisepedia', async (req, res) => {
   const username = req.query.username;
@@ -3008,6 +3060,83 @@ function ouvrirSacCombat(){
 
 var brisepediaZone = 0; // 0 = toutes les zones
 
+function monEquipe(){
+      fetch('/eveil/equipe?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var ligF = LIGNEES[d.fruit];
+          var fruitImg = ligF ? ligF.stades[d.fruitStade-1] : '';
+          var fruitNom = ligF ? ligF.noms[d.fruitStade-1] : d.fruit;
+
+          // Slot du fruit (toujours la, slot principal)
+          var slotsHtml = '<div style="background:linear-gradient(160deg,rgba(241,196,15,0.2),rgba(0,0,0,0.8));border:2px solid #f1c40f;border-radius:16px;padding:14px;text-align:center;">'
+            + '<div style="font-size:11px;color:#f1c40f;margin-bottom:6px;">&#x2B50; PARTENAIRE</div>'
+            + '<img src="'+IMG+'/monstres/'+fruitImg+'.png" style="width:70px;height:70px;object-fit:contain;">'
+            + '<div style="font-size:13px;color:#fff;margin-top:5px;">'+fruitNom+'</div>'
+            + '<div style="font-size:11px;color:#aaa;">Niv '+d.fruitNiveau+'</div>'
+            + '</div>';
+
+          // Les 2 slots de monstres captures
+          for(var s=1;s<=2;s++){
+            var occupant = d.recrutables.find(function(r){ return r.dansEquipe && r.slot === s; });
+            if(occupant){
+              slotsHtml += '<div style="background:linear-gradient(160deg,rgba(52,152,219,0.2),rgba(0,0,0,0.8));border:2px solid #3498db;border-radius:16px;padding:14px;text-align:center;position:relative;">'
+                + '<div style="font-size:11px;color:#3498db;margin-bottom:6px;">SLOT '+s+'</div>'
+                + '<img src="'+IMG+'/monstres/'+occupant.img+'.png" style="width:70px;height:70px;object-fit:contain;">'
+                + '<div style="font-size:13px;color:#fff;margin-top:5px;">'+occupant.nom+'</div>'
+                + '<div style="font-size:11px;color:#aaa;">Niv '+occupant.niveau+' - Stade '+occupant.stade+'</div>'
+                + '<button onclick="retirerEquipe(&#39;'+occupant.monstreId+'&#39;)" style="margin-top:8px;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;border-radius:12px;color:#fff;font-size:10px;padding:4px 10px;cursor:pointer;">Retirer</button>'
+                + '</div>';
+            } else {
+              slotsHtml += '<div style="background:rgba(0,0,0,0.5);border:2px dashed rgba(255,255,255,0.2);border-radius:16px;padding:14px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;">'
+                + '<div style="font-size:30px;opacity:0.3;">&#x2795;</div>'
+                + '<div style="font-size:11px;color:#666;margin-top:6px;">Slot '+s+' vide</div>'
+                + '</div>';
+            }
+          }
+
+          // Liste des monstres recrutables (formes 1 pas encore dans l'equipe)
+          var dispo = d.recrutables.filter(function(r){ return !r.dansEquipe; });
+          var listeHtml = '';
+          if(dispo.length === 0){
+            listeHtml = '<div style="text-align:center;color:#888;font-size:13px;padding:20px;">Aucune forme de base disponible. Capture des monstres pour agrandir ton equipe !</div>';
+          } else {
+            dispo.forEach(function(r){
+              listeHtml += '<div style="display:inline-block;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px;margin:5px;text-align:center;width:100px;">'
+                + '<img src="'+IMG+'/monstres/'+r.img+'.png" style="width:50px;height:50px;object-fit:contain;">'
+                + '<div style="font-size:11px;color:#fff;margin-top:3px;">'+r.nom+'</div>'
+                + '<div style="font-size:10px;color:#aaa;">Niv '+r.niveau+'</div>'
+                + '<div style="margin-top:5px;display:flex;gap:3px;justify-content:center;">'
+                + '<button onclick="ajouterEquipe(&#39;'+r.monstreId+'&#39;,1)" style="background:rgba(52,152,219,0.3);border:1px solid #3498db;border-radius:8px;color:#fff;font-size:9px;padding:3px 6px;cursor:pointer;">S1</button>'
+                + '<button onclick="ajouterEquipe(&#39;'+r.monstreId+'&#39;,2)" style="background:rgba(52,152,219,0.3);border:1px solid #3498db;border-radius:8px;color:#fff;font-size:9px;padding:3px 6px;cursor:pointer;">S2</button>'
+                + '</div></div>';
+            });
+          }
+
+          var html = '<div style="max-width:680px;margin:0 auto;">'
+            + '<div style="text-align:center;font-family:Cinzel,serif;font-size:26px;color:#f1c40f;letter-spacing:3px;margin-bottom:6px;">&#x1F43E; MON EQUIPE</div>'
+            + '<div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:18px;">Ton partenaire + 2 monstres de base (formes 1)</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:25px;">'+slotsHtml+'</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:16px;color:#3498db;text-align:center;margin-bottom:10px;">Monstres recrutables</div>'
+            + '<div style="text-align:center;">'+listeHtml+'</div>'
+            + '<div style="text-align:center;margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="hub()">&#x2190; Retour au repaire</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        });
+    }
+
+    function ajouterEquipe(monstreId, slot){
+      fetch('/eveil/equipe/set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,monstreId:monstreId,slot:slot})})
+        .then(function(r){return r.json();})
+        .then(function(d){ if(d.error){ alert(d.error.replace(/&#39;/g,"'")); } monEquipe(); });
+    }
+
+    function retirerEquipe(monstreId){
+      fetch('/eveil/equipe/set',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,monstreId:monstreId,slot:0})})
+        .then(function(r){return r.json();})
+        .then(function(d){ monEquipe(); });
+    }
+
     function brisepedia(){
       fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -3393,6 +3522,7 @@ function hub(){
 
           var sections = [
             { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
+            { id:'equipe',   emoji:'&#x1F43E;', titre:'MON EQUIPE', desc:'Gere ton equipe de combat', actif:true },
             { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
             { id:'carte',   emoji:'&#x1F5FA;&#xFE0F;', titre:'LE GRAND LINE', desc:'La carte et les temples', actif:true },
             { id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
@@ -3405,7 +3535,7 @@ function hub(){
           for(var i=0;i<sections.length;i++){
             var s = sections[i];
             if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : (s.id==='carte' ? 'carteMonde()' : 'bateau()')))));
+              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : (s.id==='carte' ? 'carteMonde()' : (s.id==='equipe' ? 'monEquipe()' : 'bateau()'))))));
               cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
                 + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
                 + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
