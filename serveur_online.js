@@ -2571,7 +2571,8 @@ var ATTAQUES_FRONT = {
       lance:    new Audio(IMG+'/eveil/capture-lance.mp3'),
       capture:  new Audio(IMG+'/eveil/capture-reussie.mp3'),
       boss:     new Audio(IMG+'/eveil/combat-boss.mp3'),
-      fuite:    new Audio(IMG+'/eveil/fuite.mp3')
+      fuite:    new Audio(IMG+'/eveil/fuite.mp3'),
+      rival:    new Audio(IMG+'/eveil/combat-rival.mp3')
     };
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
@@ -2608,10 +2609,23 @@ var ATTAQUES_FRONT = {
           if(d.error){ alert(d.error); hub(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
           if(d.rival){
-            // Rencontre du rival : intro speciale
+            // Rencontre du rival : bulle de dialogue + phrase aleatoire
             combatEtat.imgRival = d.imgRival;
-            jouerSon('boss');
-            afficherCombat(['&#x2694;&#xFE0F; '+d.combat.enNom+' surgit pour te defier ! Pas moyen de fuir !']);
+            arreterSon('start'); jouerSon('rival');
+            var phrasesRival = [
+              'Stop ! Tu te rappelles de moi ? J&#39;ai bien avance... Je vais t&#39;arracher la victoire. Prepare-toi !',
+              'Tiens tiens, regardez qui voila ! Toujours aussi faible ? On va vite verifier ca.',
+              'Encore toi ? Parfait. J&#39;avais justement besoin de m&#39;echauffer sur une proie facile.',
+              'Tu croyais m&#39;eviter ? Personne n&#39;echappe a son rival. En garde !',
+              'Mon monstre n&#39;attend qu&#39;une chose : te reduire en miettes. Allez, amuse-moi un peu !',
+              'Ah, le petit rival qui se croit fort... Laisse-moi te remettre a ta place !'
+            ];
+            var phrase = phrasesRival[Math.floor(Math.random()*phrasesRival.length)];
+            var ligRiv = LIGNEES[d.combat.enElem];
+            var couleurRiv = ligRiv ? ligRiv.couleur : '#8e44ad';
+            dialogueRival(d.combat.enNom, phrase, couleurRiv, d.imgRival, function(){
+              afficherCombat(['&#x2694;&#xFE0F; '+d.combat.enNom+' envoie son monstre ! Pas moyen de fuir !']);
+            });
           } else {
             jouerSon('start');
             afficherCombat([d.combat.enNom + ' sauvage apparait !']);
@@ -2772,7 +2786,7 @@ function effetElementaireEnnemi(element){
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
                 if(d.estRival){
-                  arreterSon('boss');
+                  arreterSon('boss'); arreterSon('rival');
                   jouerSon('fuite');
                   setTimeout(function(){
                     alert(msg + '\\n\\n&#x1F3C3; Ton rival prend la fuite, humilie ! &#x2694;&#xFE0F;'.replace(/&#x1F3C3;/g,'🏃').replace(/&#x2694;&#xFE0F;/g,'⚔️'));
@@ -3189,6 +3203,33 @@ function boiteMedaillons(){
         });
     }
 
+function dialogueRival(nomRival, texte, couleur, imgRival, callback){
+      var html = '<div style="max-width:680px;margin:0 auto;padding-top:30px;text-align:center;">'
+        + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+couleur+';letter-spacing:2px;margin-bottom:18px;">&#x2694;&#xFE0F; TON RIVAL !</div>'
+        + '<img src="'+IMG+'/eveil/'+imgRival+'.png" style="width:200px;height:auto;object-fit:contain;border-radius:16px;filter:drop-shadow(0 0 20px '+couleur+'aa);animation:rivalEntre 0.6s ease-out;">'
+        + '<div style="margin-top:15px;background:rgba(0,0,0,0.9);border:3px solid '+couleur+';border-radius:16px;padding:20px 24px;min-height:80px;box-shadow:0 0 30px '+couleur+'66;">'
+        + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+couleur+';margin-bottom:10px;">'+nomRival+'</div>'
+        + '<div id="rival-dlg-texte" style="font-size:15px;color:#fff;line-height:1.6;min-height:50px;"></div>'
+        + '<div id="rival-dlg-suite" style="text-align:right;font-size:12px;color:#aaa;margin-top:10px;opacity:0;">&#x25BC; cliquer pour combattre</div>'
+        + '</div></div>';
+      document.getElementById('content').innerHTML = html;
+
+      var txt = (texte||'').replace(/&#39;/g, "'");
+      var i = 0;
+      var zone = document.getElementById('rival-dlg-texte');
+      var suite = document.getElementById('rival-dlg-suite');
+      if(dialogueEnCours) clearInterval(dialogueEnCours);
+      dialogueEnCours = setInterval(function(){
+        if(i < txt.length){ zone.textContent += txt.charAt(i); i++; try{jouerSon('attaque');}catch(e){} }
+        else { clearInterval(dialogueEnCours); dialogueEnCours = null; suite.style.opacity='1'; }
+      }, 35);
+
+      document.getElementById('content').onclick = function(){
+        if(dialogueEnCours){ clearInterval(dialogueEnCours); dialogueEnCours=null; zone.textContent=txt; suite.style.opacity='1'; }
+        else { document.getElementById('content').onclick = null; callback(); }
+      };
+    }
+
 function sceneRival(callback){
       fetch('/eveil/rival?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -3338,6 +3379,7 @@ function carteMonde(){
 function hub(){
       arreterSon('start');
       arreterSon('boss');
+      arreterSon('rival');
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
