@@ -1279,11 +1279,26 @@ app.post('/eveil/utiliser', async (req, res) => {
 
     // XP sur un capture
     if (objet.type === 'capture') return res.status(400).json({ error: 'Les Elixiteilles arrivent bientot !' });
+    const nivAvantCap = cap.niveau || 1;
+    const xpAvantCap = cap.xp || 0;
+    const idAvantCap = cible;
+    const stadeAvantCap = cap.stade || 1;
     const resCap = await appliquerXpCapture(u, cible, objet.valeur);
     const nq = item.quantite - 1;
     await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
     if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
-    return res.json({ success: true, surCapture: true, niveau: resCap.niveau, stade: resCap.stade, events: resCap.events, gainXp: objet.valeur, evoCapture: resCap.aEvolueVers, nom: objet.nom });
+    // Recuperer l'etat final pour l'animation
+    const idFinalCap = resCap.nouveauMonstre || cible;
+    const { data: capFinal } = await supabase.from('eveil_captures').select('niveau, xp, stade').eq('username', u).eq('monstre_id', idFinalCap).single();
+    return res.json({
+      success: true, surCapture: true, surCaptureXp: true,
+      niveau: resCap.niveau, stade: resCap.stade, events: resCap.events,
+      gainXp: objet.valeur, evoCapture: resCap.aEvolueVers, nom: objet.nom,
+      idAvant: idAvantCap, idApres: idFinalCap,
+      nivAvant: nivAvantCap, nivApres: resCap.niveau,
+      xpAvant: xpAvantCap, xpApres: (capFinal ? capFinal.xp : 0),
+      prochainXpAvant: xpPourNiveau(nivAvantCap), prochainXpApres: xpPourNiveau(resCap.niveau)
+    });
   }
 
   // --- SOIN (potions/elixirs) : rend des PV ---
@@ -2559,14 +2574,8 @@ var BOUTIQUE = {
         .then(function(d){
           if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
           if(d.surCapture){
-            if(d.soin){ alert('💚 +'+d.gainPv+' PV rendus !'); }
-            else {
-              var m = '✨ +'+d.gainXp+' XP !';
-              if(d.evoCapture){ m += '\\n🌟 Ton monstre evolue !'; }
-              else if(d.events && d.events.indexOf('niveau')>=0){ m += '\\n⬆️ Niveau '+d.niveau+' !'; }
-              alert(m);
-            }
-            sac();
+            if(d.soin){ alert('💚 +'+d.gainPv+' PV rendus !'); sac(); }
+            else { popupUtilisationCapture(o, d); }
             return;
           }
           if(d.soin){ popupSoin(o, d); return; }
@@ -2656,6 +2665,64 @@ var BOUTIQUE = {
 
           document.getElementById('soin-close').onclick = function(){ document.body.removeChild(overlay); sac(); };
         });
+    }
+
+function popupUtilisationCapture(o, d){
+      var mAvant = EVEIL_MONSTRES_FRONT ? EVEIL_MONSTRES_FRONT[d.idAvant] : null;
+      // On utilise les images directes des monstres (id = nom de fichier)
+      var imgAvant = d.idAvant;
+      var imgApres = d.idApres;
+      var couleur = '#3498db';
+      var pctAvant = Math.min(100, Math.round((d.xpAvant / d.prochainXpAvant) * 100));
+      var pctApres = Math.min(100, Math.round((d.xpApres / d.prochainXpApres) * 100));
+      var aEvolue = !!d.evoCapture;
+      var aMonte = d.events && d.events.indexOf('niveau')>=0;
+
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99998;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML =
+        '<div style="background:linear-gradient(160deg,rgba(0,0,0,0.95),'+couleur+'22);border:2px solid '+couleur+';border-radius:20px;padding:35px 30px;max-width:420px;text-align:center;box-shadow:0 0 40px '+couleur+'66;">'
+        + '<div style="font-size:13px;color:#87ceeb;letter-spacing:2px;margin-bottom:15px;">ENTRAINEMENT</div>'
+        + '<div style="position:relative;display:inline-block;">'
+        + '<img id="popupc-img" src="'+IMG+'/objets/'+o.img+'.png" style="width:70px;height:70px;object-fit:contain;position:absolute;left:50%;top:0;transform:translateX(-50%);z-index:2;opacity:0;transition:all 0.6s;">'
+        + '<img id="popupc-monstre" src="'+IMG+'/monstres/'+imgAvant+'.png" style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 0 20px '+couleur+'aa);">'
+        + '</div>'
+        + '<div id="popupc-niv" style="font-size:14px;color:#fff;margin:10px 0;">Niveau '+d.nivAvant+'</div>'
+        + '<div style="max-width:300px;margin:0 auto;">'
+        + '<div style="background:rgba(0,0,0,0.5);border:1px solid '+couleur+';border-radius:12px;height:18px;overflow:hidden;"><div id="popupc-barre" style="height:100%;width:'+pctAvant+'%;background:'+couleur+';transition:width 1s ease-out;"></div></div></div>'
+        + '<div id="popupc-gain" style="font-size:18px;color:#2ecc71;font-weight:bold;margin-top:12px;opacity:0;transition:opacity 0.4s;">+'+d.gainXp+' XP</div>'
+        + '<div id="popupc-event" style="font-size:15px;color:#ffd479;margin-top:6px;min-height:20px;"></div>'
+        + '<button id="popupc-close" style="margin-top:18px;background:'+couleur+';border:none;border-radius:25px;color:#fff;font-weight:bold;padding:10px 30px;cursor:pointer;opacity:0;transition:opacity 0.4s;">Super !</button>'
+        + '</div>';
+      document.body.appendChild(overlay);
+
+      setTimeout(function(){ var im=document.getElementById('popupc-img'); im.style.opacity='1'; im.style.top='50px'; }, 200);
+      setTimeout(function(){
+        var im=document.getElementById('popupc-img'); im.style.opacity='0'; im.style.transform='translateX(-50%) scale(1.5)';
+        document.getElementById('popupc-gain').style.opacity='1';
+      }, 900);
+      setTimeout(function(){
+        var barre=document.getElementById('popupc-barre');
+        if(aEvolue || aMonte){ barre.style.width='100%'; } else { barre.style.width=pctApres+'%'; }
+      }, 1200);
+      setTimeout(function(){
+        if(aEvolue){
+          document.getElementById('popupc-monstre').src = IMG+'/monstres/'+imgApres+'.png';
+          document.getElementById('popupc-monstre').style.animation = 'saute 0.8s ease-in-out';
+          document.getElementById('popupc-event').textContent = '✨ Evolution !';
+          document.getElementById('popupc-niv').textContent = 'Niveau '+d.nivApres;
+          document.getElementById('popupc-barre').style.transition='none';
+          document.getElementById('popupc-barre').style.width=pctApres+'%';
+        } else if(aMonte){
+          document.getElementById('popupc-event').textContent = '⬆️ Niveau '+d.nivApres+' !';
+          document.getElementById('popupc-niv').textContent = 'Niveau '+d.nivApres;
+          document.getElementById('popupc-barre').style.transition='none';
+          document.getElementById('popupc-barre').style.width=pctApres+'%';
+        }
+        document.getElementById('popupc-close').style.opacity='1';
+      }, 2300);
+
+      document.getElementById('popupc-close').onclick = function(){ overlay.remove(); sac(); };
     }
 
           function popupUtilisation(o, d){
