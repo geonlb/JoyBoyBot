@@ -1255,6 +1255,37 @@ app.post('/eveil/utiliser', async (req, res) => {
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
 
+  // === CIBLE = un monstre capture (pas le fruit) ===
+  const cible = req.body.cible;
+  if (cible && cible !== 'fruit') {
+    const { data: cap } = await supabase.from('eveil_captures').select('*').eq('username', u).eq('monstre_id', cible).single();
+    if (!cap) return res.status(400).json({ error: 'Ce monstre n&#39;est pas dans ta collection !' });
+    const mDef = EVEIL_MONSTRES[cible];
+    if (!mDef) return res.status(400).json({ error: 'Monstre inconnu' });
+    const statsCap = statsCalc(mDef.element, cap.niveau || 1);
+
+    // SOIN sur un capture
+    if (objet.type === 'soin') {
+      const pvAvant = (cap.pv_actuels != null && cap.pv_actuels >= 0) ? cap.pv_actuels : statsCap.pvMax;
+      if (pvAvant >= statsCap.pvMax) return res.status(400).json({ error: 'Ce monstre a deja tous ses PV !' });
+      const soin = (objet.valeur >= 9999) ? statsCap.pvMax : objet.valeur;
+      const pvApres = Math.min(statsCap.pvMax, pvAvant + soin);
+      await supabase.from('eveil_captures').update({ pv_actuels: pvApres }).eq('username', u).eq('monstre_id', cible);
+      const nq = item.quantite - 1;
+      await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+      if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
+      return res.json({ success: true, soin: true, pvAvant, pvApres, pvMax: statsCap.pvMax, gainPv: pvApres - pvAvant, nom: objet.nom, surCapture: true });
+    }
+
+    // XP sur un capture
+    if (objet.type === 'capture') return res.status(400).json({ error: 'Les Elixiteilles arrivent bientot !' });
+    const resCap = await appliquerXpCapture(u, cible, objet.valeur);
+    const nq = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
+    return res.json({ success: true, surCapture: true, niveau: resCap.niveau, stade: resCap.stade, events: resCap.events, gainXp: objet.valeur, evoCapture: resCap.aEvolueVers, nom: objet.nom });
+  }
+
   // --- SOIN (potions/elixirs) : rend des PV ---
   if (objet.type === 'soin') {
     if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant !' });
@@ -2517,16 +2548,67 @@ var BOUTIQUE = {
 
   function utiliser(objetId){
       var o = BOUTIQUE[objetId];
-      if(!confirm('Utiliser '+o.nom+' ?')) return;
-      fetch('/eveil/utiliser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:objetId})})
+      // Choisir la cible (fruit ou monstre de l'equipe)
+      choisirCibleObjet(o, objetId);
+    }
+
+    function appliquerObjet(objetId, cible){
+      var o = BOUTIQUE[objetId];
+      fetch('/eveil/utiliser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:objetId,cible:cible})})
         .then(function(r){return r.json();})
         .then(function(d){
-          if(d.error){ alert(d.error); return; }
+          if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
+          if(d.surCapture){
+            if(d.soin){ alert('💚 +'+d.gainPv+' PV rendus !'); }
+            else {
+              var m = '✨ +'+d.gainXp+' XP !';
+              if(d.evoCapture){ m += '\\n🌟 Ton monstre evolue !'; }
+              else if(d.events && d.events.indexOf('niveau')>=0){ m += '\\n⬆️ Niveau '+d.niveau+' !'; }
+              alert(m);
+            }
+            sac();
+            return;
+          }
           if(d.soin){ popupSoin(o, d); return; }
           popupUtilisation(o, d);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
+
+    function choisirCibleObjet(o, objetId){
+      fetch('/eveil/equipe?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var ligF = LIGNEES[d.fruit];
+          var fruitImg = ligF ? ligF.stades[d.fruitStade-1] : '';
+          var fruitNom = ligF ? ligF.noms[d.fruitStade-1] : d.fruit;
+          var cards = '<div onclick="appliquerObjet(&#39;'+objetId+'&#39;,&#39;fruit&#39;);fermerCible();" style="background:rgba(241,196,15,0.15);border:2px solid #f1c40f;border-radius:14px;padding:12px;text-align:center;width:120px;cursor:pointer;">'
+            + '<img src="'+IMG+'/monstres/'+fruitImg+'.png" style="width:60px;height:60px;object-fit:contain;">'
+            + '<div style="font-size:12px;color:#fff;margin-top:4px;">'+fruitNom+'</div>'
+            + '<div style="font-size:10px;color:#f1c40f;">Partenaire Niv '+d.fruitNiveau+'</div></div>';
+          // Les captures dans l'equipe
+          var enEquipe = d.recrutables.filter(function(r){ return r.dansEquipe; });
+          enEquipe.forEach(function(r){
+            cards += '<div onclick="appliquerObjet(&#39;'+objetId+'&#39;,&#39;'+r.monstreId+'&#39;);fermerCible();" style="background:rgba(52,152,219,0.15);border:2px solid #3498db;border-radius:14px;padding:12px;text-align:center;width:120px;cursor:pointer;">'
+              + '<img src="'+IMG+'/monstres/'+r.img+'.png" style="width:60px;height:60px;object-fit:contain;">'
+              + '<div style="font-size:12px;color:#fff;margin-top:4px;">'+r.nom+'</div>'
+              + '<div style="font-size:10px;color:#3498db;">Niv '+r.niveau+'</div></div>';
+          });
+          var overlay = document.createElement('div');
+          overlay.id = 'cible-objet';
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99997;display:flex;align-items:center;justify-content:center;';
+          overlay.innerHTML = '<div style="background:linear-gradient(160deg,#1a1a2a,#0d0d15);border:3px solid #9b59b6;border-radius:18px;padding:25px;max-width:440px;text-align:center;">'
+            + '<div style="font-family:Cinzel,serif;font-size:17px;color:#9b59b6;letter-spacing:2px;margin-bottom:6px;">Utiliser '+o.nom+'</div>'
+            + '<div style="font-size:12px;color:#aaa;margin-bottom:14px;">Sur quel monstre ?</div>'
+            + '<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;">'+cards+'</div>'
+            + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:12px;padding:8px 22px;margin-top:14px;" onclick="fermerCible()">Annuler</button>'
+            + '</div>';
+          overlay.onclick = function(ev){ if(ev.target===overlay) overlay.remove(); };
+          document.body.appendChild(overlay);
+        });
+    }
+
+    function fermerCible(){ var c = document.getElementById('cible-objet'); if(c) c.remove(); }
 
     function popupSoin(o, d){
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
