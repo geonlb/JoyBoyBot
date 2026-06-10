@@ -1766,13 +1766,19 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const c = JSON.parse(j.combat_actif);
   const idx = Math.max(0, Math.min(2, parseInt(attaqueIndex) || 0));
   // L'ultime (idx 2) n'est dispo qu'au stade 4
-  if (idx === 2 && j.stade < 4) return res.status(400).json({ error: 'Ultime debloquee au stade final !' });
+  const actifCheck = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+  const stadeActif = actifCheck ? actifCheck.stade : j.stade;
+  const estFruitActif = !actifCheck || actifCheck.type === 'fruit';
+  if (idx === 2 && (!estFruitActif || j.stade < 4)) return res.status(400).json({ error: 'Ultime reservee a ton partenaire au stade final !' });
 
   const log = [];
 
   // --- Attaque du joueur ---
-  const atkJoueur = EVEIL_ATTAQUES[j.fruit][idx];
-  const multJ = multiplicateurElement(j.fruit, c.enElem);
+  // Element du monstre actif (fruit ou capture)
+  const actifJ = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+  const elemJoueur = actifJ ? actifJ.elem : j.fruit;
+  const atkJoueur = EVEIL_ATTAQUES[elemJoueur][idx];
+  const multJ = multiplicateurElement(elemJoueur, c.enElem);
   let degJ = Math.max(1, Math.round((c.joAtk * atkJoueur.mult - c.enDef * 0.5) * multJ));
   const critJ = Math.random() < 0.1 ? 2 : 1; // 10% crit
   degJ = Math.round(degJ * critJ);
@@ -1807,7 +1813,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   // --- Riposte de l'ennemi ---
   const idxEnnemi = c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2);
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][idxEnnemi];
-  let multE = multiplicateurElement(c.enElem, j.fruit);
+  let multE = multiplicateurElement(c.enElem, elemJoueur);
   if (c.estBoss && multE === 2) multE = 1.5; // super-efficace adouci pour les boss
   let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
   const critE = Math.random() < 0.08 ? 2 : 1;
@@ -1829,7 +1835,10 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 
   // Combat continue
   c.tour++;
-  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.joPv }).eq('username', u);
+  const majAttaque = { combat_actif: JSON.stringify(c) };
+  const actifSave = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+  if (!actifSave || actifSave.type === 'fruit') majAttaque.pv_actuels = c.joPv; // PV du fruit seulement si fruit actif
+  await supabase.from('eveil_joueurs').update(majAttaque).eq('username', u);
   res.json({ success: true, fini: false, log, combat: c, enAtkIdx: idxEnnemi, enElem: c.enElem });
 });
 
@@ -2791,11 +2800,12 @@ var ATTAQUES_FRONT = {
       var pctE = Math.max(0, Math.round((c.enPv/c.enPvMax)*100));
       var couleurPv = function(p){ return p>50 ? '#2ecc71' : (p>20 ? '#f39c12' : '#e74c3c'); };
 
-      var atks = ATTAQUES_FRONT[e.joFruit];
+      var elemActif = (actif ? actif.elem : e.joFruit);
+      var atks = ATTAQUES_FRONT[elemActif];
       var btnsAtk = '';
       for(var i=0;i<3;i++){
         var ultime = (i===2);
-        var dispo = !ultime || e.joStade>=4;
+        var dispo = !ultime || (actif && actif.type==='fruit' && e.joStade>=4) || (!actif && e.joStade>=4);
         var labels = ['Base','Chargee','Ultime'];
         if(dispo){
           btnsAtk += '<button class="connect-btn" style="border:none;cursor:pointer;font-size:13px;padding:10px 16px;margin:4px;" onclick="attaquer('+i+')"><b>'+atks[i]+'</b><br><span style="font-size:10px;opacity:0.8;">'+labels[i]+'</span></button>';
