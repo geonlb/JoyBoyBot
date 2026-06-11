@@ -4237,7 +4237,7 @@ function hub(){
           // ===== Positions faciles a ajuster si besoin =====
           var CARTE_X = 17.9;   // centre horizontal du cadre blanc (en %)
           var html = '<div style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
-            + '<img src="'+IMG+'/eveil/lobbyfond.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="Lobby">'
+            + '<img src="'+IMG+'/eveil/lobbyfond.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" alt="Lobby">'
             + '<div style="position:absolute;left:'+CARTE_X+'%;top:9%;width:26%;transform:translateX(-50%);background:rgba(20,10,40,0.6);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:1.4cqw 1.2cqw;">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">BRISE</span><span style="color:#f6c562;">'+brise+'</span></div>'
