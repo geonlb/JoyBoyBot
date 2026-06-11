@@ -1929,10 +1929,12 @@ app.post('/eveil/combat/attaque', async (req, res) => {
       await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
       if (c.estRival) { majV.rival_zone = 0; majV.rival_vaincu = (j.rival_vaincu || 0) + 1; }
       await supabase.from('eveil_joueurs').update(majV).eq('username', u);
-      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom });
+      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true });
     }
 
     // Sinon : l'XP va au fruit (comportement normal)
+    const xpAvantFruit = (j.xp || 0);
+    const nivAvantFruit = j.niveau;
     xp = (j.xp || 0) + gainXp; niveau = j.niveau; events = [];
     while (xp >= xpPourNiveau(niveau)) { xp -= xpPourNiveau(niveau); niveau++; events.push('niveau'); if(niveau===EVEIL_EVO_ADO)events.push('evo3'); if(niveau===EVEIL_EVO_FINAL)events.push('evo4'); }
     stade = calculerStade(true, niveau);
@@ -1943,8 +1945,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
     if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false });
-  }
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, xpAvant: xpAvantFruit, xpApres: xp, nivAvant: nivAvantFruit, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvantFruit), prochainXpApres: xpPourNiveau(niveau) });
 
   // --- Riposte de l'ennemi ---
   const idxEnnemi = c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2);
@@ -3280,8 +3281,12 @@ function effetElementaireEnnemi(element){
                         }, 'pnj-' + templeActuel.element);
                       });
                   }, 1200);
-                } else {
+                } else if(d.surCaptureVic){
+                  // Victoire avec un monstre capture : message simple pour l'instant
                   setTimeout(function(){ alert(msg); hub(); }, 1200);
+                } else {
+                  // Victoire normale (fruit) : barre d'XP animee facon Pokemon
+                  animationBarreXp(d);
                 }
               } else {
                 jouerSon('defaite');
@@ -3330,6 +3335,60 @@ function effetElementaireEnnemi(element){
         .then(function(){ hub(); })
         .catch(function(){ hub(); });
     }
+function animationBarreXp(d){
+      var elemActif = combatEtat.joFruit;
+      var ligF = LIGNEES[elemActif];
+      var couleur = ligF ? ligF.couleur : '#3498db';
+      var multiNiveau = (d.nivApres > d.nivAvant);
+
+      var overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99998;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML =
+        '<div style="background:linear-gradient(160deg,rgba(0,0,0,0.95),'+couleur+'22);border:2px solid '+couleur+';border-radius:20px;padding:35px 40px;max-width:420px;text-align:center;box-shadow:0 0 40px '+couleur+'66;">'
+        + '<div style="font-family:Cinzel,serif;font-size:24px;color:#f1c40f;letter-spacing:2px;margin-bottom:8px;">&#x1F3C6; VICTOIRE</div>'
+        + '<div id="bxp-gain" style="font-size:16px;color:#fff;margin-bottom:6px;">Tu as remporte <span style="color:#2ecc71;font-weight:bold;">'+d.gainXp+' XP</span> !</div>'
+        + '<div style="font-size:13px;color:#f1c40f;margin-bottom:18px;">+ '+d.gainBrise+' Brise &#x1FA99;</div>'
+        + '<div id="bxp-niv" style="font-size:13px;color:'+couleur+';margin-bottom:6px;">Niveau '+d.nivAvant+'</div>'
+        + '<div style="max-width:320px;margin:0 auto;">'
+        + '<div style="background:rgba(0,0,0,0.5);border:1px solid #3498db;border-radius:12px;height:20px;overflow:hidden;"><div id="bxp-barre" style="height:100%;width:0%;background:linear-gradient(90deg,#2980b9,#3498db,#5dade2);transition:width 1.1s ease-in-out;"></div></div>'
+        + '</div>'
+        + '<div id="bxp-event" style="font-size:16px;color:#ffd479;margin-top:14px;min-height:22px;font-weight:bold;"></div>'
+        + '<button id="bxp-close" style="margin-top:16px;background:'+couleur+';border:none;border-radius:25px;color:#fff;font-weight:bold;padding:10px 32px;cursor:pointer;opacity:0;transition:opacity 0.4s;">Continuer</button>'
+        + '</div>';
+      document.body.appendChild(overlay);
+
+      var pctAvant = Math.min(100, Math.round((d.xpAvant / d.prochainXpAvant) * 100));
+      var pctApres = Math.min(100, Math.round((d.xpApres / d.prochainXpApres) * 100));
+      var barre = document.getElementById('bxp-barre');
+
+      // 1) Barre demarre au niveau d'XP d'avant
+      setTimeout(function(){ barre.style.width = pctAvant + '%'; }, 300);
+
+      if(multiNiveau){
+        // 2) Monte jusqu'a 100%, level up, puis repart
+        setTimeout(function(){ barre.style.width = '100%'; }, 700);
+        setTimeout(function(){
+          barre.style.transition = 'none';
+          barre.style.width = '0%';
+          document.getElementById('bxp-niv').textContent = 'Niveau ' + d.nivApres;
+          var ev = '';
+          if(d.events && d.events.indexOf('evo4')>=0) ev = '👑 EVOLUTION FINALE !';
+          else if(d.events && d.events.indexOf('evo3')>=0) ev = '✨ Evolution !';
+          else ev = '⬆️ Niveau ' + d.nivApres + ' !';
+          document.getElementById('bxp-event').textContent = ev;
+          jouerSon('victoire');
+          setTimeout(function(){ barre.style.transition='width 1s ease-in-out'; barre.style.width = pctApres + '%'; }, 100);
+        }, 1900);
+        setTimeout(function(){ document.getElementById('bxp-close').style.opacity='1'; }, 3200);
+      } else {
+        // 2) Monte juste jusqu'au nouveau pourcentage
+        setTimeout(function(){ barre.style.width = pctApres + '%'; }, 700);
+        setTimeout(function(){ document.getElementById('bxp-close').style.opacity='1'; }, 2000);
+      }
+
+      document.getElementById('bxp-close').onclick = function(){ document.body.removeChild(overlay); hub(); };
+    }
+
         function ouvrirSwitchForce(){
       var c = combatEtat.combat;
       var cards = '';
