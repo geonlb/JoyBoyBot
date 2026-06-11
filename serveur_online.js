@@ -3070,6 +3070,10 @@ var ATTAQUES_FRONT = {
       fuite:    new Audio(IMG+'/eveil/fuite.mp3'),
       rival:    new Audio(IMG+'/eveil/combat-rival.mp3')
     };
+    // Les musiques de combat tournent en boucle tant que le combat dure
+    sonsCombat.start.loop = true;
+    sonsCombat.boss.loop = true;
+    sonsCombat.rival.loop = true;
     function jouerSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.currentTime=0; s.volume=0.5; s.play().catch(function(){}); } }catch(e){} }
     function arreterSon(nom){ try{ var s = sonsCombat[nom]; if(s){ s.pause(); s.currentTime=0; } }catch(e){} }
 
@@ -3362,8 +3366,8 @@ function effetElementaireEnnemi(element){
                       });
                   }, 1200);
                 } else if(d.surCaptureVic){
-                  // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
-                  setTimeout(function(){ animationBarreXp(d); }, 900);
+                  // Victoire avec un monstre capture : alert simple (pas de barre animee, la fiche du monstre la montre deja)
+                  setTimeout(function(){ alert(msg); hub(); }, 1200);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
                   setTimeout(function(){ animationBarreXp(d); }, 900);
