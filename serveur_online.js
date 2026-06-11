@@ -1701,10 +1701,13 @@ app.post('/eveil/temple/start', async (req, res) => {
     return res.status(400).json({ error: 'Termine le temple precedent d&#39;abord !' });
   }
 
-  // Stats joueur
-  const sj = statsCalc(j.fruit, j.niveau);
-  let pvJoueur = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
-  if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avant le combat.' });
+  // Charger l'equipe et choisir le monstre de depart (fruit en priorite, sinon premier capture vivant)
+  const equipe = await chargerEquipe(j, u);
+  const actifDepart = equipe.findIndex(function(m){ return m.pv > 0; });
+  if (actifDepart < 0) return res.status(400).json({ error: 'Toute ton equipe est KO ! Soigne tes monstres avant de combattre.' });
+  const depart = equipe[actifDepart];
+  const sj = { pvMax: depart.pvMax, atk: depart.atk, def: depart.def };
+  let pvJoueur = depart.pv;
 
   // Le boss : monstre de fruit de l'element du temple, niveau eleve
   const bossFruit = temple.bossFruit;
@@ -1720,6 +1723,7 @@ app.post('/eveil/temple/start', async (req, res) => {
     enNom: temple.pnj, enImgFruit: bossFruit, enStadeFruit: stadeBoss,
     enPvMax: pvBossMax, enPv: pvBossMax, enAtk: sb.atk, enDef: sb.def,
     joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+    equipe: equipe, actif: actifDepart,
     tour: 1
   };
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
