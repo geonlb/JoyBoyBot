@@ -1140,9 +1140,16 @@ async function appliquerDecroissanceBonheur(joueur) {
 app.get('/eveil/joueur', async (req, res) => {
   const username = req.query.username;
   if (!username) return res.status(400).json({ error: 'Manque username' });
-  let { data } = await supabase.from('eveil_joueurs').select('*').eq('username', username.toLowerCase()).single();
+  const u = username.toLowerCase();
+  let { data } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (data) data = await appliquerDecroissanceBonheur(data);
-  res.json({ joueur: data || null });
+  let nbCaptures = 0;
+  if (data) {
+    const { data: caps } = await supabase.from('eveil_captures').select('monstre_id').eq('username', u);
+    nbCaptures = caps ? caps.length : 0;
+  }
+  const totalMonstres = Array.isArray(EVEIL_MONSTRES) ? EVEIL_MONSTRES.length : Object.keys(EVEIL_MONSTRES).length;
+  res.json({ joueur: data || null, nbCaptures: nbCaptures, totalMonstres: totalMonstres });
 });
 
 // Choisir son genre (cree le joueur)
@@ -4170,44 +4177,40 @@ function hub(){
           var nom = lig.noms[stade-1];
           var eclos = stade >= 2;
 
-          var sections = [
-            { id:'monstre', emoji:'&#x1F409;', titre:'MON MONSTRE', desc:'Vois et gere ton partenaire', actif:true },
-            { id:'equipe',   emoji:'&#x1F43E;', titre:'MON EQUIPE', desc:'Gere ton equipe de combat', actif:true },
-            { id:'combat',  emoji:'&#x2694;&#xFE0F;', titre:'COMBAT', desc:'Affronte des monstres sauvages', actif:true },
-            { id:'carte',   emoji:'&#x1F5FA;&#xFE0F;', titre:'LE GRAND LINE', desc:'La carte et les temples', actif:true },
-            { id:'explo',   emoji:'&#x1F4D6;', titre:'BRISEPEDIA', desc:'Ta collection de monstres', actif:true },
-            { id:'boutique',emoji:'&#x1F3EA;', titre:'BOUTIQUE', desc:'Achete potions et objets', actif:true },
-            { id:'sac',     emoji:'&#x1F392;', titre:'SAC', desc:'Tes objets et ressources', actif:true },
-            { id:'bateau',  emoji:'&#x1F3E0;', titre:'MON BATEAU', desc:'Ton repaire personnel', actif:true }
-          ];
+          var genreImg = (j.genre === 'femme') ? 'perso-femme' : 'perso-homme';
+          var nbCap = (d.nbCaptures != null) ? d.nbCaptures : 0;
+          var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
+          var brise = (j.berrys != null) ? j.berrys : 0;
 
-          var cards = '';
-          for(var i=0;i<sections.length;i++){
-            var s = sections[i];
-            if(s.actif){
-              var action = s.id==='monstre' ? 'monMonstre()' : (s.id==='boutique' ? 'boutique()' : (s.id==='sac' ? 'sac()' : (s.id==='combat' ? 'combat()' : (s.id==='explo' ? 'brisepedia()' : (s.id==='carte' ? 'carteMonde()' : (s.id==='equipe' ? 'monEquipe()' : 'bateau()'))))));
-              cards += '<div onclick="'+action+'" style="background:rgba(0,0,0,0.7);border:1px solid '+lig.couleur+';border-radius:16px;padding:22px;cursor:pointer;transition:all 0.3s;text-align:center;" onmouseover="this.style.transform=&#39;translateY(-6px)&#39;;this.style.boxShadow=&#39;0 8px 25px '+lig.couleur+'66&#39;;" onmouseout="this.style.transform=&#39;translateY(0)&#39;;this.style.boxShadow=&#39;none&#39;;">'
-                + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
-                + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:'+lig.couleur+';">'+s.titre+'</div>'
-                + '<div style="font-size:12px;color:#aaa;margin-top:6px;">'+s.desc+'</div>'
-                + '</div>';
-            } else {
-              cards += '<div style="background:rgba(0,0,0,0.5);border:1px solid rgba(138,43,226,0.3);border-radius:16px;padding:22px;text-align:center;opacity:0.55;">'
-                + '<div style="font-size:42px;margin-bottom:8px;">'+s.emoji+'</div>'
-                + '<div style="font-family:Cinzel,serif;font-size:17px;letter-spacing:2px;color:#87ceeb;">'+s.titre+'</div>'
-                + '<div style="font-size:12px;color:#888;margin-top:6px;">'+s.desc+'</div>'
-                + '<div style="display:inline-block;margin-top:8px;background:rgba(138,43,226,0.3);border:1px solid #8a2be2;color:#8a2be2;font-size:10px;padding:2px 10px;border-radius:10px;">BIENTOT</div>'
-                + '</div>';
-            }
+          // Les 8 menus, dans l'ordre des ronds : ligne du haut (gauche->droite) puis ligne du bas
+          var ronds = [
+            { x:45.9, y:18.4, emoji:'&#x1F409;', action:'monMonstre()', nom:'Mon Monstre' },
+            { x:60.9, y:18.4, emoji:'&#x1F43E;', action:'monEquipe()', nom:'Mon Equipe' },
+            { x:75.9, y:18.4, emoji:'&#x2694;&#xFE0F;', action:'combat()', nom:'Combat' },
+            { x:89.9, y:18.4, emoji:'&#x1F5FA;&#xFE0F;', action:'carteMonde()', nom:'Le Grand Line' },
+            { x:45.9, y:57.4, emoji:'&#x1F4D6;', action:'brisepedia()', nom:'Brisepedia' },
+            { x:60.9, y:57.4, emoji:'&#x1F3EA;', action:'boutique()', nom:'Boutique' },
+            { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', nom:'Sac' },
+            { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', nom:'Mon Bateau' }
+          ];
+          var hots = '';
+          for(var i=0;i<ronds.length;i++){
+            var rd = ronds[i];
+            hots += '<div onclick="'+rd.action+'" title="'+rd.nom+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:6.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:3.3cqw;transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.18)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'+rd.emoji+'</div>';
           }
 
-          var html = '<div style="margin-bottom:25px;display:flex;align-items:center;justify-content:center;gap:15px;flex-wrap:wrap;">'
-            + '<img src="'+IMG+'/monstres/'+img+'.png" style="width:70px;height:70px;object-fit:contain;filter:drop-shadow(0 0 12px '+lig.couleur+'aa);">'
-            + '<div style="text-align:left;">'
-            + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+lig.couleur+';">'+(j.surnom || nom)+'</div>'
-            + '<div style="font-size:13px;color:#aaa;">'+(eclos ? 'Niveau '+j.niveau+' &#x2022; '+lig.element : 'Oeuf a couver')+'</div>'
-            + '</div></div>'
-            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;max-width:680px;margin:0 auto;">'+cards+'</div>';
+          // ===== Positions faciles a ajuster si besoin =====
+          var CARTE_X = 17.9;   // centre horizontal du cadre blanc (en %)
+          var html = '<div style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
+            + '<img src="'+IMG+'/eveil/lobbyfond.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="Lobby">'
+            + '<div style="position:absolute;left:'+CARTE_X+'%;top:11%;width:27%;transform:translateX(-50%);text-align:center;background:rgba(20,10,40,0.55);border-radius:10px;padding:2.2cqw 1cqw;">'
+            + '<div style="font-family:Cinzel,serif;font-size:2.3cqw;color:#fff;line-height:1.5;">ID : '+currentUser+'</div>'
+            + '<div style="font-size:2.1cqw;color:#f6c562;line-height:1.5;">&#x1F4B0; '+brise+' Brise</div>'
+            + '<div style="font-size:2.1cqw;color:#9fd3ec;line-height:1.5;">&#x1F4D6; Brisepedia '+nbCap+'/'+totCap+'</div>'
+            + '</div>'
+            + '<img src="'+IMG+'/eveil/'+genreImg+'.png" style="position:absolute;left:'+CARTE_X+'%;bottom:6%;width:26%;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,0,0,0.6));" alt="Perso">'
+            + hots
+            + '</div>';
           document.getElementById('content').innerHTML = html;
         });
     }
