@@ -4348,7 +4348,7 @@ function hub(){
             + '</div>'
             // Colonne droite : stats + xp
             + '<div style="flex:1;min-width:220px;">'
-            + statBar('&#x2764;&#xFE0F; PV', pvMax, 600, '#2ecc71')
+            + statBar('&#x2764;&#xFE0F; PV', pvMax, pvMax, '#2ecc71')
             + statBar('&#x2694;&#xFE0F; Attaque', atk, 220, '#e74c3c')
             + statBar('&#x1F6E1;&#xFE0F; Defense', def, 180, '#3498db')
             + '<div style="margin-top:12px;">' + barreXP(j.xp, j.prochainNiveauXp || estimXp(j.niveau), 'Niv '+(j.niveau+1), lig.couleur) + '</div>'
