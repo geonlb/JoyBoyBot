@@ -4177,7 +4177,7 @@ function hub(){
           var nom = lig.noms[stade-1];
           var eclos = stade >= 2;
 
-          var genreImg = (j.genre === 'femme') ? 'perso-femme' : 'perso-homme';
+          var genreImg = (j.genre === 'femme') ? 'rival-femme' : 'rival-homme';
           var nbCap = (d.nbCaptures != null) ? d.nbCaptures : 0;
           var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
           var brise = (j.berrys != null) ? j.berrys : 0;
@@ -4208,10 +4208,10 @@ function hub(){
           var CARTE_X = 17.9;   // centre horizontal du cadre blanc (en %)
           var html = '<div style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
             + '<img src="'+IMG+'/eveil/lobbyfond.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;" alt="Lobby">'
-            + '<div style="position:absolute;left:'+CARTE_X+'%;top:11%;width:27%;transform:translateX(-50%);text-align:center;background:rgba(20,10,40,0.55);border-radius:10px;padding:2.2cqw 1cqw;">'
-            + '<div style="font-family:Cinzel,serif;font-size:2.3cqw;color:#fff;line-height:1.5;">ID : '+currentUser+'</div>'
-            + '<div style="font-size:2.1cqw;color:#f6c562;line-height:1.5;">&#x1F4B0; '+brise+' Brise</div>'
-            + '<div style="font-size:2.1cqw;color:#9fd3ec;line-height:1.5;">&#x1F4D6; Brisepedia '+nbCap+'/'+totCap+'</div>'
+            + '<div style="position:absolute;left:'+CARTE_X+'%;top:9%;width:26%;transform:translateX(-50%);background:rgba(20,10,40,0.6);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:1.4cqw 1.2cqw;">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">BRISE</span><span style="color:#f6c562;">'+brise+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
             + '</div>'
             + '<img src="'+IMG+'/eveil/'+genreImg+'.png" style="position:absolute;left:'+CARTE_X+'%;bottom:6%;width:26%;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,0,0,0.6));" alt="Perso">'
             + hots
