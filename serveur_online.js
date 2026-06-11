@@ -1358,8 +1358,11 @@ app.post('/eveil/utiliser', async (req, res) => {
 app.get('/eveil/sac', async (req, res) => {
   const username = req.query.username;
   if (!username) return res.status(400).json({ error: 'Manque username' });
-  const { data } = await supabase.from('eveil_sac').select('*').eq('username', username.toLowerCase());
-  res.json({ sac: data || [] });
+  const u = username.toLowerCase();
+  const { data } = await supabase.from('eveil_sac').select('*').eq('username', u);
+  const { data: j } = await supabase.from('eveil_joueurs').select('medaillons').eq('username', u).single();
+  const medaillons = (j && j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  res.json({ sac: data || [], medaillons: medaillons, temples: EVEIL_TEMPLES });
 });
 
 // Acheter un objet (avec quantite + limite XP/jour)
@@ -2605,6 +2608,8 @@ var BOUTIQUE = {
           ];
 
           var panneaux = '';
+          var medaillons = d.medaillons || [];
+          var temples = d.temples || [];
           for(var c=0;c<categories.length;c++){
             var cat = categories[c];
             // Cases d'objets de cette categorie
@@ -2624,6 +2629,26 @@ var BOUTIQUE = {
                 + '<div style="font-size:9px;color:#e8d5a3;margin-top:4px;line-height:1.1;min-height:22px;">'+o.nom+'</div>'
                 + ((estXp || estSoin) ? '<button onclick="utiliser(&#39;'+id+'&#39;)" style="margin-top:4px;background:'+cat.couleur+';border:none;border-radius:6px;color:#000;font-size:9px;font-weight:bold;padding:3px 6px;cursor:pointer;width:100%;">Utiliser</button>' : '')
                 + '</div>';
+            }
+            // Pour la categorie Quete : ajouter les medaillons des temples obtenus
+            if(cat.cle === 'Quete'){
+              for(var t=0;t<temples.length;t++){
+                var tp = temples[t];
+                var obtenu = medaillons.indexOf(tp.id) >= 0;
+                if(obtenu){
+                  compte++;
+                  cases += '<div title="Medaillon '+tp.nom+' - vaincu '+tp.pnj+'" style="position:relative;background:linear-gradient(160deg,#3a2a18,#2a1d10);border:2px solid '+tp.couleur+';border-radius:8px;padding:8px;width:88px;text-align:center;box-shadow:inset 0 2px 6px rgba(0,0,0,0.5),0 0 10px '+tp.couleur+'55;">'
+                    + '<div style="font-size:36px;line-height:1;filter:drop-shadow(0 0 6px '+tp.couleur+'aa);">'+tp.emoji+'</div>'
+                    + '<div style="font-size:9px;color:'+tp.couleur+';margin-top:4px;line-height:1.1;font-family:Cinzel,serif;letter-spacing:0.5px;">'+tp.nom+'</div>'
+                    + '</div>';
+                } else {
+                  cases += '<div title="Medaillon non obtenu" style="position:relative;background:rgba(20,15,8,0.7);border:2px dashed rgba(107,79,46,0.5);border-radius:8px;padding:8px;width:88px;text-align:center;opacity:0.6;">'
+                    + '<div style="font-size:36px;line-height:1;filter:grayscale(1) brightness(0.4);">'+tp.emoji+'</div>'
+                    + '<div style="font-size:9px;color:#6b5a3a;margin-top:4px;line-height:1.1;font-family:Cinzel,serif;">???</div>'
+                    + '</div>';
+                  compte++;
+                }
+              }
             }
             if(compte === 0){
               cases = '<div style="font-size:11px;color:#8a7355;font-style:italic;padding:14px;">Vide pour l&#39;instant...</div>';
