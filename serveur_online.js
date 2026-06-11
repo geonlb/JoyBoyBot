@@ -4223,12 +4223,12 @@ function hub(){
             { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', label:'SAC' },
             { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', label:'HOME' }
           ];
-          var LABEL_DY = 6.5;   // decalage vertical du label sous la bulle (en %)
+          var LABEL_DY = 7.5;   // decalage vertical du label sous la bulle (en %)
           var LOGO_DX = 0.35;   // decalage du logo vers la droite dans la bulle (en cqw)
           var hots = '';
           for(var i=0;i<ronds.length;i++){
             var rd = ronds[i];
-            hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:6.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.18)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'
+            hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:7.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:rgba(20,10,40,0.7);border:2px solid rgba(180,140,255,0.85);box-shadow:0 0 14px rgba(138,43,226,0.45),inset 0 0 10px rgba(0,0,0,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s,box-shadow 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.15)&#39;;this.style.boxShadow=&#39;0 0 22px rgba(180,140,255,0.85),inset 0 0 10px rgba(0,0,0,0.4)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;this.style.boxShadow=&#39;0 0 14px rgba(138,43,226,0.45),inset 0 0 10px rgba(0,0,0,0.4)&#39;;">'
               + '<span style="position:relative;left:'+LOGO_DX+'cqw;font-size:3.3cqw;">'+rd.emoji+'</span>'
               + '</div>'
               + '<div onclick="'+rd.action+'" style="position:absolute;left:'+rd.x+'%;top:'+(rd.y+LABEL_DY)+'%;transform:translateX(-50%);font-family:Cinzel,serif;font-size:1.5cqw;letter-spacing:0.5px;color:#fff;background:rgba(20,10,40,0.62);padding:0.3cqw 0.8cqw;border-radius:6px;white-space:nowrap;cursor:pointer;">'+rd.label+'</div>';
@@ -4237,13 +4237,13 @@ function hub(){
           // ===== Positions faciles a ajuster si besoin =====
           var CARTE_X = 17.9;   // centre horizontal du cadre blanc (en %)
           var html = '<div style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
-            + '<img src="'+IMG+'/eveil/lobbyfond.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" alt="Lobby">'
-            + '<div style="position:absolute;left:'+CARTE_X+'%;top:9%;width:26%;transform:translateX(-50%);background:rgba(20,10,40,0.6);border:1px solid rgba(255,255,255,0.25);border-radius:8px;padding:1.4cqw 1.2cqw;">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">BRISE</span><span style="color:#f6c562;">'+brise+'</span></div>'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#9fb4d6;letter-spacing:0.5px;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<img src="'+IMG+'/eveil/lobbyfond.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;" alt="Lobby">'
+            + '<div style="position:absolute;left:'+CARTE_X+'%;top:6%;bottom:6%;width:28%;transform:translateX(-50%);background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05);padding:1.4cqw 1.2cqw;display:flex;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;margin-top:0.6cqw;"><img src="'+IMG+'/eveil/'+genreImg+'.png" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));" alt="Perso"></div>'
             + '</div>'
-            + '<img src="'+IMG+'/eveil/'+genreImg+'.png" style="position:absolute;left:'+CARTE_X+'%;bottom:6%;width:26%;transform:translateX(-50%);object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,0,0,0.6));" alt="Perso">'
             + hots
             + '</div>';
           document.getElementById('content').innerHTML = html;
