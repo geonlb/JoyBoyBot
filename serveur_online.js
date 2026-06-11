@@ -1591,6 +1591,8 @@ const EVEIL_MONSTRES = {
   tacodog:    { nom:'Tacodog', img:'tacodog', element:'lave', rarete:'commun', zone:1, evolution:'gigatacdog' },
   vochou:     { nom:'Vochou', img:'vochou', element:'lave', rarete:'commun', zone:1, evolution:'minoto' },
   pyronouille:{ nom:'Pyronouille', img:'pyronouille', element:'lave', rarete:'commun', zone:1, evolution:'ignifrog' },
+  hydro:      { nom:'Hydro', img:'hydro', element:'marin', rarete:'commun', zone:1, evolution:'aquamass' },
+  cendro:     { nom:'Cendro', img:'cendro', element:'lave', rarete:'commun', zone:1, evolution:'arbruler' },
   // ===== ZONE 2 (Nv 11-20) - communs varies =====
   bricolouf:  { nom:'Bricolouf', img:'bricolouf', element:'roche', rarete:'commun', zone:2, evolution:'costarpaing' },
   gladuc:     { nom:'Gladuc', img:'gladuc', element:'givre', rarete:'commun', zone:2, evolution:'glagroduc' },
@@ -1604,10 +1606,13 @@ const EVEIL_MONSTRES = {
   scara:      { nom:'Scara', img:'scara', element:'roche', rarete:'commun', zone:2, evolution:'scarabox' },
   kouala:     { nom:'Kouala', img:'kouala', element:'nuage', rarete:'commun', zone:2, evolution:'branchala' },
   mimilican:  { nom:'Mimilican', img:'mimilican', element:'nuage', rarete:'commun', zone:2, evolution:'slipelican' },
+  piafoudre:  { nom:'Piafoudre', img:'piafoudre', element:'nuage', rarete:'commun', zone:2, evolution:'voltara' },
   // ===== ZONE 3 (Nv 21-30) - epiques =====
   axolomax:   { nom:'Axolomax', img:'axolomax', element:'marin', rarete:'epique', zone:3 },
   crabamax:   { nom:'Crabamax', img:'crabamax', element:'marin', rarete:'epique', zone:3 },
   torturage:  { nom:'Torturage', img:'torturage', element:'marin', rarete:'epique', zone:3 },
+  aquamass:   { nom:'Aquamass', img:'aquamass', element:'marin', rarete:'epique', zone:3 },
+  arbruler:   { nom:'Arbruler', img:'arbruler', element:'lave', rarete:'epique', zone:3, evolution:'incendio' },
   costarpaing:{ nom:'Costarpaing', img:'costarpaing', element:'roche', rarete:'epique', zone:3 },
   daphir:     { nom:'Daphir', img:'daphir', element:'roche', rarete:'epique', zone:3 },
   dubis:      { nom:'Dubis', img:'dubis', element:'roche', rarete:'epique', zone:3 },
@@ -1625,6 +1630,7 @@ const EVEIL_MONSTRES = {
   scarabox:   { nom:'Scarabox', img:'scarabox', element:'roche', rarete:'epique', zone:4, evolution:'scarabatte' },
   branchala:  { nom:'Branchala', img:'branchala', element:'nuage', rarete:'epique', zone:4, evolution:'koarbre' },
   slipelican: { nom:'Slipelican', img:'slipelican', element:'nuage', rarete:'epique', zone:4, evolution:'nuagelican' },
+  voltara:    { nom:'Voltara', img:'voltara', element:'nuage', rarete:'epique', zone:4, evolution:'aranimbus' },
   // ===== ZONE 5 (Nv 41+) - ultimes (endgame) =====
   glagroduc:  { nom:'Glagroduc', img:'glagroduc', element:'givre', rarete:'ultime', zone:5 },
   celestion:  { nom:'Celestion', img:'celestion', element:'neant', rarete:'ultime', zone:5 },
@@ -1637,7 +1643,9 @@ const EVEIL_MONSTRES = {
   dinoquartz: { nom:'Dinoquartz', img:'dinoquartz', element:'roche', rarete:'ultime', zone:5 },
   scarabatte: { nom:'Scarabatte', img:'scarabatte', element:'roche', rarete:'ultime', zone:5 },
   koarbre:    { nom:'Koarbre', img:'koarbre', element:'nuage', rarete:'ultime', zone:5 },
-  nuagelican: { nom:'Nuagelican', img:'nuagelican', element:'nuage', rarete:'ultime', zone:5 }
+  nuagelican: { nom:'Nuagelican', img:'nuagelican', element:'nuage', rarete:'ultime', zone:5 },
+  incendio:   { nom:'Incendio', img:'incendio', element:'lave', rarete:'ultime', zone:5 },
+  aranimbus:  { nom:'Aranimbus', img:'aranimbus', element:'nuage', rarete:'ultime', zone:5 }
 };
 // ========== TEMPLES ELEMENTAIRES (carte du monde) ==========
 // Ordre de progression. Le boss a un monstre de fruit (lignee LIGNEES) a niveau eleve.
