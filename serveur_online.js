@@ -4223,14 +4223,11 @@ function hub(){
             { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', label:'SAC' },
             { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', label:'HOME' }
           ];
-          var LABEL_DY = 7.5;   // decalage vertical du label sous la bulle (en %)
-          var LOGO_DX = 0.35;   // decalage du logo vers la droite dans la bulle (en cqw)
+          var LABEL_DY = 7.5;   // decalage vertical du label sous l'icone (en %)
           var hots = '';
           for(var i=0;i<ronds.length;i++){
             var rd = ronds[i];
-            hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:7.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:rgba(20,10,40,0.7);border:2px solid rgba(180,140,255,0.85);box-shadow:0 0 14px rgba(138,43,226,0.45),inset 0 0 10px rgba(0,0,0,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s,box-shadow 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.15)&#39;;this.style.boxShadow=&#39;0 0 22px rgba(180,140,255,0.85),inset 0 0 10px rgba(0,0,0,0.4)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;this.style.boxShadow=&#39;0 0 14px rgba(138,43,226,0.45),inset 0 0 10px rgba(0,0,0,0.4)&#39;;">'
-              + '<span style="position:relative;left:'+LOGO_DX+'cqw;font-size:3.3cqw;">'+rd.emoji+'</span>'
-              + '</div>'
+            hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:11%;aspect-ratio:1;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:8.5cqw;line-height:1;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.6));transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.15)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'+rd.emoji+'</div>'
               + '<div onclick="'+rd.action+'" style="position:absolute;left:'+rd.x+'%;top:'+(rd.y+LABEL_DY)+'%;transform:translateX(-50%);font-family:Cinzel,serif;font-size:1.5cqw;letter-spacing:0.5px;color:#fff;background:rgba(20,10,40,0.62);padding:0.3cqw 0.8cqw;border-radius:6px;white-space:nowrap;cursor:pointer;">'+rd.label+'</div>';
           }
 
