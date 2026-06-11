@@ -1149,7 +1149,9 @@ app.get('/eveil/joueur', async (req, res) => {
     nbCaptures = caps ? caps.length : 0;
   }
   const totalMonstres = Array.isArray(EVEIL_MONSTRES) ? EVEIL_MONSTRES.length : Object.keys(EVEIL_MONSTRES).length;
-  res.json({ joueur: data || null, nbCaptures: nbCaptures, totalMonstres: totalMonstres });
+  const { data: primeData } = await supabase.from('primes').select('berrys').eq('username', u).single();
+  const brise = primeData ? primeData.berrys : 0;
+  res.json({ joueur: data || null, nbCaptures: nbCaptures, totalMonstres: totalMonstres, brise: brise });
 });
 
 // Choisir son genre (cree le joueur)
@@ -4180,7 +4182,7 @@ function hub(){
           var genreImg = (j.genre === 'femme') ? 'rival-femme' : 'rival-homme';
           var nbCap = (d.nbCaptures != null) ? d.nbCaptures : 0;
           var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
-          var brise = (j.berrys != null) ? j.berrys : 0;
+          var brise = (d.brise != null) ? d.brise : 0;
 
           // Les 8 menus, dans l'ordre des ronds : ligne du haut (gauche->droite) puis ligne du bas
           var ronds = [
