@@ -1911,6 +1911,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
       events = resCap.events || [];
       evoCapture = resCap.aEvolueVers;
       // Le fruit ne gagne rien, on garde ses valeurs et on sauve juste ses PV si besoin
+      await sauverPvEquipe(c, u);
       const majV = { combat_actif: '' };
       if (c.equipe[0] && c.equipe[0].type === 'fruit') majV.pv_actuels = c.equipe[0].pv;
       // Brise
@@ -1929,6 +1930,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
     const newBrise = (prime ? prime.berrys : 0) + gainBrise;
     await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
+    await sauverPvEquipe(c, u);
     const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
     if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
@@ -1965,6 +1967,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     }
 
     // Tous KO (ou pas d'equipe) : defaite totale
+    await sauverPvEquipe(c, u);
     const majDefaite = { pv_actuels: 0, combat_actif: '' };
     if (c.estRival) majDefaite.rival_zone = c.zone;
     await supabase.from('eveil_joueurs').update(majDefaite).eq('username', u);
@@ -2185,6 +2188,7 @@ app.post('/eveil/combat/fuir', async (req, res) => {
     const c = JSON.parse(j.combat_actif);
     if (c.estBoss) return res.status(400).json({ error: 'Impossible de fuir un combat de temple !' });
     if (c.estRival) return res.status(400).json({ error: 'Ton rival ne te laissera pas fuir !' });
+    await sauverPvEquipe(c, u);
     await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
   }
   res.json({ success: true });
