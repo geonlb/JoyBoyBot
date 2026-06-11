@@ -1813,10 +1813,14 @@ app.post('/eveil/combat/start', async (req, res) => {
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
   if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
 
-  // Stats du joueur
-  const sj = statsCalc(j.fruit, j.niveau);
-  let pvJoueur = (j.pv_actuels != null) ? Math.min(j.pv_actuels, sj.pvMax) : sj.pvMax;
-  if (pvJoueur <= 0) return res.status(400).json({ error: 'Ton monstre est KO ! Soigne-le avec une potion avant de combattre.' });
+  // Charger l'equipe et choisir le monstre de depart (fruit en priorite, sinon premier capture vivant)
+  const equipe = await chargerEquipe(j, u);
+  const actifDepart = equipe.findIndex(function(m){ return m.pv > 0; });
+  if (actifDepart < 0) return res.status(400).json({ error: 'Toute ton equipe est KO ! Soigne tes monstres avant de combattre.' });
+  const depart = equipe[actifDepart];
+  // Stats du monstre actif au depart (fruit OU capture)
+  const sj = { pvMax: depart.pvMax, atk: depart.atk, def: depart.def };
+  let pvJoueur = depart.pv;
 
   // ===== RIVAL : 20% de chance, ou force si le joueur a perdu contre lui dans cette zone =====
   const rivalCampe = (j.rival_zone === z); // le rival attend dans cette zone (joueur a perdu avant)
@@ -1834,6 +1838,7 @@ app.post('/eveil/combat/start', async (req, res) => {
       enNom: RIVAL_NOMS2[genreRival] || 'Rival', zone: z,
       enPvMax: sr.pvMax, enPv: sr.pvMax, enAtk: sr.atk, enDef: sr.def,
       joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+      equipe: equipe, actif: actifDepart,
       tour: 1
     };
     await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combatR), rival_niveau: nivRival }).eq('username', u);
@@ -1853,18 +1858,14 @@ app.post('/eveil/combat/start', async (req, res) => {
   const nivEnnemi = Math.max(1, zoneInfo.nivMin + Math.floor(Math.random()*(zoneInfo.nivMax - zoneInfo.nivMin + 1)));
   const se = statsCalc(monstre.element, nivEnnemi);
 
-  const equipe = await chargerEquipe(j, u);
   const combat = {
     monstreId: monstreId, enElem: monstre.element, enNiv: nivEnnemi, enStade: 2,
     enNom: monstre.nom, enImg: monstre.img, enRarete: monstre.rarete, zone: z,
     enPvMax: se.pvMax, enPv: se.pvMax, enAtk: se.atk, enDef: se.def,
     joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
-    equipe: equipe, actif: 0,
+    equipe: equipe, actif: actifDepart,
     tour: 1
   };
-  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
-
-  res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade });
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
 
   res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade });
