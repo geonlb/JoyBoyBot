@@ -1946,6 +1946,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
     return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, xpAvant: xpAvantFruit, xpApres: xp, nivAvant: nivAvantFruit, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvantFruit), prochainXpApres: xpPourNiveau(niveau) });
+  }
 
   // --- Riposte de l'ennemi ---
   const idxEnnemi = c.enStade >= 4 ? (Math.random()<0.3?2:Math.floor(Math.random()*2)) : Math.floor(Math.random()*2);
