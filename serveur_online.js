@@ -3173,7 +3173,8 @@ var ATTAQUES_FRONT = {
         + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
-      if(estDebut){ spawnCombat(ligJ.couleur, ligE.couleur); }
+      if(estDebut === true || estDebut === 'tous'){ spawnCombat(ligJ.couleur, ligE.couleur); }
+      else if(estDebut === 'joueur'){ spawnJoueur(ligJ.couleur); }
     }
 
     // === Animations apparition (spawn) et mort (KO) des monstres en combat ===
@@ -3192,6 +3193,11 @@ var ATTAQUES_FRONT = {
       if(mE) mE.style.animation = 'cbtSpawnE 0.7s ease-out';
       if(mJ) mJ.style.animation = 'cbtSpawnJ 0.7s ease-out';
       fumeeSpawnSur(mE, coulE);
+      fumeeSpawnSur(mJ, coulJ);
+    }
+    function spawnJoueur(coulJ){
+      var mJ = document.getElementById('cbt-joueur');
+      if(mJ) mJ.style.animation = 'cbtSpawnJ 0.7s ease-out';
       fumeeSpawnSur(mJ, coulJ);
     }
     function mortMonstre(estJoueur){
@@ -3459,7 +3465,7 @@ function animationBarreXp(d){
         .then(function(d){
           if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
           combatEtat.combat = d.combat;
-          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre dans l&#39;arene !']);
+          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre dans l&#39;arene !'], 'joueur');
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
@@ -3509,7 +3515,7 @@ function ouvrirSwitch(){
           cAffiche.joPv = d.pvAvantRiposte;
           if(cAffiche.equipe && cAffiche.equipe[cAffiche.actif]) cAffiche.equipe[cAffiche.actif].pv = d.pvAvantRiposte;
           combatEtat.combat = cAffiche;
-          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre en jeu !']);
+          afficherCombat(['&#x1F501; '+d.nomNouveau+' entre en jeu !'], 'joueur');
 
           // 2) Apres un court delai : l'ennemi attaque (animation)
           setTimeout(function(){
