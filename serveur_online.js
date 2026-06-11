@@ -1525,6 +1525,15 @@ async function appliquerXpCapture(u, monstreId, gainXp) {
 
   return { events, niveau, stade, nouveauMonstre: monstreActuel, aEvolueVers: (monstreActuel !== monstreId ? monstreActuel : null) };
 }
+// Sauvegarde les PV de chaque monstre capture de l'equipe en fin de combat
+async function sauverPvEquipe(c, u) {
+  if (!c.equipe) return;
+  for (const m of c.equipe) {
+    if (m.type === 'capture' && m.monstreId) {
+      await supabase.from('eveil_captures').update({ pv_actuels: Math.max(0, m.pv) }).eq('username', u).eq('monstre_id', m.monstreId);
+    }
+  }
+}
 
 // Charge l'equipe de combat du joueur : [fruit, ...monstres captures dans l'equipe]
 async function chargerEquipe(j, u) {
