@@ -1820,7 +1820,7 @@ app.post('/eveil/combat/start', async (req, res) => {
 
   // ===== RIVAL : 20% de chance, ou force si le joueur a perdu contre lui dans cette zone =====
   const rivalCampe = (j.rival_zone === z); // le rival attend dans cette zone (joueur a perdu avant)
-  const rivalApparait = j.rival_element && (rivalCampe || Math.random() < 0.20);
+  const rivalApparait = j.rival_element && (rivalCampe || Math.random() < 0.08);
   if (rivalApparait) {
     const genreRival = j.genre === 'homme' ? 'femme' : 'homme';
     const RIVAL_NOMS2 = { femme:'Louiise', homme:'Patrick' };
