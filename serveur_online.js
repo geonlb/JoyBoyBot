@@ -4184,19 +4184,24 @@ function hub(){
 
           // Les 8 menus, dans l'ordre des ronds : ligne du haut (gauche->droite) puis ligne du bas
           var ronds = [
-            { x:45.9, y:18.4, emoji:'&#x1F409;', action:'monMonstre()', nom:'Mon Monstre' },
-            { x:60.9, y:18.4, emoji:'&#x1F43E;', action:'monEquipe()', nom:'Mon Equipe' },
-            { x:75.9, y:18.4, emoji:'&#x2694;&#xFE0F;', action:'combat()', nom:'Combat' },
-            { x:89.9, y:18.4, emoji:'&#x1F5FA;&#xFE0F;', action:'carteMonde()', nom:'Le Grand Line' },
-            { x:45.9, y:57.4, emoji:'&#x1F4D6;', action:'brisepedia()', nom:'Brisepedia' },
-            { x:60.9, y:57.4, emoji:'&#x1F3EA;', action:'boutique()', nom:'Boutique' },
-            { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', nom:'Sac' },
-            { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', nom:'Mon Bateau' }
+            { x:45.9, y:18.4, emoji:'&#x1F409;', action:'monMonstre()', label:'MONSTRE' },
+            { x:60.9, y:18.4, emoji:'&#x1F43E;', action:'monEquipe()', label:'EQUIPE' },
+            { x:75.9, y:18.4, emoji:'&#x2694;&#xFE0F;', action:'combat()', label:'COMBAT' },
+            { x:89.9, y:18.4, emoji:'&#x1F5FA;&#xFE0F;', action:'carteMonde()', label:'CARTE' },
+            { x:45.9, y:57.4, emoji:'&#x1F4D6;', action:'brisepedia()', label:'BRISEPEDIA' },
+            { x:60.9, y:57.4, emoji:'&#x1F3EA;', action:'boutique()', label:'SHOP' },
+            { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', label:'SAC' },
+            { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', label:'HOME' }
           ];
+          var LABEL_DY = 6.5;   // decalage vertical du label sous la bulle (en %)
+          var LOGO_DX = 0.35;   // decalage du logo vers la droite dans la bulle (en cqw)
           var hots = '';
           for(var i=0;i<ronds.length;i++){
             var rd = ronds[i];
-            hots += '<div onclick="'+rd.action+'" title="'+rd.nom+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:6.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:3.3cqw;transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.18)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'+rd.emoji+'</div>';
+            hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:6.4%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.18)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'
+              + '<span style="position:relative;left:'+LOGO_DX+'cqw;font-size:3.3cqw;">'+rd.emoji+'</span>'
+              + '</div>'
+              + '<div onclick="'+rd.action+'" style="position:absolute;left:'+rd.x+'%;top:'+(rd.y+LABEL_DY)+'%;transform:translateX(-50%);font-family:Cinzel,serif;font-size:1.5cqw;letter-spacing:0.5px;color:#fff;background:rgba(20,10,40,0.62);padding:0.3cqw 0.8cqw;border-radius:6px;white-space:nowrap;cursor:pointer;">'+rd.label+'</div>';
           }
 
           // ===== Positions faciles a ajuster si besoin =====
