@@ -4212,7 +4212,7 @@ function hub(){
           var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
           var brise = (d.brise != null) ? d.brise : 0;
 
-          // Les 8 menus, dans l'ordre des ronds : ligne du haut (gauche->droite) puis ligne du bas
+          // Les 8 menus
           var ronds = [
             { x:45.9, y:18.4, emoji:'&#x1F409;', action:'monMonstre()', label:'MONSTRE' },
             { x:60.9, y:18.4, emoji:'&#x1F43E;', action:'monEquipe()', label:'EQUIPE' },
@@ -4223,17 +4223,28 @@ function hub(){
             { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', label:'SAC' },
             { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', label:'HOME' }
           ];
-          var LABEL_DY = 7.5;   // decalage vertical du label sous l'icone (en %)
+
+          // ===== Style responsive (injecte une seule fois) =====
+          var styleLobby = '<style>'
+            + '.lobby-desk{display:block;}.lobby-mob{display:none;}'
+            + '@media (max-width:640px){.lobby-desk{display:none;}.lobby-mob{display:block;}}'
+            + '.lobby-mob .grille-menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}'
+            + '.lobby-mob .case{background:rgba(10,5,25,0.78);border:1.5px solid rgba(180,140,255,0.5);border-radius:12px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s,border-color 0.15s;padding:6px;}'
+            + '.lobby-mob .case:active{transform:scale(0.96);border-color:#b48cff;}'
+            + '.lobby-mob .case .ic{font-size:56px;line-height:1;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.6));}'
+            + '.lobby-mob .case .lab{font-family:Cinzel,serif;font-size:12px;letter-spacing:1px;color:#fff;margin-top:6px;}'
+            + '</style>';
+
+          // ===== LAYOUT DESKTOP (carte + ronds positionnes sur le fond) =====
+          var LABEL_DY = 7.5;
           var hots = '';
           for(var i=0;i<ronds.length;i++){
             var rd = ronds[i];
             hots += '<div onclick="'+rd.action+'" title="'+rd.label+'" style="position:absolute;left:'+rd.x+'%;top:'+rd.y+'%;width:11%;aspect-ratio:1;transform:translate(-50%,-50%);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:8.5cqw;line-height:1;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.6));transition:transform 0.15s;" onmouseover="this.style.transform=&#39;translate(-50%,-50%) scale(1.15)&#39;;" onmouseout="this.style.transform=&#39;translate(-50%,-50%) scale(1)&#39;;">'+rd.emoji+'</div>'
               + '<div onclick="'+rd.action+'" style="position:absolute;left:'+rd.x+'%;top:'+(rd.y+LABEL_DY)+'%;transform:translateX(-50%);font-family:Cinzel,serif;font-size:1.5cqw;letter-spacing:0.5px;color:#fff;background:rgba(20,10,40,0.62);padding:0.3cqw 0.8cqw;border-radius:6px;white-space:nowrap;cursor:pointer;">'+rd.label+'</div>';
           }
-
-          // ===== Positions faciles a ajuster si besoin =====
-          var CARTE_X = 17.9;   // centre horizontal du cadre blanc (en %)
-          var html = '<div style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
+          var CARTE_X = 17.9;
+          var htmlDesk = '<div class="lobby-desk" style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
             + '<img src="'+IMG+'/eveil/lobbyfond.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;" alt="Lobby">'
             + '<div style="position:absolute;left:'+CARTE_X+'%;top:6%;bottom:6%;width:28%;transform:translateX(-50%);background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05);padding:1.4cqw 1.2cqw;display:flex;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
@@ -4243,7 +4254,25 @@ function hub(){
             + '</div>'
             + hots
             + '</div>';
-          document.getElementById('content').innerHTML = html;
+
+          // ===== LAYOUT MOBILE PORTRAIT (carte compacte + grille 2 colonnes) =====
+          var grille = '';
+          for(var k=0;k<ronds.length;k++){
+            var rk = ronds[k];
+            grille += '<div class="case" onclick="'+rk.action+'"><div class="ic">'+rk.emoji+'</div><div class="lab">'+rk.label+'</div></div>';
+          }
+          var htmlMob = '<div class="lobby-mob" style="max-width:480px;margin:0 auto;padding:10px;background:url('+IMG+'/eveil/lobbyfond.svg) center/cover;border-radius:14px;">'
+            + '<div style="display:flex;gap:12px;align-items:stretch;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:12px;padding:10px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
+            + '<img src="'+IMG+'/eveil/'+genreImg+'.png" style="width:38%;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));" alt="Perso">'
+            + '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;font-size:13px;">'
+            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '</div></div>'
+            + '<div class="grille-menu">'+grille+'</div>'
+            + '</div>';
+
+          document.getElementById('content').innerHTML = styleLobby + htmlDesk + htmlMob;
         });
     }
 
