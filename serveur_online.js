@@ -1474,6 +1474,8 @@ const CAPTURE_EVO_STADE3 = 30; // stade 2 -> 3 au niveau 30
 async function appliquerXpCapture(u, monstreId, gainXp) {
   const { data: cap } = await supabase.from('eveil_captures').select('*').eq('username', u).eq('monstre_id', monstreId).single();
   if (!cap) return { events: [] };
+  const xpAvant = cap.xp || 0;
+  const nivAvant = cap.niveau || 1;
   let niveau = cap.niveau || 1;
   let xp = (cap.xp || 0) + gainXp;
   let monstreActuel = monstreId;
@@ -1523,7 +1525,7 @@ async function appliquerXpCapture(u, monstreId, gainXp) {
     await supabase.from('eveil_captures').update({ niveau, xp, pv_actuels: Math.min(cap.pv_actuels >= 0 ? cap.pv_actuels : stats.pvMax, stats.pvMax) }).eq('username', u).eq('monstre_id', monstreId);
   }
 
-  return { events, niveau, stade, nouveauMonstre: monstreActuel, aEvolueVers: (monstreActuel !== monstreId ? monstreActuel : null) };
+  return { events, niveau, stade, nouveauMonstre: monstreActuel, aEvolueVers: (monstreActuel !== monstreId ? monstreActuel : null), xpAvant: xpAvant, xpApres: xp, nivAvant: nivAvant, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvant), prochainXpApres: xpPourNiveau(niveau) };
 }
 // Sauvegarde les PV de chaque monstre capture de l'equipe en fin de combat
 async function sauverPvEquipe(c, u) {
@@ -1930,7 +1932,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
       await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
       if (c.estRival) { majV.rival_zone = 0; majV.rival_vaincu = (j.rival_vaincu || 0) + 1; }
       await supabase.from('eveil_joueurs').update(majV).eq('username', u);
-      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true });
+      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true, xpAvant: resCap.xpAvant, xpApres: resCap.xpApres, nivAvant: resCap.nivAvant, nivApres: resCap.nivApres, prochainXpAvant: resCap.prochainXpAvant, prochainXpApres: resCap.prochainXpApres, captureElem: actifVic.elem });
     }
 
     // Sinon : l'XP va au fruit (comportement normal)
@@ -3284,8 +3286,8 @@ function effetElementaireEnnemi(element){
                       });
                   }, 1200);
                 } else if(d.surCaptureVic){
-                  // Victoire avec un monstre capture : message simple pour l'instant
-                  setTimeout(function(){ alert(msg); hub(); }, 1200);
+                  // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
+                  animationBarreXp(d);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
                   animationBarreXp(d);
@@ -3338,7 +3340,7 @@ function effetElementaireEnnemi(element){
         .catch(function(){ hub(); });
     }
 function animationBarreXp(d){
-      var elemActif = combatEtat.joFruit;
+      var elemActif = d.captureElem || combatEtat.joFruit;
       var ligF = LIGNEES[elemActif];
       var couleur = ligF ? ligF.couleur : '#3498db';
       var multiNiveau = (d.nivApres > d.nivAvant);
@@ -3375,7 +3377,7 @@ function animationBarreXp(d){
           document.getElementById('bxp-niv').textContent = 'Niveau ' + d.nivApres;
           var ev = '';
           if(d.events && d.events.indexOf('evo4')>=0) ev = '👑 EVOLUTION FINALE !';
-          else if(d.events && d.events.indexOf('evo3')>=0) ev = '✨ Evolution !';
+          else if(d.events && (d.events.indexOf('evo3')>=0 || d.events.indexOf('evolution')>=0)) ev = '✨ Evolution !';
           else ev = '⬆️ Niveau ' + d.nivApres + ' !';
           document.getElementById('bxp-event').textContent = ev;
           jouerSon('victoire');
