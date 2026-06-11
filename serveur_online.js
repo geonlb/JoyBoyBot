@@ -1736,11 +1736,11 @@ app.get('/eveil/carte', async (req, res) => {
   res.json({ temples: EVEIL_TEMPLES, medaillons, joueur: j || null });
 });
 const EVEIL_ZONES = {
-  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:10, couleur:'#2ecc71' },
-  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:11, nivMax:20, couleur:'#1abc9c' },
-  3: { nom:'Cavernes Rocheuses', desc:'Un dedale mineral plein de dangers', nivMin:21, nivMax:30, couleur:'#9b59b6' },
-  4: { nom:'Pics Tempetueux', desc:'Les hauteurs ou rodent les plus feroces', nivMin:31, nivMax:40, couleur:'#e67e22' },
-  5: { nom:'Abysses Maudits', desc:'Le repaire des monstres ultimes', nivMin:41, nivMax:60, couleur:'#e74c3c' }
+  1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:10, couleur:'#2ecc71', requis:null },
+  2: { nom:'Jungle Brumeuse', desc:'Des creatures plus coriaces rodent ici', nivMin:11, nivMax:20, couleur:'#1abc9c', requis:'lave' },
+  3: { nom:'Cavernes Rocheuses', desc:'Un dedale mineral plein de dangers', nivMin:21, nivMax:30, couleur:'#9b59b6', requis:'marin' },
+  4: { nom:'Pics Tempetueux', desc:'Les hauteurs ou rodent les plus feroces', nivMin:31, nivMax:40, couleur:'#e67e22', requis:'nuage' },
+  5: { nom:'Abysses Maudits', desc:'Le repaire des monstres ultimes', nivMin:41, nivMax:60, couleur:'#e74c3c', requis:'givre' }
 };
 const RARETE_INFO = {
   commun: { nom:'Commun', couleur:'#2ecc71', tauxBase:0.45 },
@@ -1823,7 +1823,14 @@ app.post('/eveil/combat/start', async (req, res) => {
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
   if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
-
+// Verifier que la zone est debloquee par le bon medaillon
+  if (zoneInfo.requis) {
+    const medsJoueur = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+    if (medsJoueur.indexOf(zoneInfo.requis) < 0) {
+      const tReq = EVEIL_TEMPLES.find(function(t){ return t.id === zoneInfo.requis; });
+      return res.status(400).json({ error: 'Zone verrouillee ! Bats ' + (tReq ? tReq.pnj : 'le boss') + ' pour debloquer cette zone.' });
+    }
+  }
   // Charger l'equipe et choisir le monstre de depart (fruit en priorite, sinon premier capture vivant)
   const equipe = await chargerEquipe(j, u);
   const actifDepart = equipe.findIndex(function(m){ return m.pv > 0; });
@@ -3056,18 +3063,31 @@ var ATTAQUES_FRONT = {
 
     function combat(){
       // Affiche l'ecran de choix de zone
-      fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser))
-        .then(function(r){return r.json();})
-        .then(function(d){
+      Promise.all([
+        fetch('/eveil/brisepedia?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();}),
+        fetch('/eveil/carte?username='+encodeURIComponent(currentUser)).then(function(r){return r.json();})
+      ]).then(function(rs){
+          var d = rs[0]; var dc = rs[1];
           var zones = d.zones;
+          var meds = dc.medaillons || [];
           var cards = '';
           for(var z in zones){
             var zo = zones[z];
-            cards += '<div onclick="lancerCombatZone('+z+')" style="position:relative;background:linear-gradient(rgba(5,5,16,0.45),rgba(5,5,16,0.75)), url('+IMG+'/eveil/zone'+z+'.png?v=2) center/cover;border:2px solid '+zo.couleur+';border-radius:16px;padding:25px 20px;cursor:pointer;transition:transform 0.2s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;" onmouseover="this.style.transform=&#39;scale(1.03)&#39;;" onmouseout="this.style.transform=&#39;scale(1)&#39;;">'
-              + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+zo.couleur+';text-shadow:0 2px 4px rgba(0,0,0,0.8);">'+zo.nom+'</div>'
-              + '<div style="font-size:12px;color:#ddd;text-shadow:0 1px 3px rgba(0,0,0,0.9);margin-top:4px;">'+zo.desc+'</div>'
-              + '<div style="font-size:11px;color:'+zo.couleur+';margin-top:6px;">Niveaux '+zo.nivMin+' - '+zo.nivMax+'</div>'
-              + '</div>';
+            var verr = zo.requis && meds.indexOf(zo.requis) < 0;
+            if(verr){
+              cards += '<div style="position:relative;background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.92)), url('+IMG+'/eveil/zone'+z+'.png?v=2) center/cover;border:2px dashed rgba(255,255,255,0.25);border-radius:16px;padding:25px 20px;cursor:not-allowed;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;filter:grayscale(0.7);" onclick="alert(&#39;&#x1F512; Zone verrouillee ! Obtiens le medaillon du temple correspondant pour la debloquer.&#39;)">'
+                + '<div style="position:absolute;top:10px;right:14px;font-size:26px;">&#x1F512;</div>'
+                + '<div style="font-family:Cinzel,serif;font-size:20px;color:#aaa;text-shadow:0 2px 4px rgba(0,0,0,0.8);">'+zo.nom+'</div>'
+                + '<div style="font-size:12px;color:#999;text-shadow:0 1px 3px rgba(0,0,0,0.9);margin-top:4px;">Bats le boss du temple pour debloquer</div>'
+                + '<div style="font-size:11px;color:#888;margin-top:6px;">Niveaux '+zo.nivMin+' - '+zo.nivMax+'</div>'
+                + '</div>';
+            } else {
+              cards += '<div onclick="lancerCombatZone('+z+')" style="position:relative;background:linear-gradient(rgba(5,5,16,0.45),rgba(5,5,16,0.75)), url('+IMG+'/eveil/zone'+z+'.png?v=2) center/cover;border:2px solid '+zo.couleur+';border-radius:16px;padding:25px 20px;cursor:pointer;transition:transform 0.2s;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;" onmouseover="this.style.transform=&#39;scale(1.03)&#39;;" onmouseout="this.style.transform=&#39;scale(1)&#39;;">'
+                + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+zo.couleur+';text-shadow:0 2px 4px rgba(0,0,0,0.8);">'+zo.nom+'</div>'
+                + '<div style="font-size:12px;color:#ddd;text-shadow:0 1px 3px rgba(0,0,0,0.9);margin-top:4px;">'+zo.desc+'</div>'
+                + '<div style="font-size:11px;color:'+zo.couleur+';margin-top:6px;">Niveaux '+zo.nivMin+' - '+zo.nivMax+'</div>'
+                + '</div>';
+            }
           }
           var html = '<div style="max-width:680px;margin:0 auto;">'
             + '<div style="text-align:center;font-family:Cinzel,serif;font-size:26px;color:#8a2be2;letter-spacing:3px;margin-bottom:8px;">&#x2694;&#xFE0F; CHOISIS TA ZONE</div>'
