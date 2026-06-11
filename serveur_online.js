@@ -2294,7 +2294,7 @@ app.get('/eveil', (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L'Eveil des Fruits - NeyLaBrise</title>
+  <title>⭐ EVEIL NLB ⭐ - NeyLaBrise</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
@@ -2360,11 +2360,11 @@ app.get('/eveil', (req, res) => {
 <div id="rotate-msg">
     <div style="font-size:70px;animation:tourne 2s ease-in-out infinite;">📱</div>
     <div style="font-family:'Cinzel',serif;font-size:24px;color:#87ceeb;letter-spacing:2px;margin-top:25px;">TOURNE TON TELEPHONE</div>
-    <div style="font-size:15px;color:#ccc;margin-top:12px;max-width:300px;line-height:1.6;">L'Eveil des Fruits se joue en mode paysage pour une meilleure aventure ! &#x1F3F4;</div>
+    <div style="font-size:15px;color:#ccc;margin-top:12px;max-width:300px;line-height:1.6;">EVEIL NLB se joue en mode paysage pour une meilleure aventure ! &#x1F3F4;</div>
   </div>
   <div class="container">
     <a href="/" class="back-btn">&#x2190; Retour au port</a>
-    <div class="title">&#x1F34E; L'EVEIL DES FRUITS</div>
+    <div class="title">&#x2B50; EVEIL NLB &#x2B50;</div>
     <div class="subtitle">Deviens un Eveilleur de la Grand Line</div>
     <div class="divider"></div>
     <div id="content"><div class="loading">Chargement...</div></div>
