@@ -3382,18 +3382,19 @@ function effetElementaireEnnemi(element){
                   }, 1200);
                 } else if(d.estBoss && d.templeId){
                   arreterSon('boss');
-                  // Victoire de boss : dialogue + medaillon
+                  // Victoire de boss : barre XP animee, puis dialogue + medaillon
                   setTimeout(function(){
-                    alert(msg);
-                    fetch('/eveil/temple/medaillon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,templeId:d.templeId})})
-                      .then(function(r){return r.json();})
-                      .then(function(){
-                        afficherDialogue(templeActuel.pnj, templeActuel.victoire, templeActuel.couleur, function(){
-                          alert('🏅 Tu obtiens le medaillon ' + templeActuel.nom + ' !');
-                          carteMonde();
-                        }, 'pnj-' + templeActuel.element);
-                      });
-                  }, 1200);
+                    animationBarreXp(d, function(){
+                      fetch('/eveil/temple/medaillon',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,templeId:d.templeId})})
+                        .then(function(r){return r.json();})
+                        .then(function(){
+                          afficherDialogue(templeActuel.pnj, templeActuel.victoire, templeActuel.couleur, function(){
+                            alert('🏅 Tu obtiens le medaillon ' + templeActuel.nom + ' !');
+                            carteMonde();
+                          }, 'pnj-' + templeActuel.element);
+                        });
+                    });
+                  }, 900);
                 } else if(d.surCaptureVic){
                   // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
                   setTimeout(function(){ animationBarreXp(d); }, 900);
@@ -3448,7 +3449,8 @@ function effetElementaireEnnemi(element){
         .then(function(){ hub(); })
         .catch(function(){ hub(); });
     }
-function animationBarreXp(d){
+function animationBarreXp(d, apresClick){
+      var suite = apresClick || function(){ hub(); };
       var elemActif = d.captureElem || combatEtat.joFruit;
       var ligF = LIGNEES[elemActif];
       var couleur = ligF ? ligF.couleur : '#3498db';
@@ -3499,7 +3501,7 @@ function animationBarreXp(d){
         setTimeout(function(){ document.getElementById('bxp-close').style.opacity='1'; }, 2000);
       }
 
-      document.getElementById('bxp-close').onclick = function(){ document.body.removeChild(overlay); hub(); };
+      document.getElementById('bxp-close').onclick = function(){ document.body.removeChild(overlay); suite(); };
     }
 
         function ouvrirSwitchForce(){
