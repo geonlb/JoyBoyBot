@@ -1645,7 +1645,10 @@ const EVEIL_MONSTRES = {
   koarbre:    { nom:'Koarbre', img:'koarbre', element:'nuage', rarete:'ultime', zone:5 },
   nuagelican: { nom:'Nuagelican', img:'nuagelican', element:'nuage', rarete:'ultime', zone:5 },
   incendio:   { nom:'Incendio', img:'incendio', element:'lave', rarete:'ultime', zone:5 },
-  aranimbus:  { nom:'Aranimbus', img:'aranimbus', element:'nuage', rarete:'ultime', zone:5 }
+  aranimbus:  { nom:'Aranimbus', img:'aranimbus', element:'nuage', rarete:'ultime', zone:5 },
+  rubiduc:    { nom:'Rubiduc', img:'rubiduc', element:'lave', rarete:'legendaire', zone:5 },
+  saphiduc:   { nom:'Saphiduc', img:'saphiduc', element:'marin', rarete:'legendaire', zone:5 },
+  jaduc:      { nom:'Jaduc', img:'jaduc', element:'roche', rarete:'legendaire', zone:5 }
 };
 // ========== TEMPLES ELEMENTAIRES (carte du monde) ==========
 // Ordre de progression. Le boss a un monstre de fruit (lignee LIGNEES) a niveau eleve.
@@ -1753,7 +1756,8 @@ const EVEIL_ZONES = {
 const RARETE_INFO = {
   commun: { nom:'Commun', couleur:'#2ecc71', tauxBase:0.45 },
   epique: { nom:'Epique', couleur:'#9b59b6', tauxBase:0.22 },
-  ultime: { nom:'Ultime', couleur:'#e74c3c', tauxBase:0.08 }
+  ultime: { nom:'Ultime', couleur:'#e74c3c', tauxBase:0.08 },
+  legendaire: { nom:'Legendaire', couleur:'#ffd700', tauxBase:0.03 }
 };
 
 // ===== SYSTEME D'EQUIPE =====
@@ -1874,7 +1878,7 @@ app.post('/eveil/combat/start', async (req, res) => {
   // Choisir un monstre AU HASARD parmi ceux de la zone
   const monstresZone = Object.keys(EVEIL_MONSTRES).filter(function(id){ return EVEIL_MONSTRES[id].zone === z; });
   // Ponderation par rarete : commun plus frequent, ultime rare
-  const poids = { commun:60, epique:30, ultime:10 };
+  const poids = { commun:600, epique:300, ultime:100, legendaire:7 };
   let pool = [];
   monstresZone.forEach(function(id){ var n = poids[EVEIL_MONSTRES[id].rarete] || 10; for(var k=0;k<n;k++) pool.push(id); });
   const monstreId = pool[Math.floor(Math.random()*pool.length)];
@@ -3720,7 +3724,7 @@ function ouvrirSwitch(){
           arreterSon('start'); jouerSon('capture'); jouerSon('victoire');
           setTimeout(function(){
             var msg = '🎉 '+d.monstreNom+' capture !';
-            if(d.premiere) msg += '\\n📖 Nouvelle entree dans la Brisepedia !';
+            if(d.premiere) msg += '\\n📖 Nouvelle entree dans la Collection !';
             alert(msg);
             hub();
           }, 700);
@@ -3856,17 +3860,19 @@ function monEquipe(){
                 + (captures[id]>1 ? '<div style="font-size:10px;color:#aaa;margin-top:3px;">x'+captures[id]+'</div>' : '')
                 + '</div>';
             } else {
+              var teaseLeg = (m.rarete === 'legendaire') ? '<div style="font-size:9px;color:#ffd700;margin-top:3px;letter-spacing:1px;font-style:italic;">Duc Legendaire</div>' : '';
               cases += '<div style="background:rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center;">'
                 + '<img src="'+IMG+'/monstres/'+m.img+'.png" style="width:80px;height:80px;object-fit:contain;filter:brightness(0) drop-shadow(0 0 6px rgba(255,255,255,0.2));">'
                 + '<div style="font-family:Cinzel,serif;font-size:13px;color:#666;margin-top:5px;">???</div>'
                 + '<div style="display:inline-block;margin-top:4px;background:rgba(255,255,255,0.1);color:#666;font-size:9px;font-weight:bold;padding:2px 10px;border-radius:10px;">?????</div>'
+                + teaseLeg
                 + '</div>';
             }
           }
 
           var html = '<div style="max-width:720px;margin:0 auto;">'
             + '<div style="text-align:center;margin-bottom:8px;">'
-            + '<div style="font-family:Cinzel,serif;font-size:28px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">&#x1F4D6; BRISEPEDIA</div>'
+            + '<div style="font-family:Cinzel,serif;font-size:28px;color:#f39c12;letter-spacing:3px;text-shadow:0 0 20px rgba(243,156,18,0.6);">&#x1F4D6; COLLECTION</div>'
             + '<div style="font-size:13px;color:#aaa;margin-top:5px;">'+decouverts+' / '+total+' monstres decouverts</div>'
             + '</div>'
             + '<div style="text-align:center;margin-bottom:18px;">'+onglets+'</div>'
@@ -4218,7 +4224,7 @@ function hub(){
             { x:60.9, y:18.4, emoji:'&#x1F43E;', action:'monEquipe()', label:'EQUIPE' },
             { x:75.9, y:18.4, emoji:'&#x2694;&#xFE0F;', action:'combat()', label:'COMBAT' },
             { x:89.9, y:18.4, emoji:'&#x1F5FA;&#xFE0F;', action:'carteMonde()', label:'CARTE' },
-            { x:45.9, y:57.4, emoji:'&#x1F4D6;', action:'brisepedia()', label:'BRISEPEDIA' },
+            { x:45.9, y:57.4, emoji:'&#x1F4D6;', action:'brisepedia()', label:'COLLECTION' },
             { x:60.9, y:57.4, emoji:'&#x1F3EA;', action:'boutique()', label:'SHOP' },
             { x:76.0, y:57.4, emoji:'&#x1F392;', action:'sac()', label:'SAC' },
             { x:90.0, y:57.1, emoji:'&#x1F3E0;', action:'bateau()', label:'HOME' }
@@ -4249,7 +4255,7 @@ function hub(){
             + '<div style="position:absolute;left:'+CARTE_X+'%;top:6%;bottom:6%;width:28%;transform:translateX(-50%);background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05);padding:1.4cqw 1.2cqw;display:flex;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
             + '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;margin-top:0.6cqw;"><img src="'+IMG+'/eveil/'+genreImg+'.png" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));" alt="Perso"></div>'
             + '</div>'
             + hots
@@ -4267,7 +4273,7 @@ function hub(){
             + '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;font-size:13px;">'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
-            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISEPEDIA</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
             + '</div></div>'
             + '<div class="grille-menu">'+grille+'</div>'
             + '</div>';
