@@ -2312,6 +2312,10 @@ app.get('/eveil', (req, res) => {
     @keyframes captureSuccess{0%{filter:none;}50%{filter:brightness(1.8) drop-shadow(0 0 25px currentColor);}100%{filter:none;}}
     .elixi-flash{position:absolute;border-radius:50%;background:radial-gradient(circle,#ffe87a,transparent 70%);pointer-events:none;animation:scintille 0.5s;}
     @keyframes fumeeCapture{0%{opacity:0;transform:scale(0.2);}30%{opacity:1;transform:scale(1.4);}100%{opacity:0;transform:scale(2);}}
+    @keyframes cbtSpawnE{0%{transform:scale(0.08);opacity:0;}40%{opacity:1;}100%{transform:scale(1);opacity:1;}}
+    @keyframes cbtSpawnJ{0%{transform:scaleX(-1) scale(0.08);opacity:0;}40%{opacity:1;}100%{transform:scaleX(-1) scale(1);opacity:1;}}
+    @keyframes cbtMortE{0%{opacity:1;transform:scale(1);}12%{opacity:0.15;}24%{opacity:1;}36%{opacity:0.15;}48%{opacity:1;}60%{opacity:0.15;transform:scale(1);}72%{opacity:1;}100%{opacity:0;transform:scale(0.2);}}
+    @keyframes cbtMortJ{0%{opacity:1;transform:scaleX(-1) scale(1);}12%{opacity:0.15;}24%{opacity:1;}36%{opacity:0.15;}48%{opacity:1;}60%{opacity:0.15;transform:scaleX(-1) scale(1);}72%{opacity:1;}100%{opacity:0;transform:scaleX(-1) scale(0.2);}}
     .particule{position:absolute;font-size:32px;pointer-events:none;animation:monteFade 1.5s ease-out forwards;z-index:50;}
     .saute{animation:saute 0.8s ease-in-out !important;}
     .gain-txt{position:absolute;font-size:24px;font-weight:bold;color:#ff69b4;text-shadow:0 0 10px rgba(233,30,140,0.8);pointer-events:none;animation:monteFade 1.6s ease-out forwards;z-index:51;}
@@ -3088,17 +3092,17 @@ var ATTAQUES_FRONT = {
             var ligRiv = LIGNEES[d.combat.enElem];
             var couleurRiv = ligRiv ? ligRiv.couleur : '#8e44ad';
             dialogueRival(d.combat.enNom, phrase, couleurRiv, d.imgRival, function(){
-              afficherCombat(['&#x2694;&#xFE0F; '+d.combat.enNom+' envoie son monstre ! Pas moyen de fuir !']);
+              afficherCombat(['&#x2694;&#xFE0F; '+d.combat.enNom+' envoie son monstre ! Pas moyen de fuir !'], true);
             });
           } else {
             jouerSon('start');
-            afficherCombat([d.combat.enNom + ' sauvage apparait !']);
+            afficherCombat([d.combat.enNom + ' sauvage apparait !'], true);
           }
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
-    function afficherCombat(logLignes){
+    function afficherCombat(logLignes, estDebut){
       var e = combatEtat;
       var c = e.combat;
       // Monstre actif (fruit ou capture)
@@ -3169,6 +3173,30 @@ var ATTAQUES_FRONT = {
         + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
+      if(estDebut){ spawnCombat(ligJ.couleur, ligE.couleur); }
+    }
+
+    // === Animations apparition (spawn) et mort (KO) des monstres en combat ===
+    function fumeeSpawnSur(img, couleur){
+      if(!img) return;
+      var r = img.getBoundingClientRect();
+      var taille = Math.max(r.width, r.height) * 1.5;
+      var f = document.createElement('div');
+      f.style.cssText = 'position:fixed;left:'+(r.left + r.width/2 - taille/2)+'px;top:'+(r.top + r.height/2 - taille/2)+'px;width:'+taille+'px;height:'+taille+'px;border-radius:50%;z-index:60;pointer-events:none;background:radial-gradient(circle,#fff,'+(couleur||'#fff')+' 40%,transparent 70%);animation:fumeeCapture 0.7s ease-out forwards;';
+      document.body.appendChild(f);
+      setTimeout(function(){ if(f.parentNode) f.remove(); }, 750);
+    }
+    function spawnCombat(coulJ, coulE){
+      var mE = document.getElementById('cbt-ennemi');
+      var mJ = document.getElementById('cbt-joueur');
+      if(mE) mE.style.animation = 'cbtSpawnE 0.7s ease-out';
+      if(mJ) mJ.style.animation = 'cbtSpawnJ 0.7s ease-out';
+      fumeeSpawnSur(mE, coulE);
+      fumeeSpawnSur(mJ, coulJ);
+    }
+    function mortMonstre(estJoueur){
+      var el = document.getElementById(estJoueur ? 'cbt-joueur' : 'cbt-ennemi');
+      if(el) el.style.animation = (estJoueur ? 'cbtMortJ' : 'cbtMortE') + ' 1s ease-in forwards';
     }
 
 // Effets visuels par element pour l'attaque chargee
@@ -3260,6 +3288,7 @@ function effetElementaireEnnemi(element){
               if(d.victoire){
                 arreterSon('start');
                 jouerSon('victoire');
+                mortMonstre(false); // l'ennemi clignote et disparait
                 var msg = '🏆 VICTOIRE !\\n+'+d.gainXp+' XP\\n+'+d.gainBrise+' Brise';
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
@@ -3287,13 +3316,14 @@ function effetElementaireEnnemi(element){
                   }, 1200);
                 } else if(d.surCaptureVic){
                   // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
-                  animationBarreXp(d);
+                  setTimeout(function(){ animationBarreXp(d); }, 900);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
-                  animationBarreXp(d);
+                  setTimeout(function(){ animationBarreXp(d); }, 900);
                 }
               } else {
                 jouerSon('defaite');
+                mortMonstre(true); // le monstre du joueur clignote et disparait
                 setTimeout(function(){
                   if(d.estRival){ alert('💀 Ton rival t&#39;a vaincu ! Il campe dans cette zone... Soigne ton monstre et reviens te venger !'.replace(/&#39;/g,"'")); }
                   else { alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); }
@@ -3306,12 +3336,11 @@ function effetElementaireEnnemi(element){
             combatEtat.combat = d.combat;
             setTimeout(function(){
               afficherCombat(d.log);
-              var mJ = document.getElementById('cbt-joueur');
-              if(mJ){ mJ.style.animation = 'cbtFlash 0.3s'; }
+              mortMonstre(true); // le monstre KO clignote et disparait
               setTimeout(function(){
                 alert('💀 Ton monstre est K.O. ! Choisis un autre combattant.');
                 ouvrirSwitchForce();
-              }, 900);
+              }, 1050);
             }, 850);
           } else {
             // L'ennemi riposte : il avance + le joueur tremble
@@ -3902,7 +3931,7 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
           if(d.error){ alert(d.error); carteMonde(); return; }
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
           arreterSon('start'); jouerSon('boss');
-          afficherCombat(['&#x1F3DB;&#xFE0F; '+d.temple.pnj+' envoie son monstre !']);
+          afficherCombat(['&#x1F3DB;&#xFE0F; '+d.temple.pnj+' envoie son monstre !'], true);
         })
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
