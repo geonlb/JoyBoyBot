@@ -2144,7 +2144,10 @@ app.post('/eveil/combat/objet', async (req, res) => {
   if (!username || !objetId) return res.status(400).json({ error: 'Manque des infos' });
   const u = username.toLowerCase();
   const objet = EVEIL_BOUTIQUE[objetId];
-  if (!objet || objet.type !== 'soin') return res.status(400).json({ error: 'Objet invalide' });
+  if (!objet) return res.status(400).json({ error: 'Objet invalide' });
+  // Types autorises en combat
+  const typesCombat = ['soin', 'super_ration', 'orbe', 'parchemin'];
+  if (typesCombat.indexOf(objet.type) < 0) return res.status(400).json({ error: 'Cet objet n&#39;est pas utilisable en combat' });
 
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.combat_actif) return res.status(400).json({ error: 'Pas de combat en cours !' });
@@ -2154,6 +2157,57 @@ app.post('/eveil/combat/objet', async (req, res) => {
   if (!item || item.quantite < 1) return res.status(400).json({ error: 'Tu n&#39;as pas cet objet !' });
 
   const c = JSON.parse(j.combat_actif);
+
+  // ===== ORBE DE CHANCE : active un flag pour le prochain lancer de bouteille, PAS de tour consomme =====
+  if (objet.type === 'orbe') {
+    if (c.orbeActif) return res.status(400).json({ error: 'L&#39;Orbe est deja active pour le prochain lancer !' });
+    c.orbeActif = true;
+    const nqO = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nqO > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqO });
+    await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c) }).eq('username', u);
+    return res.json({ success: true, orbe: true, fini: false, combat: c, msg: 'Orbe de Chance active ! x2 sur ton prochain lancer.' });
+  }
+
+  // ===== PARCHEMIN D'EVASION : fuir n'importe quel combat (utile contre rival) =====
+  if (objet.type === 'parchemin') {
+    const nqP = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nqP > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqP });
+    // Sauvegarder les PV du fruit et des captures puis vider le combat
+    const majP = { combat_actif: '' };
+    if (c.actif === 0) majP.pv_actuels = c.joPv;
+    if (c.equipe && c.equipe.length) {
+      // Sauvegarder les PV des captures
+      for (let i = 1; i < c.equipe.length; i++) {
+        const m = c.equipe[i];
+        if (m && m.id) {
+          const pvM = (c.actif === i) ? c.joPv : m.pv;
+          await supabase.from('eveil_captures').update({ pv_actuels: pvM }).eq('username', u).eq('monstre_id', m.id);
+        }
+      }
+    }
+    await supabase.from('eveil_joueurs').update(majP).eq('username', u);
+    return res.json({ success: true, parchemin: true, fini: true, fuite: true, msg: 'Tu utilises le Parchemin d&#39;Evasion et fuis le combat sans dommages !' });
+  }
+
+  // ===== SUPER-RATION : soigne 50% des PV, PAS de tour consomme (pas de riposte) =====
+  if (objet.type === 'super_ration') {
+    if (c.joPv >= c.joPvMax) return res.status(400).json({ error: 'Ton monstre a deja tous ses PV !' });
+    const soinSR = Math.round(c.joPvMax * 0.5);
+    const pvAvSR = c.joPv;
+    c.joPv = Math.min(c.joPvMax, c.joPv + soinSR);
+    const gainSR = c.joPv - pvAvSR;
+    // Sauvegarder les PV dans l'equipe aussi
+    if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
+    const nqSR = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nqSR > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqSR });
+    await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.actif === 0 ? c.joPv : j.pv_actuels }).eq('username', u);
+    return res.json({ success: true, superRation: true, fini: false, gainPv: gainSR, combat: c, msg: 'Super-Ration : +' + gainSR + ' PV (pas de riposte)' });
+  }
+
+  // ===== POTION / ELIXIR (soin classique avec riposte) =====
   if (c.joPv >= c.joPvMax) return res.status(400).json({ error: 'Ton monstre a deja tous ses PV !' });
 
   // Soigner
@@ -2161,6 +2215,7 @@ app.post('/eveil/combat/objet', async (req, res) => {
   const pvAvant = c.joPv;
   c.joPv = Math.min(c.joPvMax, c.joPv + soin);
   const gainPv = c.joPv - pvAvant;
+  if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
 
   // Consommer l'objet
   const nq = item.quantite - 1;
@@ -2172,6 +2227,7 @@ app.post('/eveil/combat/objet', async (req, res) => {
   const multE = multiplicateurElement(c.enElem, j.fruit);
   let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
+  if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
 
   if (c.joPv <= 0) {
     await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
@@ -2283,8 +2339,11 @@ app.post('/eveil/combat/capture', async (req, res) => {
   // Calcul du taux
   const tauxBase = RARETE_TAUXBASE[c.enRarete] || 0.22;
   const bonusPV = 1 + 1.2 * ((c.enPvMax - c.enPv) / c.enPvMax);
-  let taux = tauxBase * force * bonusPV;
+  const bonusOrbe = c.orbeActif ? 2 : 1;
+  let taux = tauxBase * force * bonusPV * bonusOrbe;
   taux = Math.min(0.95, taux); // plafond 95%
+  const orbeConsomme = !!c.orbeActif;
+  c.orbeActif = false; // consomme l'orbe au lancer (peu importe le resultat)
   const reussi = Math.random() < taux;
 
   // Nombre de scintillements pour l'animation (3 = capture, 1-2 = echec)
@@ -2785,8 +2844,32 @@ var BOUTIQUE = {
 
   function utiliser(objetId){
       var o = BOUTIQUE[objetId];
+      // Objets sans cible : Bonheur (set 100) et Serum (soigne toute l'equipe) -> applique direct
+      if (objetId === 'bonheur' || objetId === 'serum') { appliquerObjetGlobal(objetId); return; }
       // Choisir la cible (fruit ou monstre de l'equipe)
       choisirCibleObjet(o, objetId);
+    }
+
+    function appliquerObjetGlobal(objetId){
+      var o = BOUTIQUE[objetId];
+      fetch('/eveil/utiliser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,objetId:objetId})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error.replace(/&#39;/g,"'")); return; }
+          if(d.bonheur != null){
+            alert('🧪 ' + o.nom + ' utilisee !\\nTon monstre est au maximum de bonheur (' + d.bonheur + '/100).');
+            sac();
+            return;
+          }
+          if(d.serum){
+            alert('⚗️ ' + o.nom + ' utilise !\\nToute ton equipe (fruit + captures) est entierement soignee !');
+            sac();
+            return;
+          }
+          alert(o.nom + ' utilisee !');
+          sac();
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
     function appliquerObjet(objetId, cible){
@@ -3734,7 +3817,6 @@ function ouvrirSwitch(){
           var qte = {};
           items.forEach(function(it){ qte[it.objet] = it.quantite; });
 
-          // Elixiteilles
           var bouteilles = [
             { id:'bouteille_rouge', nom:'Rouge', couleur:'#e74c3c' },
             { id:'bouteille_bleue', nom:'Bleue', couleur:'#3498db' },
@@ -3743,8 +3825,15 @@ function ouvrirSwitch(){
           ];
           var potions = [
             { id:'potion', nom:'Potion', couleur:'#2ecc71' },
-            { id:'elixir', nom:'Elixir', couleur:'#1abc9c' }
+            { id:'elixir', nom:'Elixir', couleur:'#1abc9c' },
+            { id:'super_ration', nom:'Super-R', couleur:'#f39c12' }
           ];
+          var speciaux = [
+            { id:'orbe', nom:'Orbe', couleur:'#9b59b6' },
+            { id:'parchemin', nom:'Parchemin', couleur:'#e8d5a3' }
+          ];
+
+          var orbeActifVisuel = combatEtat && combatEtat.combat && combatEtat.combat.orbeActif;
 
           var htmlBout = '';
           bouteilles.forEach(function(b){
@@ -3758,16 +3847,26 @@ function ouvrirSwitch(){
             var dispo = q > 0;
             htmlPot += '<button '+(dispo?'':'disabled')+' onclick="'+(dispo?'utiliserObjetCombat(&#39;'+p.id+'&#39;)':'')+'" style="border:none;border-radius:12px;cursor:'+(dispo?'pointer':'not-allowed')+';opacity:'+(dispo?'1':'0.4')+';background:rgba(0,0,0,0.6);border:1px solid '+p.couleur+';color:#fff;padding:10px 14px;margin:4px;font-size:12px;"><img src="'+IMG+'/objets/'+p.id+'.png" style="width:36px;height:36px;object-fit:contain;display:block;margin:0 auto 4px;">'+p.nom+'<br><span style="font-size:10px;color:'+p.couleur+';">x'+q+'</span></button>';
           });
+          var htmlSp = '';
+          speciaux.forEach(function(s){
+            var q = qte[s.id] || 0;
+            var dispo = q > 0 && !(s.id === 'orbe' && orbeActifVisuel);
+            var libelle = s.nom;
+            if (s.id === 'orbe' && orbeActifVisuel) libelle = '✓ Active';
+            htmlSp += '<button '+(dispo?'':'disabled')+' onclick="'+(dispo?'utiliserObjetCombat(&#39;'+s.id+'&#39;)':'')+'" style="border:none;border-radius:12px;cursor:'+(dispo?'pointer':'not-allowed')+';opacity:'+(dispo?'1':'0.4')+';background:rgba(0,0,0,0.6);border:1px solid '+s.couleur+';color:#fff;padding:10px 14px;margin:4px;font-size:12px;"><img src="'+IMG+'/objets/'+s.id+'.png" style="width:36px;height:36px;object-fit:contain;display:block;margin:0 auto 4px;">'+libelle+'<br><span style="font-size:10px;color:'+s.couleur+';">x'+q+'</span></button>';
+          });
 
           var overlay = document.createElement('div');
           overlay.id = 'sac-combat';
           overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99997;display:flex;align-items:center;justify-content:center;';
-          overlay.innerHTML = '<div style="background:linear-gradient(160deg,#2a1d10,#1a1109);border:3px solid #6b4f2e;border-radius:18px;padding:25px;max-width:380px;text-align:center;">'
+          overlay.innerHTML = '<div style="background:linear-gradient(160deg,#2a1d10,#1a1109);border:3px solid #6b4f2e;border-radius:18px;padding:25px;max-width:420px;text-align:center;">'
             + '<div style="font-family:Cinzel,serif;font-size:18px;color:#f5d98a;letter-spacing:2px;margin-bottom:14px;">&#x1F392; SAC</div>'
             + '<div style="font-size:12px;color:#9b59b6;margin-bottom:6px;">&#x1F376; Elixiteilles (capture)</div>'
             + '<div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">'+(htmlBout||'<span style="font-size:11px;color:#888;">Aucune bouteille</span>')+'</div>'
             + '<div style="font-size:12px;color:#2ecc71;margin-bottom:6px;">&#x1F9EA; Soins</div>'
             + '<div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">'+(htmlPot||'<span style="font-size:11px;color:#888;">Aucune potion</span>')+'</div>'
+            + '<div style="font-size:12px;color:#f39c12;margin-bottom:6px;">&#x2728; Speciaux</div>'
+            + '<div style="display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">'+(htmlSp||'<span style="font-size:11px;color:#888;">Aucun objet special</span>')+'</div>'
             + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:12px;padding:8px 22px;" onclick="document.getElementById(&#39;sac-combat&#39;).remove()">Retour</button>'
             + '</div>';
           overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
@@ -3781,7 +3880,25 @@ function ouvrirSwitch(){
         .then(function(r){return r.json();})
         .then(function(d){
           if(d.error){ alert(d.error); return; }
-          combatEtat.combat = d.combat;
+          if(d.combat) combatEtat.combat = d.combat;
+          // Orbe : active le flag, pas de tour consomme
+          if(d.orbe){
+            afficherCombat(['&#x1F52E; Orbe de Chance active ! Ton prochain lancer aura x2 chances.']);
+            return;
+          }
+          // Parchemin : fuite immediate sans riposte
+          if(d.parchemin && d.fuite){
+            arreterSon('start'); arreterSon('boss'); arreterSon('rival');
+            jouerSon('fuite');
+            setTimeout(function(){ alert('&#x1F4DC; '+d.msg); hub(); }, 600);
+            return;
+          }
+          // Super-Ration : soin sans riposte
+          if(d.superRation){
+            afficherCombat(['&#x1F356; Super-Ration : +'+d.gainPv+' PV (sans perdre le tour) !']);
+            return;
+          }
+          // Potion/Elixir : soin avec riposte
           var lignes = ['💚 +'+d.gainPv+' PV !', 'Le '+combatEtat.combat.enNom+' riposte ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats'];
           if(d.fini && !d.victoire){
             afficherCombat(lignes);
