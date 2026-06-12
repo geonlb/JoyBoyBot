@@ -1237,8 +1237,14 @@ app.post('/eveil/nommer', async (req, res) => {
 const EVEIL_BOUTIQUE = {
   ration:      { nom:'Ration', img:'ration', prix:200, desc:'Donne +50 XP a ton monstre', type:'xp', valeur:50 },
   poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP a ton monstre', type:'xp', valeur:250 },
+  super_ration:{ nom:'Super-Ration', img:'super-ration', prix:500, desc:'Soigne 50% des PV sans consommer le tour (combat)', type:'super_ration', valeur:0.5 },
   potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV (utile en combat)', type:'soin', valeur:50 },
   elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV (utile en combat)', type:'soin', valeur:9999 },
+  bonheur:     { nom:'Potion de Bonheur', img:'bonheur', prix:500, desc:'Remplit la jauge de bonheur a 100%', type:'bonheur', valeur:100 },
+  serum:       { nom:'Elixir de Serum', img:'serum', prix:1500, desc:'Soigne TOUTE ton equipe (fruit + captures)', type:'serum', valeur:0 },
+  orbe:        { nom:'Orbe de Chance', img:'orbe', prix:10000, desc:'x2 le taux de capture du prochain lancer (combat, sans consommer de tour)', type:'orbe', valeur:2 },
+  parchemin:   { nom:'Parchemin d&#39;Evasion', img:'parchemin', prix:2500, desc:'Permet de fuir un combat rival', type:'parchemin', valeur:0 },
+  cristal:     { nom:'Cristal d&#39;Evolution', img:'cristal', prix:50000, desc:'Pousse un monstre au niveau de sa prochaine evolution', type:'cristal', valeur:0 },
   bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille_rouge', prix:300, desc:'Capture (taux faible) - bientot', type:'capture', valeur:1 },
   bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille_bleue', prix:700, desc:'Capture (taux moyen) - bientot', type:'capture', valeur:2 },
   bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille_noire', prix:1500, desc:'Capture (taux eleve) - bientot', type:'capture', valeur:3 },
@@ -1259,10 +1265,100 @@ app.post('/eveil/utiliser', async (req, res) => {
 
   // Les objets de capture ne sont pas encore utilisables
   if (objet.type === 'capture') return res.status(400).json({ error: 'Les Elixiteilles arrivent bientot !' });
+  // Ces 3 objets sont utilisables uniquement EN COMBAT (gerés par la route attaque/combat)
+  if (objet.type === 'super_ration') return res.status(400).json({ error: 'La Super-Ration s&#39;utilise pendant un combat !' });
+  if (objet.type === 'orbe') return res.status(400).json({ error: 'L&#39;Orbe de Chance s&#39;utilise pendant un combat (avant de lancer une Elixiteille) !' });
+  if (objet.type === 'parchemin') return res.status(400).json({ error: 'Le Parchemin d&#39;Evasion s&#39;utilise pendant un combat rival !' });
 
   // Recuperer le monstre
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+
+  // BONHEUR : remplit la jauge a 100, pas de cible
+  if (objet.type === 'bonheur') {
+    if ((j.bonheur || 0) >= 100) return res.status(400).json({ error: 'Ton monstre est deja au maximum de bonheur !' });
+    await supabase.from('eveil_joueurs').update({ bonheur: 100, bonheur_maj: new Date().toISOString() }).eq('username', u);
+    const nq = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
+    return res.json({ success: true, bonheur: 100, nom: objet.nom });
+  }
+
+  // SERUM : soigne tout : fruit + captures
+  if (objet.type === 'serum') {
+    const sjAll = statsCalc(j.fruit, j.niveau);
+    await supabase.from('eveil_joueurs').update({ pv_actuels: sjAll.pvMax }).eq('username', u);
+    // Soigne aussi toutes les captures
+    const { data: caps } = await supabase.from('eveil_captures').select('monstre_id, niveau').eq('username', u);
+    if (caps && caps.length) {
+      for (const c of caps) {
+        const mD = EVEIL_MONSTRES[c.monstre_id];
+        if (!mD) continue;
+        const sc = statsCalc(mD.element, c.niveau || 1);
+        await supabase.from('eveil_captures').update({ pv_actuels: sc.pvMax }).eq('username', u).eq('monstre_id', c.monstre_id);
+      }
+    }
+    const nq = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nq > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nq });
+    return res.json({ success: true, serum: true, nom: objet.nom });
+  }
+
+  // CRISTAL D'EVOLUTION : pousse le monstre cible au niveau de sa prochaine evolution
+  if (objet.type === 'cristal') {
+    const cibleC = req.body.cible;
+    // Sur un capture
+    if (cibleC && cibleC !== 'fruit') {
+      const { data: capC } = await supabase.from('eveil_captures').select('*').eq('username', u).eq('monstre_id', cibleC).single();
+      if (!capC) return res.status(400).json({ error: 'Ce monstre n&#39;est pas dans ta collection !' });
+      const mDefC = EVEIL_MONSTRES[cibleC];
+      if (!mDefC || !mDefC.evolution) return res.status(400).json({ error: 'Ce monstre n&#39;a pas d&#39;evolution !' });
+      // Calcule le niveau d'evolution (palier de la chaine pour ce monstre)
+      // Convention dans le code : evo3=palier ado (niv ~15), evo4=palier final (niv ~30)
+      // Si le monstre est forme 1 -> on l'amene au palier evo3 ; forme 2 -> palier evo4
+      const nivPalier = (capC.stade && capC.stade >= 2) ? EVEIL_EVO_FINAL : EVEIL_EVO_ADO;
+      const nivAvantC = capC.niveau || 1;
+      const xpAvantC = capC.xp || 0;
+      if (nivAvantC >= nivPalier) return res.status(400).json({ error: 'Ce monstre a deja atteint son palier d&#39;evolution !' });
+      // Calcule combien d'XP il faut pour atteindre nivPalier
+      let xpAfaire = 0;
+      for (let n = nivAvantC; n < nivPalier; n++) xpAfaire += xpPourNiveau(n);
+      xpAfaire -= xpAvantC;
+      const resC = await appliquerXpCapture(u, cibleC, Math.max(1, xpAfaire));
+      const nqC = item.quantite - 1;
+      await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+      if (nqC > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqC });
+      const idFinC = resC.nouveauMonstre || cibleC;
+      const { data: cFinC } = await supabase.from('eveil_captures').select('niveau, xp, stade').eq('username', u).eq('monstre_id', idFinC).single();
+      return res.json({ success: true, surCapture: true, surCaptureXp: true, cristal: true, niveau: resC.niveau, stade: resC.stade, events: resC.events, gainXp: xpAfaire, evoCapture: resC.aEvolueVers, nom: objet.nom, idAvant: cibleC, idApres: idFinC, nivAvant: nivAvantC, nivApres: resC.niveau, xpAvant: xpAvantC, xpApres: (cFinC ? cFinC.xp : 0), prochainXpAvant: xpPourNiveau(nivAvantC), prochainXpApres: xpPourNiveau(resC.niveau) });
+    }
+    // Sur le fruit
+    if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant d&#39;evoluer !' });
+    const nivPalierF = (j.stade >= 3) ? EVEIL_EVO_FINAL : EVEIL_EVO_ADO;
+    const nivAvantF = j.niveau || 1;
+    if (nivAvantF >= EVEIL_EVO_FINAL) return res.status(400).json({ error: 'Ton monstre a deja atteint sa forme finale !' });
+    if (nivAvantF >= nivPalierF) return res.status(400).json({ error: 'Ton monstre a deja atteint ce palier d&#39;evolution !' });
+    let xpAfaireF = 0;
+    for (let n = nivAvantF; n < nivPalierF; n++) xpAfaireF += xpPourNiveau(n);
+    xpAfaireF -= (j.xp || 0);
+    // Applique l'XP comme un objet XP
+    let xpF = (j.xp || 0) + Math.max(1, xpAfaireF);
+    let niveauF = nivAvantF;
+    const eventsF = [];
+    while (xpF >= xpPourNiveau(niveauF)) {
+      xpF -= xpPourNiveau(niveauF);
+      niveauF++;
+      eventsF.push('niveau');
+      if (niveauF === EVEIL_EVO_ADO) eventsF.push('evo3');
+      if (niveauF === EVEIL_EVO_FINAL) eventsF.push('evo4');
+    }
+    const stadeF = calculerStade(true, niveauF);
+    await supabase.from('eveil_joueurs').update({ xp: xpF, niveau: niveauF, stade: stadeF }).eq('username', u);
+    const nqF = item.quantite - 1;
+    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
+    if (nqF > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqF });
+    return res.json({ success: true, cristal: true, xp: xpF, niveau: niveauF, stade: stadeF, events: eventsF, gainXp: xpAfaireF, xpAvant: (j.xp || 0), niveauAvant: nivAvantF, stadeAvant: j.stade, prochainNiveauXp: xpPourNiveau(niveauF), prochainNiveauXpAvant: xpPourNiveau(nivAvantF), nom: objet.nom });
+  }
 
   // === CIBLE = un monstre capture (pas le fruit) ===
   const cible = req.body.cible;
@@ -1842,7 +1938,8 @@ app.post('/eveil/combat/start', async (req, res) => {
   const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
   if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
   if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore avant de combattre !' });
-// Verifier que la zone est debloquee par le bon medaillon
+
+  // Verifier que la zone est debloquee par le bon medaillon
   if (zoneInfo.requis) {
     const medsJoueur = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
     if (medsJoueur.indexOf(zoneInfo.requis) < 0) {
@@ -1850,6 +1947,7 @@ app.post('/eveil/combat/start', async (req, res) => {
       return res.status(400).json({ error: 'Zone verrouillee ! Bats ' + (tReq ? tReq.pnj : 'le boss') + ' pour debloquer cette zone.' });
     }
   }
+
   // Charger l'equipe et choisir le monstre de depart (fruit en priorite, sinon premier capture vivant)
   const equipe = await chargerEquipe(j, u);
   const actifDepart = equipe.findIndex(function(m){ return m.pv > 0; });
@@ -2502,8 +2600,14 @@ function ecranNommer(){
 var BOUTIQUE = {
       ration:      { nom:'Ration', img:'ration', prix:200, desc:'Donne +50 XP', categorie:'XP' },
       poulet:      { nom:'Poulet d&#39;XP', img:'poulet', prix:800, desc:'Donne +250 XP', categorie:'XP' },
+      cristal:     { nom:'Cristal d&#39;Evolution', img:'cristal', prix:50000, desc:'Pousse au palier d&#39;evolution', categorie:'XP' },
       potion:      { nom:'Potion', img:'potion', prix:150, desc:'Rend 50 PV', categorie:'Soin' },
       elixir:      { nom:'Elixir', img:'elixir', prix:400, desc:'Restaure tous les PV', categorie:'Soin' },
+      super_ration:{ nom:'Super-Ration', img:'super-ration', prix:500, desc:'Soigne 50% sans perdre le tour', categorie:'Soin' },
+      bonheur:     { nom:'Potion de Bonheur', img:'bonheur', prix:500, desc:'Bonheur a 100%', categorie:'Soin' },
+      serum:       { nom:'Elixir de Serum', img:'serum', prix:1500, desc:'Soigne TOUTE l&#39;equipe', categorie:'Soin' },
+      orbe:        { nom:'Orbe de Chance', img:'orbe', prix:10000, desc:'x2 capture (combat, sans tour)', categorie:'Capture' },
+      parchemin:   { nom:'Parchemin d&#39;Evasion', img:'parchemin', prix:2500, desc:'Fuir un combat rival', categorie:'Capture' },
       bouteille_rouge:       { nom:'Elixiteille Rouge', img:'bouteille_rouge', prix:300, desc:'Capture - taux faible', categorie:'Capture' },
       bouteille_bleue:       { nom:'Elixiteille Bleue', img:'bouteille_bleue', prix:700, desc:'Capture - taux moyen', categorie:'Capture' },
       bouteille_noire:       { nom:'Elixiteille Noire', img:'bouteille_noire', prix:1500, desc:'Capture - taux eleve', categorie:'Capture' },
@@ -3396,8 +3500,8 @@ function effetElementaireEnnemi(element){
                     });
                   }, 900);
                 } else if(d.surCaptureVic){
-                  // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
-                  setTimeout(function(){ animationBarreXp(d); }, 900);
+                  // Victoire avec un monstre capture : alert simple (pas de barre animee, la fiche du monstre la montre deja)
+                  setTimeout(function(){ alert(msg); hub(); }, 1200);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
                   setTimeout(function(){ animationBarreXp(d); }, 900);
