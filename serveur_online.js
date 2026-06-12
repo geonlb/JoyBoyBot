@@ -3583,8 +3583,8 @@ function effetElementaireEnnemi(element){
                     });
                   }, 900);
                 } else if(d.surCaptureVic){
-                  // Victoire avec un monstre capture : alert simple (pas de barre animee, la fiche du monstre la montre deja)
-                  setTimeout(function(){ alert(msg); hub(); }, 1200);
+                  // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
+                  setTimeout(function(){ animationBarreXp(d); }, 900);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
                   setTimeout(function(){ animationBarreXp(d); }, 900);
