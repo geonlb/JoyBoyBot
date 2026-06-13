@@ -4496,13 +4496,16 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
           if(d.error){ alert(d.error); entrerLigue(); return; }
           ligueBossActuel = d.boss;
           combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
-          // Dialogue d'intro avec buste, puis combat
-          arreterSon('start'); arreterSon('boss');
-          // Charger la musique custom de ce boss
+          // Stopper toute musique en cours (zones, boss temple, ligue precedente)
+          arreterSon('start'); arreterSon('boss'); arreterSon('rival');
+          arreterMusiqueLigue();
+          // Charger la musique custom de ce boss et la garder en reference globale
           try{
-            var nouv = new Audio(IMG+'/eveil/'+d.boss.musique+'.mp3');
-            nouv.loop = true; nouv.volume = 0.5; nouv.play().catch(function(){});
-            sonsCombat[d.boss.musique] = nouv;
+            window._musiqueLigueActive = new Audio(IMG+'/eveil/'+d.boss.musique+'.mp3');
+            window._musiqueLigueActive.loop = true;
+            window._musiqueLigueActive.volume = 0.5;
+            window._musiqueLigueActive.play().catch(function(){});
+            sonsCombat[d.boss.musique] = window._musiqueLigueActive;
           }catch(e){}
           dialogueBoss(d.boss.pnj, d.boss.intro, d.boss.couleur, IMG+'/eveil/'+d.boss.buste+'.png', function(){
             afficherCombat(['&#x1F3F4;&#x200D;&#x2620;&#xFE0F; '+d.boss.pnj+' envoie son premier monstre !'], true);
@@ -4536,7 +4539,26 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
     }
 
     function arreterMusiqueLigue(){
-      ['ligue-1','ligue-2','ligue-3','ligue-roi'].forEach(function(k){ try{ if(sonsCombat[k]){ sonsCombat[k].pause(); sonsCombat[k].currentTime=0; } }catch(e){} });
+      // 1) Couper la reference globale active
+      try{
+        if(window._musiqueLigueActive){
+          window._musiqueLigueActive.pause();
+          window._musiqueLigueActive.currentTime = 0;
+          window._musiqueLigueActive.src = '';
+          window._musiqueLigueActive = null;
+        }
+      }catch(e){}
+      // 2) Couper aussi toute Audio Ligue residuelle dans sonsCombat
+      ['ligue-1','ligue-2','ligue-3','ligue-roi'].forEach(function(k){
+        try{
+          if(sonsCombat[k]){
+            sonsCombat[k].pause();
+            sonsCombat[k].currentTime = 0;
+            sonsCombat[k].src = '';
+            sonsCombat[k] = null;
+          }
+        }catch(e){}
+      });
     }
 
 function boiteMedaillons(){
