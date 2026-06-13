@@ -4515,15 +4515,22 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
       overlay.id = 'dlg-boss-ligue';
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;';
       var lignes = texte.split('\\n').map(function(l){ return l.trim(); }).filter(Boolean);
-      var html = '<div style="max-width:640px;background:linear-gradient(140deg,#1a0f3a,#0a0518);border:3px solid '+couleur+';border-radius:18px;box-shadow:0 0 32px '+couleur+'88;padding:24px;text-align:center;">'
+      window._dlgBossCb = callback;
+      window._dlgBossClose = function(){
+        var ov = document.getElementById('dlg-boss-ligue');
+        if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+        var cb = window._dlgBossCb;
+        window._dlgBossCb = null;
+        if(cb) cb();
+      };
+      var html = '<div style="max-width:640px;background:linear-gradient(140deg,#1a0f3a,#0a0518);border:3px solid '+couleur+';border-radius:18px;box-shadow:0 0 32px '+couleur+'88;padding:24px;text-align:center;position:relative;z-index:99999;">'
         + '<img src="'+imgBuste+'" style="width:200px;height:200px;object-fit:cover;border-radius:50%;border:4px solid '+couleur+';box-shadow:0 0 22px '+couleur+'aa;" alt="'+nom+'">'
         + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+couleur+';letter-spacing:3px;margin-top:12px;text-shadow:0 0 14px '+couleur+'88;">'+nom+'</div>'
         + '<div style="font-size:15px;color:#e5d4ff;margin-top:14px;line-height:1.6;font-style:italic;">'+lignes.map(function(l){return '&laquo; '+l+' &raquo;';}).join('<br><br>')+'</div>'
-        + '<button class="connect-btn" id="dlg-boss-next" style="margin-top:18px;border:none;cursor:pointer;background:'+couleur+';color:#000;font-weight:bold;font-size:13px;padding:9px 26px;border-radius:8px;">Continuer &#x25B6;</button>'
+        + '<button onclick="window._dlgBossClose()" style="margin-top:18px;border:none;cursor:pointer;background:'+couleur+';color:#000;font-weight:bold;font-size:13px;padding:9px 26px;border-radius:8px;position:relative;z-index:99999;">Continuer &#x25B6;</button>'
         + '</div>';
       overlay.innerHTML = html;
       document.body.appendChild(overlay);
-      document.getElementById('dlg-boss-next').onclick = function(){ document.body.removeChild(overlay); if(callback) callback(); };
     }
 
     function arreterMusiqueLigue(){
