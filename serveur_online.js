@@ -1557,13 +1557,13 @@ const EVEIL_STATS = {
 };
 // Attaques par element : [base, chargee, ultime] avec multiplicateur de degats
 const EVEIL_ATTAQUES = {
-  lave:  [{nom:'Morsure Ardente',mult:1.0},{nom:'Souffle de Lave',mult:1.6},{nom:'Apocalypse Volcanique',mult:2.5}],
-  marin: [{nom:'Morsure deferlante',mult:1.0},{nom:'Charge tourbillon',mult:1.6},{nom:'Gueule de l\'Ocean',mult:2.5}],
-  nuage: [{nom:'Bourrasque',mult:1.0},{nom:'Serres foudroyantes',mult:1.6},{nom:'Oeil du Cyclone',mult:2.5}],
-  roche: [{nom:'Coup de poing rocheux',mult:1.0},{nom:'Charge devastatrice',mult:1.6},{nom:'Effondrement de Montagne',mult:2.5}],
-  givre: [{nom:'Morsure gelee',mult:1.0},{nom:'Souffle de blizzard',mult:1.6},{nom:'Ere Glaciaire',mult:2.5}],
-  neant: [{nom:'Griffe du vide',mult:1.0},{nom:'Engloutissement',mult:1.6},{nom:'Trou Noir',mult:2.5}],
-  neutre:[{nom:'Frappe Mystique',mult:1.0},{nom:'Onde Multicolore',mult:1.6},{nom:'Eclipse Cosmique',mult:2.5}]
+  lave:  [{nom:'Morsure Ardente',mult:1.0},{nom:'Souffle de Lave',mult:1.5},{nom:'Apocalypse Volcanique',mult:1.8}],
+  marin: [{nom:'Morsure deferlante',mult:1.0},{nom:'Charge tourbillon',mult:1.5},{nom:'Gueule de l\'Ocean',mult:1.8}],
+  nuage: [{nom:'Bourrasque',mult:1.0},{nom:'Serres foudroyantes',mult:1.5},{nom:'Oeil du Cyclone',mult:1.8}],
+  roche: [{nom:'Coup de poing rocheux',mult:1.0},{nom:'Charge devastatrice',mult:1.5},{nom:'Effondrement de Montagne',mult:1.8}],
+  givre: [{nom:'Morsure gelee',mult:1.0},{nom:'Souffle de blizzard',mult:1.5},{nom:'Ere Glaciaire',mult:1.8}],
+  neant: [{nom:'Griffe du vide',mult:1.0},{nom:'Engloutissement',mult:1.5},{nom:'Trou Noir',mult:1.8}],
+  neutre:[{nom:'Frappe Mystique',mult:1.0},{nom:'Onde Multicolore',mult:1.5},{nom:'Eclipse Cosmique',mult:1.8}]
 };
 // Roue des forces : qui est fort contre qui (cle bat valeur)
 const EVEIL_FORCES = { lave:'givre', givre:'marin', marin:'nuage', nuage:'roche', roche:'lave' };
@@ -2015,14 +2015,22 @@ app.get('/eveil/equipe', async (req, res) => {
     return EVEIL_MONSTRES[c.monstre_id]; // on garde tout ce qui existe dans le bestiaire
   }).map(function(c){
     const m = EVEIL_MONSTRES[c.monstre_id];
+    const niv = c.niveau || 1;
+    const stats = statsCalc(m.element, niv);
+    const pvActuels = (c.pv_actuels != null && c.pv_actuels >= 0) ? c.pv_actuels : stats.pvMax;
     return {
       monstreId: c.monstre_id, nom: m.nom, img: m.img, element: m.element,
-      niveau: c.niveau || 1, stade: c.stade || 1, xp: c.xp || 0,
+      niveau: niv, stade: c.stade || 1, xp: c.xp || 0,
+      pv: pvActuels, pvMax: stats.pvMax,
       dansEquipe: c.dans_equipe === 1, slot: c.slot_equipe || 0
     };
   });
 
-  res.json({ fruit: j.fruit, fruitNiveau: j.niveau, fruitStade: j.stade, recrutables });
+  // PV du fruit
+  const statsFruit = statsCalc(j.fruit, j.niveau);
+  const pvFruit = (j.pv_actuels != null && j.pv_actuels >= 0) ? Math.min(j.pv_actuels, statsFruit.pvMax) : statsFruit.pvMax;
+
+  res.json({ fruit: j.fruit, fruitNiveau: j.niveau, fruitStade: j.stade, fruitPv: pvFruit, fruitPvMax: statsFruit.pvMax, recrutables });
 });
 
 // Modifier l'equipe (ajouter/retirer un monstre d'un slot)
@@ -2163,7 +2171,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const elemJoueur = actifJ ? actifJ.elem : j.fruit;
   const atkJoueur = EVEIL_ATTAQUES[elemJoueur][idx];
   const multJ = multiplicateurElement(elemJoueur, c.enElem);
-  let degJ = Math.max(1, Math.round((c.joAtk * atkJoueur.mult - c.enDef * 0.5) * multJ));
+  let degJ = Math.max(1, Math.round((c.joAtk * atkJoueur.mult - c.enDef * 1.0) * multJ));
   const critJ = Math.random() < 0.1 ? 2 : 1; // 10% crit
   degJ = Math.round(degJ * critJ);
   c.enPv = Math.max(0, c.enPv - degJ);
@@ -2238,7 +2246,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][idxEnnemi];
   let multE = multiplicateurElement(c.enElem, elemJoueur);
   if (c.estBoss && multE === 2) multE = 1.5; // super-efficace adouci pour les boss
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
   const critE = Math.random() < 0.08 ? 2 : 1;
   degE = Math.round(degE * critE);
   c.joPv = Math.max(0, c.joPv - degE);
@@ -2363,7 +2371,7 @@ app.post('/eveil/combat/objet', async (req, res) => {
   // Le monstre riposte (un tour)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, j.fruit);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
   if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
 
@@ -2431,7 +2439,7 @@ app.post('/eveil/combat/switch', async (req, res) => {
   // L'ennemi en profite pour attaquer (le switch coute un tour)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, nouveau.elem);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
   c.equipe[c.actif].pv = c.joPv;
 
@@ -2516,7 +2524,7 @@ app.post('/eveil/combat/capture', async (req, res) => {
   // Echec : le monstre riposte (un tour perdu)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, j.fruit);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 0.5) * multE));
+  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
 
   // Defaite ?
@@ -4198,12 +4206,23 @@ function monEquipe(){
           var fruitImg = ligF ? ligF.stades[d.fruitStade-1] : '';
           var fruitNom = ligF ? ligF.noms[d.fruitStade-1] : d.fruit;
 
+          // Helper : genere une barre de PV
+          function barrePv(pv, pvMax, couleur){
+            var pct = Math.max(0, Math.round((pv/pvMax)*100));
+            var coul = pct > 50 ? '#2ecc71' : (pct > 20 ? '#f39c12' : '#e74c3c');
+            return '<div style="margin-top:6px;text-align:left;">'
+              + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-bottom:2px;"><span>&#x2764;&#xFE0F; PV</span><span style="color:#fff;">'+pv+' / '+pvMax+'</span></div>'
+              + '<div style="background:rgba(0,0,0,0.5);border:1px solid '+couleur+';border-radius:8px;height:8px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:'+coul+';transition:width 0.6s;"></div></div>'
+              + '</div>';
+          }
+
           // Slot du fruit (toujours la, slot principal)
           var slotsHtml = '<div style="background:linear-gradient(160deg,rgba(241,196,15,0.2),rgba(0,0,0,0.8));border:2px solid #f1c40f;border-radius:16px;padding:14px;text-align:center;">'
             + '<div style="font-size:11px;color:#f1c40f;margin-bottom:6px;">&#x2B50; PARTENAIRE</div>'
             + '<img src="'+IMG+'/monstres/'+fruitImg+'.png" style="width:70px;height:70px;object-fit:contain;">'
             + '<div style="font-size:13px;color:#fff;margin-top:5px;">'+fruitNom+'</div>'
             + '<div style="font-size:11px;color:#aaa;">Niv '+d.fruitNiveau+'</div>'
+            + barrePv(d.fruitPv != null ? d.fruitPv : 0, d.fruitPvMax || 1, '#f1c40f')
             + '</div>';
 
           // Les 2 slots de monstres captures
@@ -4215,6 +4234,7 @@ function monEquipe(){
                 + '<img src="'+IMG+'/monstres/'+occupant.img+'.png" style="width:70px;height:70px;object-fit:contain;">'
                 + '<div style="font-size:13px;color:#fff;margin-top:5px;">'+occupant.nom+'</div>'
                 + '<div style="font-size:11px;color:#aaa;">Niv '+occupant.niveau+' - Stade '+occupant.stade+'</div>'
+                + barrePv(occupant.pv != null ? occupant.pv : occupant.pvMax, occupant.pvMax || 1, '#3498db')
                 + '<button onclick="retirerEquipe(&#39;'+occupant.monstreId+'&#39;)" style="margin-top:8px;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;border-radius:12px;color:#fff;font-size:10px;padding:4px 10px;cursor:pointer;">Retirer</button>'
                 + '</div>';
             } else {
