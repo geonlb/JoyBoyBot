@@ -1165,6 +1165,81 @@ app.post('/eveil/genre', async (req, res) => {
   res.json({ success: true });
 });
 
+// =============================================================================
+// STATS DETAILLEES DU JOUEUR : compile tout pour la page "Mes Stats"
+// =============================================================================
+app.get('/eveil/stats', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j) return res.status(404).json({ error: 'Joueur introuvable' });
+
+  // Captures : compter et trouver le monstre le plus haut niveau / le plus utilise
+  const { data: caps } = await supabase.from('eveil_captures').select('monstre_id, niveau, xp').eq('username', u);
+  const totalCaptures = (caps || []).length;
+  let topCap = null;
+  if (caps && caps.length) {
+    topCap = caps.reduce(function(a,b){ return (b.niveau || 0) > (a.niveau || 0) ? b : a; }, caps[0]);
+  }
+  // Element du fruit pour libelles
+  const fruitDef = EVEIL_LIGNEES[j.fruit] || { stades:['?'], noms:['?'] };
+  const fruitNom = fruitDef.noms[Math.min(j.stade-1, 3)] || '?';
+
+  // Medaillons
+  const meds = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+
+  // Date de creation : peut etre stockee en ms ou en ISO
+  let joursJoue = 0;
+  if (j.cree_le) {
+    const creeMs = typeof j.cree_le === 'number' ? j.cree_le : new Date(j.cree_le).getTime();
+    if (!isNaN(creeMs)) joursJoue = Math.max(1, Math.floor((Date.now() - creeMs) / 86400000));
+  }
+
+  // Brise actuelle (depuis primes)
+  const { data: prime } = await supabase.from('primes').select('berrys').eq('username', u).single();
+  const briseActuel = prime ? (prime.berrys || 0) : 0;
+
+  // Win rate
+  const cTotal = j.combats_total || 0;
+  const cVic = j.combats_victoire || 0;
+  const cDef = j.combats_defaite || 0;
+  const winRate = cTotal > 0 ? Math.round((cVic / cTotal) * 100) : 0;
+
+  // Monstre top : details
+  let topCapDetails = null;
+  if (topCap && EVEIL_MONSTRES[topCap.monstre_id]) {
+    const mDef = EVEIL_MONSTRES[topCap.monstre_id];
+    topCapDetails = { id: topCap.monstre_id, nom: mDef.nom, img: mDef.img, element: mDef.element, niveau: topCap.niveau };
+  }
+
+  res.json({
+    username: j.username,
+    genre: j.genre,
+    fruit: j.fruit,
+    fruitNom: fruitNom,
+    fruitNiveau: j.niveau || 1,
+    fruitStade: j.stade || 1,
+    fruitImg: fruitDef.stades[Math.min(j.stade-1, 3)] || fruitDef.stades[0],
+    joursJoue: joursJoue,
+    briseActuel: briseActuel,
+    briseGagneTotal: j.brise_gagne_total || 0,
+    combatsTotal: cTotal,
+    combatsVictoire: cVic,
+    combatsDefaite: cDef,
+    winRate: winRate,
+    totalCaptures: totalCaptures,
+    medaillons: meds.length,
+    medaillonsTotal: 6,
+    ligueProgres: j.ligue_progres || 0,
+    ligueTotal: 4,
+    maitreLigue: !!j.maitre_ligue,
+    rivalVaincu: j.rival_vaincu || 0,
+    topCapture: topCapDetails,
+    bonheur: j.bonheur != null ? j.bonheur : 50
+  });
+});
+
 // Noms des rivals selon le genre (oppose au joueur)
 const RIVAL_NOMS = { homme:'Patriick', femme:'Louiise' };
 // Dialogues d'intro du rival selon l'element qu'il prend
@@ -2227,6 +2302,9 @@ app.post('/eveil/combat/attaque', async (req, res) => {
       const newBrise = (prime ? prime.berrys : 0) + gainBrise;
       await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
       if (c.estRival) { majV.rival_zone = 0; majV.rival_vaincu = (j.rival_vaincu || 0) + 1; }
+      majV.combats_total = (j.combats_total || 0) + 1;
+      majV.combats_victoire = (j.combats_victoire || 0) + 1;
+      majV.brise_gagne_total = (j.brise_gagne_total || 0) + gainBrise;
       await supabase.from('eveil_joueurs').update(majV).eq('username', u);
       return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, estLigue: c.estLigue || false, ligueBossIdx: (c.ligueBossIdx != null ? c.ligueBossIdx : null), evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true, xpAvant: resCap.xpAvant, xpApres: resCap.xpApres, nivAvant: resCap.nivAvant, nivApres: resCap.nivApres, prochainXpAvant: resCap.prochainXpAvant, prochainXpApres: resCap.prochainXpApres, captureElem: actifVic.elem });
     }
@@ -2243,6 +2321,9 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     await sauverPvEquipe(c, u);
     const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
     if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
+    majVictoire.combats_total = (j.combats_total || 0) + 1;
+    majVictoire.combats_victoire = (j.combats_victoire || 0) + 1;
+    majVictoire.brise_gagne_total = (j.brise_gagne_total || 0) + gainBrise;
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
     return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, estLigue: c.estLigue || false, ligueBossIdx: (c.ligueBossIdx != null ? c.ligueBossIdx : null), xpAvant: xpAvantFruit, xpApres: xp, nivAvant: nivAvantFruit, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvantFruit), prochainXpApres: xpPourNiveau(niveau) });
   }
@@ -2280,6 +2361,8 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     await sauverPvEquipe(c, u);
     const majDefaite = { pv_actuels: 0, combat_actif: '' };
     if (c.estRival) majDefaite.rival_zone = c.zone;
+    majDefaite.combats_total = (j.combats_total || 0) + 1;
+    majDefaite.combats_defaite = (j.combats_defaite || 0) + 1;
     await supabase.from('eveil_joueurs').update(majDefaite).eq('username', u);
     return res.json({ success: true, fini: true, victoire: false, log, combat: c, estRival: c.estRival || false, koTous: true });
   }
@@ -2382,7 +2465,7 @@ app.post('/eveil/combat/objet', async (req, res) => {
   if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
 
   if (c.joPv <= 0) {
-    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '', combats_total: (j.combats_total || 0) + 1, combats_defaite: (j.combats_defaite || 0) + 1 }).eq('username', u);
     return res.json({ success: true, fini: true, victoire: false, gainPv, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
   }
 
@@ -2454,7 +2537,7 @@ app.post('/eveil/combat/switch', async (req, res) => {
   if (c.joPv <= 0) {
     const tousKO = c.equipe.every(function(m){ return m.pv <= 0; });
     if (tousKO) {
-      await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+      await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '', combats_total: (j.combats_total || 0) + 1, combats_defaite: (j.combats_defaite || 0) + 1 }).eq('username', u);
       return res.json({ success: true, fini: true, victoire: false, koTous: true, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, nomNouveau: nomNouveau, combat: c, pvAvantRiposte: pvAvantRiposte, enAtkElem: c.enElem });
     }
     koSwitch = true;
@@ -2535,7 +2618,7 @@ app.post('/eveil/combat/capture', async (req, res) => {
 
   // Defaite ?
   if (c.joPv <= 0) {
-    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '' }).eq('username', u);
+    await supabase.from('eveil_joueurs').update({ pv_actuels: 0, combat_actif: '', combats_total: (j.combats_total || 0) + 1, combats_defaite: (j.combats_defaite || 0) + 1 }).eq('username', u);
     return res.json({ success: true, capture: false, scintillements, fini: true, victoire: false, degatsRiposte: degE, attaqueEnnemi: atkEnnemi.nom, combat: c });
   }
 
@@ -2722,7 +2805,7 @@ app.get('/eveil', (req, res) => {
 
     function ecranTempleIntro(){
       document.getElementById('content').innerHTML =
-        '<div class="panel" style="background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.85)), url(' + IMG + '/eveil/temple.png?v=2) center/cover;border-color:#8a2be2;">'
+        '<div class="panel" style="background:linear-gradient(rgba(5,5,16,0.75),rgba(5,5,16,0.85)), url(' + IMG + '/eveil/temple.png) center/cover;border-color:#8a2be2;">'
         + '<p class="intro-text">Tu pousses la lourde porte de pierre d&#39;un temple oublie au coeur d&#39;une ile deserte...<br><br>Dans une salle secrete baignee d&#39;une lueur etrange, six fruits du demon en forme d&#39;oeuf reposent sur des piedestaux. L&#39;un d&#39;eux t&#39;appelle.<br><br><b style="color:#ffd479;">Choisis bien : ce fruit sera ton partenaire pour toute l&#39;aventure.</b></p>'
         + '<button class="connect-btn" style="border:none;cursor:pointer;" onclick="ecranOeufs()">Entrer dans la salle secrete</button></div>';
     }
@@ -4870,7 +4953,7 @@ function hub(){
           var CARTE_X = 17.9;
           var htmlDesk = '<div class="lobby-desk" style="position:relative;width:100%;max-width:840px;margin:0 auto;aspect-ratio:1200 / 674;container-type:inline-size;">'
             + '<img src="'+IMG+'/eveil/lobbyfond.svg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:14px;" alt="Lobby">'
-            + '<div style="position:absolute;left:'+CARTE_X+'%;top:6%;bottom:6%;width:28%;transform:translateX(-50%);background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05);padding:1.4cqw 1.2cqw;display:flex;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
+            + '<div onclick="mesStats()" title="Voir mes stats" style="position:absolute;left:'+CARTE_X+'%;top:6%;bottom:6%;width:28%;transform:translateX(-50%);background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05);padding:1.4cqw 1.2cqw;display:flex;flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;" onmouseover="this.style.boxShadow=&#39;0 4px 32px rgba(180,140,255,0.6),inset 0 0 20px rgba(255,255,255,0.1)&#39;;" onmouseout="this.style.boxShadow=&#39;0 4px 24px rgba(0,0,0,0.35),inset 0 0 20px rgba(255,255,255,0.05)&#39;;">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
@@ -4888,7 +4971,7 @@ function hub(){
             grille += '<div class="case" onclick="'+rk.action+'"><div class="ic">'+rk.emoji+'</div><div class="lab">'+rk.label+'</div></div>';
           }
           var htmlMob = '<div class="lobby-mob" style="max-width:480px;margin:0 auto;padding:10px;background:url('+IMG+'/eveil/lobbyfond.svg) center/cover;border-radius:14px;">'
-            + '<div style="display:flex;gap:12px;align-items:stretch;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:12px;padding:10px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);">'
+            + '<div onclick="mesStats()" style="display:flex;gap:12px;align-items:stretch;background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.45);border-radius:12px;padding:10px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);cursor:pointer;">'
             + '<img src="'+IMG+'/eveil/'+genreImg+'.png" style="width:38%;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.5));" alt="Perso">'
             + '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;font-size:13px;">'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
@@ -4902,6 +4985,98 @@ function hub(){
 
           document.getElementById('content').innerHTML = styleLobby + htmlDesk + htmlMob;
         });
+    }
+
+    // =================================================================
+    // MES STATS : page de profil pirate du joueur
+    // =================================================================
+    function mesStats(){
+      fetch('/eveil/stats?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); return; }
+          var lig = LIGNEES[d.fruit] || { couleur:'#b48cff' };
+          var coul = lig.couleur;
+
+          // Card helper
+          function card(emoji, titre, valeur, sub, couleur){
+            couleur = couleur || coul;
+            return '<div style="background:rgba(20,10,40,0.7);border:1.5px solid '+couleur+'66;border-radius:12px;padding:14px 12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);">'
+              + '<div style="font-size:24px;line-height:1;margin-bottom:4px;">'+emoji+'</div>'
+              + '<div style="font-size:10px;color:#9fb4d6;letter-spacing:1px;margin-bottom:6px;">'+titre+'</div>'
+              + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+couleur+';font-weight:bold;">'+valeur+'</div>'
+              + (sub ? '<div style="font-size:10px;color:#aaa;margin-top:3px;">'+sub+'</div>' : '')
+              + '</div>';
+          }
+
+          var titreMaitre = d.maitreLigue ? '<div style="text-align:center;margin:10px 0;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:13px;letter-spacing:2px;padding:6px 20px;border-radius:14px;box-shadow:0 0 18px #b48cff88;">&#x2B50; MAITRE DE LA LIGUE DES PIRATES</span></div>' : '';
+
+          var topCapHtml = '';
+          if(d.topCapture){
+            topCapHtml = '<div style="background:rgba(20,10,40,0.7);border:1.5px solid '+coul+'66;border-radius:12px;padding:12px;display:flex;align-items:center;gap:14px;">'
+              + '<img src="'+IMG+'/monstres/'+d.topCapture.img+'.png" style="width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));">'
+              + '<div style="flex:1;">'
+              + '<div style="font-size:10px;color:#9fb4d6;letter-spacing:1px;">&#x1F451; PLUS HAUT NIVEAU CAPTURE</div>'
+              + '<div style="font-family:Cinzel,serif;font-size:16px;color:'+coul+';">'+d.topCapture.nom+'</div>'
+              + '<div style="font-size:11px;color:#aaa;">Niveau '+d.topCapture.niveau+' &#x2022; '+d.topCapture.element+'</div>'
+              + '</div></div>';
+          }
+
+          var html = '<div style="max-width:900px;margin:0 auto;padding:20px;">'
+            + '<div style="text-align:center;margin-bottom:20px;">'
+              + '<div style="font-family:Cinzel,serif;font-size:30px;color:'+coul+';letter-spacing:4px;text-shadow:0 0 20px '+coul+'88;">&#x1F4DC; MES STATS</div>'
+              + '<div style="font-size:13px;color:#aaa;margin-top:6px;">Carnet du Pirate &#x2022; '+d.username+'</div>'
+            + '</div>'
+
+            // Profil principal
+            + '<div style="background:linear-gradient(140deg,rgba(0,0,0,0.7),rgba(20,10,40,0.85));border:2px solid '+coul+';border-radius:18px;padding:20px;margin-bottom:18px;box-shadow:0 0 24px '+coul+'44;">'
+              + '<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;">'
+                + '<img src="'+IMG+'/monstres/'+d.fruitImg+'.png" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 0 12px '+coul+'aa);">'
+                + '<div style="flex:1;min-width:200px;">'
+                  + '<div style="font-family:Cinzel,serif;font-size:20px;color:'+coul+';">'+d.fruitNom+'</div>'
+                  + '<div style="font-size:12px;color:#aaa;margin-top:4px;">Niveau '+d.fruitNiveau+' &#x2022; Stade '+d.fruitStade+'/4</div>'
+                  + '<div style="font-size:11px;color:#aaa;margin-top:8px;">&#x2693; Aventure depuis <b style="color:#fff;">'+d.joursJoue+' jour'+(d.joursJoue>1?'s':'')+'</b></div>'
+                  + '<div style="font-size:11px;color:#aaa;margin-top:2px;">&#x1F970; Bonheur : <b style="color:#fff;">'+d.bonheur+'/100</b></div>'
+                + '</div>'
+              + '</div>'
+            + '</div>'
+
+            + titreMaitre
+
+            // Combats
+            + '<div style="margin:18px 0 10px;font-family:Cinzel,serif;font-size:15px;letter-spacing:3px;color:'+coul+';">&#x2694;&#xFE0F; COMBATS</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">'
+              + card('&#x2694;&#xFE0F;','TOTAL COMBATS', d.combatsTotal, '')
+              + card('&#x1F3C6;','VICTOIRES', d.combatsVictoire, d.winRate + '% de win rate', '#2ecc71')
+              + card('&#x1F480;','DEFAITES', d.combatsDefaite, '', '#e74c3c')
+              + card('&#x1F525;','RIVAL VAINCU', d.rivalVaincu, 'fois')
+            + '</div>'
+
+            // Collection
+            + '<div style="margin:18px 0 10px;font-family:Cinzel,serif;font-size:15px;letter-spacing:3px;color:'+coul+';">&#x1F4D6; COLLECTION & PROGRESSION</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">'
+              + card('&#x1F43E;','CAPTURES', d.totalCaptures, 'monstres')
+              + card('&#x1F3C5;','BADGES', d.medaillons + '/' + d.medaillonsTotal, 'temples vaincus', '#f6d54a')
+              + card('&#x1F3F4;&#x200D;&#x2620;&#xFE0F;','LIGUE', d.ligueProgres + '/' + d.ligueTotal, d.maitreLigue ? 'Maitre !' : 'boss vaincus')
+            + '</div>'
+
+            + (topCapHtml ? '<div style="margin-top:14px;">'+topCapHtml+'</div>' : '')
+
+            // Brise
+            + '<div style="margin:18px 0 10px;font-family:Cinzel,serif;font-size:15px;letter-spacing:3px;color:'+coul+';">&#x1F4B0; ECONOMIE</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">'
+              + card('&#x1F4B0;','BRISE ACTUELLE', d.briseActuel.toLocaleString(), '', '#f6c562')
+              + card('&#x1F4C8;','TOTAL GAGNE', d.briseGagneTotal.toLocaleString(), 'en combat', '#f6c562')
+            + '</div>'
+
+            + '<div style="text-align:center;margin-top:24px;">'
+              + '<button onclick="hub()" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);border:1px solid '+coul+';color:#fff;font-size:13px;padding:10px 28px;border-radius:8px;">&#x2190; Retour au lobby</button>'
+            + '</div>'
+
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
     function monMonstre(){
