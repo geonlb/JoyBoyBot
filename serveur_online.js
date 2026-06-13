@@ -2320,6 +2320,8 @@ app.post('/eveil/combat/objet', async (req, res) => {
 
   // ===== PARCHEMIN D'EVASION : fuir n'importe quel combat (utile contre rival) =====
   if (objet.type === 'parchemin') {
+    if (c.estLigue) return res.status(400).json({ error: 'Impossible de fuir un combat de la Ligue des Pirates !' });
+    if (c.estBoss) return res.status(400).json({ error: 'Impossible de fuir un combat de temple !' });
     const nqP = item.quantite - 1;
     await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
     if (nqP > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqP });
@@ -2341,26 +2343,13 @@ app.post('/eveil/combat/objet', async (req, res) => {
   }
 
   // ===== SUPER-RATION : soigne 50% des PV, PAS de tour consomme (pas de riposte) =====
-  if (objet.type === 'super_ration') {
-    if (c.joPv >= c.joPvMax) return res.status(400).json({ error: 'Ton monstre a deja tous ses PV !' });
-    const soinSR = Math.round(c.joPvMax * 0.5);
-    const pvAvSR = c.joPv;
-    c.joPv = Math.min(c.joPvMax, c.joPv + soinSR);
-    const gainSR = c.joPv - pvAvSR;
-    // Sauvegarder les PV dans l'equipe aussi
-    if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
-    const nqSR = item.quantite - 1;
-    await supabase.from('eveil_sac').delete().eq('username', u).eq('objet', objetId);
-    if (nqSR > 0) await supabase.from('eveil_sac').insert({ username: u, objet: objetId, quantite: nqSR });
-    await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(c), pv_actuels: c.actif === 0 ? c.joPv : j.pv_actuels }).eq('username', u);
-    return res.json({ success: true, superRation: true, fini: false, gainPv: gainSR, combat: c, msg: 'Super-Ration : +' + gainSR + ' PV (pas de riposte)' });
-  }
-
-  // ===== POTION / ELIXIR (soin classique avec riposte) =====
+  // ===== POTION / ELIXIR / SUPER-RATION (soin classique avec riposte) =====
   if (c.joPv >= c.joPvMax) return res.status(400).json({ error: 'Ton monstre a deja tous ses PV !' });
 
-  // Soigner
-  const soin = (objet.valeur >= 9999) ? c.joPvMax : objet.valeur;
+  // Soigner : super_ration = 50% du max, potion/elixir = valeur fixe
+  let soin;
+  if (objet.type === 'super_ration') soin = Math.round(c.joPvMax * 0.5);
+  else soin = (objet.valeur >= 9999) ? c.joPvMax : objet.valeur;
   const pvAvant = c.joPv;
   c.joPv = Math.min(c.joPvMax, c.joPv + soin);
   const gainPv = c.joPv - pvAvant;
@@ -2479,6 +2468,12 @@ app.post('/eveil/combat/capture', async (req, res) => {
   const c = JSON.parse(j.combat_actif);
   // On ne capture pas un monstre KO
   if (c.enPv <= 0) return res.status(400).json({ error: 'Ce monstre est KO, impossible de le capturer !' });
+  // Pas de capture en combat de Ligue
+  if (c.estLigue) return res.status(400).json({ error: 'Impossible de capturer dans la Ligue des Pirates !' });
+  // Pas de capture en boss de temple
+  if (c.estBoss) return res.status(400).json({ error: 'Impossible de capturer un boss !' });
+  // Pas de capture sur les ultimes ni les legendaires : il faut les faire evoluer soi-meme depuis un commun/epique
+  if (c.enRarete === 'ultime' || c.enRarete === 'legendaire') return res.status(400).json({ error: 'Impossible de capturer un monstre ' + c.enRarete + ' ! Fais evoluer un monstre de forme inferieure pour l&#39;obtenir.' });
 
   // Consommer la bouteille (capture reussie ou non, on la perd)
   const nq = item.quantite - 1;
@@ -2542,6 +2537,7 @@ app.post('/eveil/combat/fuir', async (req, res) => {
   if (j && j.combat_actif) {
     const c = JSON.parse(j.combat_actif);
     if (c.estBoss) return res.status(400).json({ error: 'Impossible de fuir un combat de temple !' });
+    if (c.estLigue) return res.status(400).json({ error: 'Impossible de fuir un combat de la Ligue des Pirates !' });
     if (c.estRival) return res.status(400).json({ error: 'Ton rival ne te laissera pas fuir !' });
     await sauverPvEquipe(c, u);
     await supabase.from('eveil_joueurs').update({ pv_actuels: c.joPv, combat_actif: '' }).eq('username', u);
@@ -3581,7 +3577,7 @@ var ATTAQUES_FRONT = {
         + '<div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">'
         + '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(155,89,182,0.3);border:1px solid #9b59b6;font-size:12px;padding:8px 20px;" onclick="ouvrirSacCombat()">&#x1F392; Sac</button>'
         + ((c.equipe && c.equipe.length > 1) ? '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(46,204,113,0.3);border:1px solid #2ecc71;font-size:12px;padding:8px 20px;" onclick="ouvrirSwitch()">&#x1F501; Changer</button>' : '')
-        + ((c.estBoss || c.estRival) ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
+        + ((c.estBoss || c.estRival || c.estLigue) ? '' : '<button class="connect-btn" style="border:none;cursor:pointer;background:rgba(231,76,60,0.3);border:1px solid #e74c3c;font-size:12px;padding:8px 20px;" onclick="fuirCombat()">&#x1F3C3; Fuir</button>')
         + '</div>'
         + '</div>';
       document.getElementById('content').innerHTML = html;
@@ -4085,12 +4081,7 @@ function ouvrirSwitch(){
             setTimeout(function(){ alert('&#x1F4DC; '+d.msg); hub(); }, 600);
             return;
           }
-          // Super-Ration : soin sans riposte
-          if(d.superRation){
-            afficherCombat(['&#x1F356; Super-Ration : +'+d.gainPv+' PV (sans perdre le tour) !']);
-            return;
-          }
-          // Potion/Elixir : soin avec riposte
+          // Potion/Elixir/Super-Ration : soin avec riposte
           var lignes = ['💚 +'+d.gainPv+' PV !', 'Le '+combatEtat.combat.enNom+' riposte ('+d.attaqueEnnemi+') : '+d.degatsRiposte+' degats'];
           if(d.fini && !d.victoire){
             afficherCombat(lignes);
