@@ -2010,10 +2010,9 @@ app.get('/eveil/equipe', async (req, res) => {
   const { data: caps } = await supabase.from('eveil_captures').select('*').eq('username', u);
   const captures = caps || [];
 
-  // Monstres recrutables = ceux capturables qui sont des FORMES 1 (ont une evolution)
+  // Toutes les captures du joueur (toutes formes confondues : 1, 2 et 3)
   const recrutables = captures.filter(function(c){
-    const m = EVEIL_MONSTRES[c.monstre_id];
-    return m && m.evolution; // forme 1 = a une evolution
+    return EVEIL_MONSTRES[c.monstre_id]; // on garde tout ce qui existe dans le bestiaire
   }).map(function(c){
     const m = EVEIL_MONSTRES[c.monstre_id];
     return {
