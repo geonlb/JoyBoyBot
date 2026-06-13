@@ -1957,7 +1957,7 @@ app.post('/eveil/ligue/start', async (req, res) => {
     tour: 1
   };
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
-  res.json({ success: true, combat, boss: { pnj:boss.pnj, buste:boss.buste, couleur:boss.couleur, intro:boss.intro, victoire:boss.victoire, defaite:boss.defaite, musique:boss.musique, gainBrise:boss.gainBrise, idx:bossIdx } });
+  res.json({ success: true, combat, joFruit: j.fruit, joNiveau: j.niveau, joStade: j.stade, boss: { pnj:boss.pnj, buste:boss.buste, couleur:boss.couleur, intro:boss.intro, victoire:boss.victoire, defaite:boss.defaite, musique:boss.musique, gainBrise:boss.gainBrise, idx:bossIdx } });
 });
 
 // Quand le joueur a battu les 3 monstres d'un boss : on l'enregistre + recompense
