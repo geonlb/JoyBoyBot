@@ -3344,7 +3344,7 @@ function bateau(){
             }
           }
 
-          var html = '<div style="background:linear-gradient(rgba(5,5,16,0.55),rgba(5,5,16,0.75)), url('+IMG+'/eveil/bateau.png) center/cover;border:1px solid '+lig.couleur+';border-radius:20px;padding:30px 25px;max-width:680px;margin:0 auto;">'
+          var html = '<div style="background:linear-gradient(rgba(5,5,16,0.55),rgba(5,5,16,0.75)), url('+IMG+'/eveil/bateau.png?v=2) center/cover;border:1px solid '+lig.couleur+';border-radius:20px;padding:30px 25px;max-width:680px;margin:0 auto;">'
             + '<div style="font-family:Cinzel,serif;font-size:26px;color:#87ceeb;letter-spacing:2px;margin-bottom:5px;">🏠 MON BATEAU</div>'
             + '<div style="font-size:13px;color:#ccc;margin-bottom:20px;">Le repaire de '+nomAff+'</div>'
             + '<div id="zone-monstre" style="position:relative;display:inline-block;">'
