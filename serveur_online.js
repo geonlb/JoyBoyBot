@@ -4832,6 +4832,7 @@ function hub(){
           var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
           var brise = (d.brise != null) ? d.brise : 0;
           var maitreLigue = !!(j.maitre_ligue);
+          var medsObtenus = (j.medaillons) ? j.medaillons.split(',').filter(Boolean).length : 0;
           var badgeMaitre = maitreLigue ? '<div style="text-align:center;margin-top:0.6cqw;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:1.05cqw;letter-spacing:1px;padding:0.25cqw 0.9cqw;border-radius:8px;box-shadow:0 0 10px #b48cff88;">&#x2B50; MAITRE DE LA LIGUE</span></div>' : '';
           var badgeMaitreMob = maitreLigue ? '<div style="margin-top:6px;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;padding:2px 10px;border-radius:8px;">&#x2B50; MAITRE DE LA LIGUE</span></div>' : '';
 
@@ -4873,6 +4874,7 @@ function hub(){
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BADGES</span><span style="color:#f6d54a;">'+medsObtenus+'/6</span></div>'
             + badgeMaitre
             + '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;margin-top:0.6cqw;"><img src="'+IMG+'/eveil/'+genreImg+'.png" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));" alt="Perso"></div>'
             + '</div>'
@@ -4892,6 +4894,7 @@ function hub(){
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BADGES</span><span style="color:#f6d54a;">'+medsObtenus+'/6</span></div>'
             + badgeMaitreMob
             + '</div></div>'
             + '<div class="grille-menu">'+grille+'</div>'
