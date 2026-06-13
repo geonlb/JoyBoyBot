@@ -4451,6 +4451,7 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
 
     function entrerLigue(){
       arreterSon('start'); arreterSon('boss'); arreterSon('rival');
+      if(typeof arreterMusiqueLigue === 'function') arreterMusiqueLigue();
       fetch('/eveil/ligue/status?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
@@ -4514,7 +4515,9 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
           try{
             window._musiqueLigueActive = new Audio(IMG+'/eveil/'+d.boss.musique+'.mp3');
             window._musiqueLigueActive.loop = true;
-            window._musiqueLigueActive.volume = 0.5;
+            // Volume specifique par boss (boss 3 trop fort par defaut)
+            var volBoss = { 'ligue-1':0.5, 'ligue-2':0.5, 'ligue-3':0.25, 'ligue-roi':0.5 };
+            window._musiqueLigueActive.volume = volBoss[d.boss.musique] != null ? volBoss[d.boss.musique] : 0.5;
             window._musiqueLigueActive.play().catch(function(){});
             sonsCombat[d.boss.musique] = window._musiqueLigueActive;
           }catch(e){}
@@ -4789,6 +4792,7 @@ function hub(){
       arreterSon('start');
       arreterSon('boss');
       arreterSon('rival');
+      if(typeof arreterMusiqueLigue === 'function') arreterMusiqueLigue();
       fetch('/eveil/joueur?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
         .then(function(d){
