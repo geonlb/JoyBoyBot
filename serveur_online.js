@@ -1553,7 +1553,8 @@ const EVEIL_STATS = {
   nuage: { pvB:65,  pvN:7,  atkB:28, atkN:5, defB:26, defN:4 },
   roche: { pvB:110, pvN:14, atkB:14, atkN:2, defB:30, defN:5 },
   givre: { pvB:100, pvN:12, atkB:20, atkN:3, defB:28, defN:5 },
-  neant: { pvB:90,  pvN:10, atkB:38, atkN:7, defB:8,  defN:1 }
+  neant: { pvB:90,  pvN:10, atkB:38, atkN:7, defB:8,  defN:1 },
+  neutre:{ pvB:100, pvN:12, atkB:30, atkN:5, defB:20, defN:3 }
 };
 // Attaques par element : [base, chargee, ultime] avec multiplicateur de degats
 const EVEIL_ATTAQUES = {
@@ -2162,6 +2163,10 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const stadeActif = actifCheck ? actifCheck.stade : j.stade;
   const estFruitActif = !actifCheck || actifCheck.type === 'fruit';
   if (idx === 2 && (!estFruitActif || j.stade < 4)) return res.status(400).json({ error: 'Ultime reservee a ton partenaire au stade final !' });
+  // Limite : 1 ultime par monstre par combat (reset au switch puisque chaque slot a son entree)
+  if (!c.ultimesUsed) c.ultimesUsed = {};
+  if (idx === 2 && c.ultimesUsed[c.actif]) return res.status(400).json({ error: 'Tu as deja utilise l&#39;ultime avec ce monstre dans ce combat ! Switch pour en utiliser une autre.' });
+  if (idx === 2) c.ultimesUsed[c.actif] = true;
 
   const log = [];
 
@@ -2171,8 +2176,9 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const elemJoueur = actifJ ? actifJ.elem : j.fruit;
   const atkJoueur = EVEIL_ATTAQUES[elemJoueur][idx];
   const multJ = multiplicateurElement(elemJoueur, c.enElem);
-  let degJ = Math.max(1, Math.round((c.joAtk * atkJoueur.mult - c.enDef * 1.0) * multJ));
-  const critJ = Math.random() < 0.1 ? 2 : 1; // 10% crit
+  const nivAttJ = actifJ ? actifJ.niveau : j.niveau;
+  let degJ = Math.max(1, Math.round((nivAttJ * 0.4 + 2) * c.joAtk * atkJoueur.mult / Math.max(1, c.enDef) * multJ));
+  const critJ = Math.random() < 0.1 ? 1.5 : 1; // 10% crit x1.5
   degJ = Math.round(degJ * critJ);
   c.enPv = Math.max(0, c.enPv - degJ);
   let msgJ = 'Ton monstre utilise ' + atkJoueur.nom + ' ! ' + degJ + ' degats';
@@ -2246,8 +2252,8 @@ app.post('/eveil/combat/attaque', async (req, res) => {
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][idxEnnemi];
   let multE = multiplicateurElement(c.enElem, elemJoueur);
   if (c.estBoss && multE === 2) multE = 1.5; // super-efficace adouci pour les boss
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
-  const critE = Math.random() < 0.08 ? 2 : 1;
+  let degE = Math.max(1, Math.round((c.enNiv * 0.4 + 2) * c.enAtk * atkEnnemi.mult / Math.max(1, c.joDef) * multE));
+  const critE = Math.random() < 0.08 ? 1.5 : 1;
   degE = Math.round(degE * critE);
   c.joPv = Math.max(0, c.joPv - degE);
   let msgE = 'Le ' + c.enElem + ' sauvage riposte avec ' + atkEnnemi.nom + ' ! ' + degE + ' degats';
@@ -2371,7 +2377,7 @@ app.post('/eveil/combat/objet', async (req, res) => {
   // Le monstre riposte (un tour)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, j.fruit);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
+  let degE = Math.max(1, Math.round((c.enNiv * 0.4 + 2) * c.enAtk * atkEnnemi.mult / Math.max(1, c.joDef) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
   if (c.equipe && c.equipe[c.actif]) c.equipe[c.actif].pv = c.joPv;
 
@@ -2439,7 +2445,7 @@ app.post('/eveil/combat/switch', async (req, res) => {
   // L'ennemi en profite pour attaquer (le switch coute un tour)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, nouveau.elem);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
+  let degE = Math.max(1, Math.round((c.enNiv * 0.4 + 2) * c.enAtk * atkEnnemi.mult / Math.max(1, c.joDef) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
   c.equipe[c.actif].pv = c.joPv;
 
@@ -2524,7 +2530,7 @@ app.post('/eveil/combat/capture', async (req, res) => {
   // Echec : le monstre riposte (un tour perdu)
   const atkEnnemi = EVEIL_ATTAQUES[c.enElem][Math.floor(Math.random()*2)];
   const multE = multiplicateurElement(c.enElem, j.fruit);
-  let degE = Math.max(1, Math.round((c.enAtk * atkEnnemi.mult - c.joDef * 1.0) * multE));
+  let degE = Math.max(1, Math.round((c.enNiv * 0.4 + 2) * c.enAtk * atkEnnemi.mult / Math.max(1, c.joDef) * multE));
   c.joPv = Math.max(0, c.joPv - degE);
 
   // Defaite ?
@@ -3546,14 +3552,18 @@ var ATTAQUES_FRONT = {
       var elemActif = (actif ? actif.elem : e.joFruit);
       var atks = ATTAQUES_FRONT[elemActif];
       var btnsAtk = '';
+      // Verifier si l'ultime a deja ete utilisee par le monstre actif dans ce combat
+      var ultimeDejaUtilisee = !!(c.ultimesUsed && c.ultimesUsed[c.actif]);
       for(var i=0;i<3;i++){
         var ultime = (i===2);
-        var dispo = !ultime || (actif && actif.type==='fruit' && e.joStade>=4) || (!actif && e.joStade>=4);
+        var dispoStade = !ultime || (actif && actif.type==='fruit' && e.joStade>=4) || (!actif && e.joStade>=4);
+        var dispo = dispoStade && !(ultime && ultimeDejaUtilisee);
         var labels = ['Base','Chargee','Ultime'];
         if(dispo){
           btnsAtk += '<button class="connect-btn" style="border:none;cursor:pointer;font-size:13px;padding:10px 16px;margin:4px;" onclick="attaquer('+i+')"><b>'+atks[i]+'</b><br><span style="font-size:10px;opacity:0.8;">'+labels[i]+'</span></button>';
         } else {
-          btnsAtk += '<button disabled style="opacity:0.4;cursor:not-allowed;border:none;border-radius:30px;font-size:13px;padding:10px 16px;margin:4px;background:rgba(0,0,0,0.5);color:#888;">'+atks[i]+' &#x1F512;<br><span style="font-size:10px;">Stade final</span></button>';
+          var raisonLock = (ultime && ultimeDejaUtilisee) ? 'Deja utilisee' : 'Stade final';
+          btnsAtk += '<button disabled style="opacity:0.4;cursor:not-allowed;border:none;border-radius:30px;font-size:13px;padding:10px 16px;margin:4px;background:rgba(0,0,0,0.5);color:#888;">'+atks[i]+' &#x1F512;<br><span style="font-size:10px;">'+raisonLock+'</span></button>';
         }
       }
 
