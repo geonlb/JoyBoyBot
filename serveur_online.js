@@ -4447,10 +4447,10 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
           // Position des 4 emplacements sur l'image (etage par etage : Boss1 bas, Boss2, Boss3, Roi en haut)
           // Coords en % (x,y) calees sur la composition etagee du fond
           var positions = [
-            { x:18, y:84 }, // Boss 1 (bas)
-            { x:30, y:62 }, // Boss 2 (milieu-bas)
-            { x:54, y:42 }, // Boss 3 (milieu-haut)
-            { x:78, y:18 }  // Roi (sommet)
+            { x:60, y:80 }, // Boss 1 Camagma (lave) - salle orange en bas-centre
+            { x:22, y:52 }, // Boss 2 Tevardinerie (roche) - salle brune/mousse a gauche
+            { x:73, y:48 }, // Boss 3 Kentoro (marin) - salle bleue avec cascade a droite
+            { x:47, y:18 }  // Roi Dark-N-Ney - trone arc-en-ciel tout en haut centre
           ];
           var hots = '';
           for(var i=0;i<boss.length;i++){
