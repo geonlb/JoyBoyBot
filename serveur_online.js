@@ -1957,7 +1957,7 @@ app.post('/eveil/ligue/start', async (req, res) => {
     tour: 1
   };
   await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
-  res.json({ success: true, combat, boss: { pnj:boss.pnj, buste:boss.buste, couleur:boss.couleur, intro:boss.intro, musique:boss.musique, gainBrise:boss.gainBrise, idx:bossIdx } });
+  res.json({ success: true, combat, boss: { pnj:boss.pnj, buste:boss.buste, couleur:boss.couleur, intro:boss.intro, victoire:boss.victoire, defaite:boss.defaite, musique:boss.musique, gainBrise:boss.gainBrise, idx:bossIdx } });
 });
 
 // Quand le joueur a battu les 3 monstres d'un boss : on l'enregistre + recompense
@@ -2770,7 +2770,8 @@ app.get('/eveil', (req, res) => {
       nuage: { element:'Nuage', couleur:'#bdc3c7', stades:['brisa-no-nlb','piouf','zephyx','loukane'],              noms:['Brisa no NLB','Piouf','Zephyx','Loukane'],              attaques:['Bourrasque','Serres foudroyantes','Oeil du Cyclone'],            stats:{pvB:65,pvN:7, atkB:28,atkN:5, defB:26,defN:4} },
       roche: { element:'Roche', couleur:'#d4a017', stades:['stoko-no-nlb','cayasse','roknar','cayosaura'],          noms:['Stoko no NLB','Cayasse','Roknar','Cayosaura'],          attaques:['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'], stats:{pvB:110,pvN:14, atkB:14,atkN:2, defB:30,defN:5} },
       givre: { element:'Givre', couleur:'#5dade2', stades:['arlio-no-nlb','givrou','latsnow','pokeryx'],            noms:['Arlio no NLB','Givrou','Latsnow','Pokeryx'],            attaques:['Morsure gelee','Souffle de blizzard','Ere Glaciaire'],           stats:{pvB:100,pvN:12, atkB:20,atkN:3, defB:28,defN:5} },
-      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'],                   stats:{pvB:90,pvN:10, atkB:38,atkN:7, defB:8,defN:1} }
+      neant: { element:'Neant', couleur:'#8e44ad', stades:['neyarole-no-nlb','ombrelin','neantis','yuniversae'],    noms:['Neyarole no NLB','Ombrelin','Neantis','Yuniversae'],    attaques:['Griffe du vide','Engloutissement','Trou Noir'],                   stats:{pvB:90,pvN:10, atkB:38,atkN:7, defB:8,defN:1} },
+      neutre:{ element:'Neutre',couleur:'#b48cff', stades:['orugold','orugold','orugold','orugold'],               noms:['Neutre','Neutre','Neutre','Neutre'],                    attaques:['Frappe Mystique','Onde Multicolore','Eclipse Cosmique'],          stats:{pvB:100,pvN:12, atkB:30,atkN:5, defB:20,defN:3} }
     };
 
 function ecranNommer(){
@@ -3421,7 +3422,8 @@ var ATTAQUES_FRONT = {
       nuage: ['Bourrasque','Serres foudroyantes','Oeil du Cyclone'],
       roche: ['Coup de poing rocheux','Charge devastatrice','Effondrement de Montagne'],
       givre: ['Morsure gelee','Souffle de blizzard','Ere Glaciaire'],
-      neant: ['Griffe du vide','Engloutissement','Trou Noir']
+      neant: ['Griffe du vide','Engloutissement','Trou Noir'],
+      neutre:['Frappe Mystique','Onde Multicolore','Eclipse Cosmique']
     };
     var combatEtat = null; // garde l'etat du combat en cours cote client
     var sonsCombat = {
