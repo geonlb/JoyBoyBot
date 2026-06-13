@@ -1562,12 +1562,16 @@ const EVEIL_ATTAQUES = {
   nuage: [{nom:'Bourrasque',mult:1.0},{nom:'Serres foudroyantes',mult:1.6},{nom:'Oeil du Cyclone',mult:2.5}],
   roche: [{nom:'Coup de poing rocheux',mult:1.0},{nom:'Charge devastatrice',mult:1.6},{nom:'Effondrement de Montagne',mult:2.5}],
   givre: [{nom:'Morsure gelee',mult:1.0},{nom:'Souffle de blizzard',mult:1.6},{nom:'Ere Glaciaire',mult:2.5}],
-  neant: [{nom:'Griffe du vide',mult:1.0},{nom:'Engloutissement',mult:1.6},{nom:'Trou Noir',mult:2.5}]
+  neant: [{nom:'Griffe du vide',mult:1.0},{nom:'Engloutissement',mult:1.6},{nom:'Trou Noir',mult:2.5}],
+  neutre:[{nom:'Frappe Mystique',mult:1.0},{nom:'Onde Multicolore',mult:1.6},{nom:'Eclipse Cosmique',mult:2.5}]
 };
 // Roue des forces : qui est fort contre qui (cle bat valeur)
 const EVEIL_FORCES = { lave:'givre', givre:'marin', marin:'nuage', nuage:'roche', roche:'lave' };
 // Neant : fort contre marin et roche, faible contre les 4 autres
+// Neutre : aucune faiblesse, tape 1.5x sur tout, recoit 1x de tout
 function multiplicateurElement(attaquant, defenseur) {
+  if (attaquant === 'neutre') return 1.5;
+  if (defenseur === 'neutre') return 1;
   if (attaquant === 'neant') return (defenseur === 'marin' || defenseur === 'roche') ? 2 : 0.5;
   if (defenseur === 'neant') return (attaquant === 'marin' || attaquant === 'roche') ? 0.5 : 2;
   if (EVEIL_FORCES[attaquant] === defenseur) return 2;       // super efficace
@@ -1778,6 +1782,51 @@ const EVEIL_TEMPLES = [
     defaite:'Hahaha... Le vide te reclame deja. Reviens, si tu oses... mais l&#39;ombre, elle, n&#39;oublie jamais.' }
 ];
 
+// =============================================================================
+// LIGUE DES PIRATES : monstres et boss dedies (pool separe, hors collection)
+// =============================================================================
+const EVEIL_MONSTRES_LIGUE = {
+  // Boss 1 - Camagma (lave)
+  miaouf:        { nom:'Miaouf', img:'miaouf', element:'lave', niveau:60 },
+  flamochon:     { nom:'Flamochon', img:'flamochon', element:'lave', niveau:60 },
+  chaudiradateur:{ nom:'Chaudiradateur', img:'chaudiradateur', element:'lave', niveau:60 },
+  // Boss 2 - Tevardinerie (roche)
+  terrenesol:    { nom:'Terrenesol', img:'terrenesol', element:'roche', niveau:65 },
+  poutravec:     { nom:'Poutravec', img:'poutravec', element:'roche', niveau:65 },
+  carnitwist:    { nom:'Carnitwist', img:'carnitwist', element:'roche', niveau:65 },
+  // Boss 3 - Kentoro (marin)
+  herichaku:     { nom:'Herichaku', img:'herichaku', element:'marin', niveau:70 },
+  anguinjaja:    { nom:'Anguinjaja', img:'anguinjaja', element:'marin', niveau:70 },
+  katazard:      { nom:'Katazard', img:'katazard', element:'marin', niveau:70 },
+  // Roi - Dark-N-Ney (neutre)
+  orugold:       { nom:'Orugold', img:'orugold', element:'neutre', niveau:80 },
+  pandarion:     { nom:'Pandarion', img:'pandarion', element:'neutre', niveau:80 },
+  celesturion:   { nom:'Celesturion', img:'celesturion', element:'neutre', niveau:80 }
+};
+
+const EVEIL_LIGUE_BOSS = [
+  { id:'camagma', pnj:'Camagma', buste:'camagma-buste', element:'lave', couleur:'#e74c3c', musique:'ligue-1',
+    equipe:['miaouf','flamochon','chaudiradateur'], gainBrise:5000,
+    intro:'J&#39;ai chaud ! Pas toi ?! J&#39;ai pas le temps avec toi, ca va aller vite !',
+    victoire:'Incroyable, mais j&#39;ai... j&#39;ai pas le temps, je dois retourner bosser... bonne chance.',
+    defaite:'Hahahaha... je t&#39;avais prevenu, t&#39;iras en cuisine, tu seras surement meilleur la-bas !' },
+  { id:'tevardinerie', pnj:'Tevardinerie', buste:'tevardinerie-buste', element:'roche', couleur:'#9b59b6', musique:'ligue-2',
+    equipe:['terrenesol','poutravec','carnitwist'], gainBrise:5000,
+    intro:'J&#39;adore les fleurs, j&#39;aime la nature, et toi ? ... En vrai, ca m&#39;interesse pas, viens te battre !',
+    victoire:'Je crois que j&#39;me suis pris un beau rateau... Bravo... Mais j&#39;reste meilleur que toi.',
+    defaite:'1 fois pas 2 ! Va voir ailleurs si j&#39;y suis...' },
+  { id:'kentoro', pnj:'Kentoro', buste:'kentoro-buste', element:'marin', couleur:'#3498db', musique:'ligue-3',
+    equipe:['herichaku','anguinjaja','katazard'], gainBrise:5000,
+    intro:'Hmmmmm... Toi... OK.',
+    victoire:'Le boss t&#39;attend...',
+    defaite:'Tu me fais perdre mon temps !' },
+  { id:'roi', pnj:'Dark-N-Ney', buste:'dark-n-ney-buste', element:'neutre', couleur:'#b48cff', musique:'ligue-roi',
+    equipe:['orugold','pandarion','celesturion'], gainBrise:50000,
+    intro:'Tu as vaincu les 3 minables, tu peux me croire, ton chemin s&#39;arrete ici. J&#39;espere que tu as prevu des mouchoirs car tu vas pleurer ! Let&#39;s GO !!!',
+    victoire:'Co... comment... Tu... C&#39;est pas possible... jamais personne... n&#39;a... (soupire) Bravo !',
+    defaite:'Je t&#39;avais prevenu ! Retour jouer aux billes et laisse les grands tranquilles. Minable...' }
+];
+
 // Lancer le combat de boss d'un temple
 app.post('/eveil/temple/start', async (req, res) => {
   const { username, templeId } = req.body;
@@ -1848,6 +1897,91 @@ app.get('/eveil/carte', async (req, res) => {
   const { data: j } = await supabase.from('eveil_joueurs').select('medaillons, fruit, niveau, stade').eq('username', u).single();
   const medaillons = (j && j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
   res.json({ temples: EVEIL_TEMPLES, medaillons, joueur: j || null });
+});
+
+// =============================================================================
+// LIGUE DES PIRATES : status + combat
+// =============================================================================
+app.get('/eveil/ligue/status', async (req, res) => {
+  const username = req.query.username;
+  if (!username) return res.status(400).json({ error: 'Manque username' });
+  const u = username.toLowerCase();
+  const { data: j } = await supabase.from('eveil_joueurs').select('ligue_progres, maitre_ligue, medaillons').eq('username', u).single();
+  if (!j) return res.json({ progres: 0, maitre: false, debloque: false, boss: EVEIL_LIGUE_BOSS });
+  const meds = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  // La Ligue est debloquee une fois les 6 medaillons obtenus
+  const debloque = meds.length >= 6;
+  const bossPublic = EVEIL_LIGUE_BOSS.map(function(b){ return { id:b.id, pnj:b.pnj, buste:b.buste, element:b.element, couleur:b.couleur }; });
+  res.json({ progres: j.ligue_progres || 0, maitre: !!j.maitre_ligue, debloque: debloque, boss: bossPublic });
+});
+
+// Lance le combat contre un boss de la Ligue (selon l'index 0-3)
+app.post('/eveil/ligue/start', async (req, res) => {
+  const { username, bossIdx } = req.body;
+  if (!username || bossIdx == null) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const boss = EVEIL_LIGUE_BOSS[bossIdx];
+  if (!boss) return res.status(400).json({ error: 'Boss inconnu' });
+
+  const { data: j } = await supabase.from('eveil_joueurs').select('*').eq('username', u).single();
+  if (!j || !j.fruit) return res.status(400).json({ error: 'Pas de monstre !' });
+  if (j.stade < 2) return res.status(400).json({ error: 'Ton oeuf doit eclore !' });
+  const meds = (j.medaillons) ? j.medaillons.split(',').filter(Boolean) : [];
+  if (meds.length < 6) return res.status(400).json({ error: 'Tu dois battre les 6 temples avant la Ligue !' });
+  const progres = j.ligue_progres || 0;
+  if (bossIdx !== progres) return res.status(400).json({ error: 'Tu dois battre les boss dans l&#39;ordre !' });
+
+  // Charger l'equipe (fruit + captures) + monstre de depart vivant
+  const equipe = await chargerEquipe(j, u);
+  const actifDepart = equipe.findIndex(function(m){ return m.pv > 0; });
+  if (actifDepart < 0) return res.status(400).json({ error: 'Toute ton equipe est KO ! Soigne tes monstres.' });
+  const depart = equipe[actifDepart];
+  const sj = { pvMax: depart.pvMax, atk: depart.atk, def: depart.def };
+  let pvJoueur = depart.pv;
+
+  // Equipe boss : 3 monstres a affronter en sequence
+  const teamBoss = boss.equipe.map(function(mid){
+    const m = EVEIL_MONSTRES_LIGUE[mid];
+    const s = statsCalc(m.element, m.niveau);
+    return { id:mid, nom:m.nom, img:m.img, element:m.element, niveau:m.niveau, pvMax:s.pvMax, pv:s.pvMax, atk:s.atk, def:s.def };
+  });
+  const m0 = teamBoss[0];
+
+  const combat = {
+    estLigue: true, ligueBossIdx: bossIdx, ligueActif: 0, ligueEquipe: teamBoss,
+    monstreId: m0.id, enElem: m0.element, enNiv: m0.niveau, enStade: 3,
+    enNom: m0.nom, enImg: m0.img, enRarete: 'ultime', zone: 0,
+    enPvMax: m0.pvMax, enPv: m0.pv, enAtk: m0.atk, enDef: m0.def,
+    joPvMax: sj.pvMax, joPv: pvJoueur, joAtk: sj.atk, joDef: sj.def,
+    equipe: equipe, actif: actifDepart,
+    tour: 1
+  };
+  await supabase.from('eveil_joueurs').update({ combat_actif: JSON.stringify(combat) }).eq('username', u);
+  res.json({ success: true, combat, boss: { pnj:boss.pnj, buste:boss.buste, couleur:boss.couleur, intro:boss.intro, musique:boss.musique, gainBrise:boss.gainBrise, idx:bossIdx } });
+});
+
+// Quand le joueur a battu les 3 monstres d'un boss : on l'enregistre + recompense
+app.post('/eveil/ligue/victoire', async (req, res) => {
+  const { username, bossIdx } = req.body;
+  if (!username || bossIdx == null) return res.status(400).json({ error: 'Manque des infos' });
+  const u = username.toLowerCase();
+  const boss = EVEIL_LIGUE_BOSS[bossIdx];
+  if (!boss) return res.status(400).json({ error: 'Boss inconnu' });
+  const { data: j } = await supabase.from('eveil_joueurs').select('ligue_progres, maitre_ligue').eq('username', u).single();
+  if (!j) return res.status(400).json({ error: 'Joueur inconnu' });
+  const progres = j.ligue_progres || 0;
+  if (bossIdx !== progres) return res.json({ success: true, deja: true });
+
+  const nouveauProgres = bossIdx + 1;
+  const estFinal = (nouveauProgres === EVEIL_LIGUE_BOSS.length);
+  const maj = { ligue_progres: nouveauProgres };
+  if (estFinal) maj.maitre_ligue = true;
+  await supabase.from('eveil_joueurs').update(maj).eq('username', u);
+  // Donner la Brise (depuis la table primes)
+  const { data: pData } = await supabase.from('primes').select('berrys').eq('username', u).single();
+  const briseCur = (pData && pData.berrys) ? pData.berrys : 0;
+  await supabase.from('primes').upsert({ username: u, berrys: briseCur + boss.gainBrise }, { onConflict: 'username' });
+  res.json({ success: true, progres: nouveauProgres, maitre: estFinal, gainBrise: boss.gainBrise, totalBrise: briseCur + boss.gainBrise });
 });
 const EVEIL_ZONES = {
   1: { nom:'Crique des Debutants', desc:'Une plage tranquille pour faire ses armes', nivMin:1, nivMax:10, couleur:'#2ecc71', requis:null },
@@ -2042,6 +2176,22 @@ app.post('/eveil/combat/attaque', async (req, res) => {
 
   // Victoire ?
   if (c.enPv <= 0) {
+    // ===== LIGUE : si le boss a encore des monstres, envoie le suivant et le combat continue =====
+    if (c.estLigue && c.ligueEquipe && c.ligueActif < c.ligueEquipe.length - 1) {
+      c.ligueActif += 1;
+      const next = c.ligueEquipe[c.ligueActif];
+      c.monstreId = next.id; c.enElem = next.element; c.enNiv = next.niveau; c.enStade = 3;
+      c.enNom = next.nom; c.enImg = next.img;
+      c.enPvMax = next.pvMax; c.enPv = next.pv; c.enAtk = next.atk; c.enDef = next.def;
+      log.push('Le boss envoie ' + next.nom + ' (niv ' + next.niveau + ') !');
+      c.tour++;
+      await sauverPvEquipe(c, u);
+      const majAJ = { combat_actif: JSON.stringify(c) };
+      const actifSv = (c.equipe && c.equipe[c.actif]) ? c.equipe[c.actif] : null;
+      if (!actifSv || actifSv.type === 'fruit') majAJ.pv_actuels = c.joPv;
+      await supabase.from('eveil_joueurs').update(majAJ).eq('username', u);
+      return res.json({ success: true, fini: false, log, combat: c, ligueNextMonstre: true, nomNext: next.nom, imgNext: next.img, elemNext: next.element });
+    }
     let gainXp = 20 + c.enNiv * 8;
     let gainBrise = 30 + c.enNiv * 5;
     if (c.estRival) { gainXp = Math.round(gainXp * 2); gainBrise = Math.round(gainBrise * 2.5); }
@@ -2065,7 +2215,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
       await supabase.from('primes').upsert({ username: u, berrys: newBrise, derniermessage: 0, derniereprime: 0 });
       if (c.estRival) { majV.rival_zone = 0; majV.rival_vaincu = (j.rival_vaincu || 0) + 1; }
       await supabase.from('eveil_joueurs').update(majV).eq('username', u);
-      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true, xpAvant: resCap.xpAvant, xpApres: resCap.xpApres, nivAvant: resCap.nivAvant, nivApres: resCap.nivApres, prochainXpAvant: resCap.prochainXpAvant, prochainXpApres: resCap.prochainXpApres, captureElem: actifVic.elem });
+      return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau: resCap.niveau, stade: resCap.stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, estLigue: c.estLigue || false, ligueBossIdx: (c.ligueBossIdx != null ? c.ligueBossIdx : null), evoCapture, captureGagnante: actifVic.nom, surCaptureVic: true, xpAvant: resCap.xpAvant, xpApres: resCap.xpApres, nivAvant: resCap.nivAvant, nivApres: resCap.nivApres, prochainXpAvant: resCap.prochainXpAvant, prochainXpApres: resCap.prochainXpApres, captureElem: actifVic.elem });
     }
 
     // Sinon : l'XP va au fruit (comportement normal)
@@ -2081,7 +2231,7 @@ app.post('/eveil/combat/attaque', async (req, res) => {
     const majVictoire = { xp, niveau, stade, pv_actuels: c.joPv, combat_actif: '' };
     if (c.estRival) { majVictoire.rival_zone = 0; majVictoire.rival_vaincu = (j.rival_vaincu || 0) + 1; }
     await supabase.from('eveil_joueurs').update(majVictoire).eq('username', u);
-    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, xpAvant: xpAvantFruit, xpApres: xp, nivAvant: nivAvantFruit, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvantFruit), prochainXpApres: xpPourNiveau(niveau) });
+    return res.json({ success: true, fini: true, victoire: true, log, gainXp, gainBrise, events, niveau, stade, combat: c, estBoss: c.estBoss || false, templeId: c.templeId || null, estRival: c.estRival || false, estLigue: c.estLigue || false, ligueBossIdx: (c.ligueBossIdx != null ? c.ligueBossIdx : null), xpAvant: xpAvantFruit, xpApres: xp, nivAvant: nivAvantFruit, nivApres: niveau, prochainXpAvant: xpPourNiveau(nivAvantFruit), prochainXpApres: xpPourNiveau(niveau) });
   }
 
   // --- Riposte de l'ennemi ---
@@ -3473,7 +3623,8 @@ var ATTAQUES_FRONT = {
       nuage: { emoji:'⚡', couleur:'#bdc3c7', halo:'#ecf0f1' },
       roche: { emoji:'🪨', couleur:'#d4a017', halo:'#e8b923' },
       givre: { emoji:'❄️', couleur:'#5dade2', halo:'#aed6f1' },
-      neant: { emoji:'🌑', couleur:'#8e44ad', halo:'#bb8fce' }
+      neant: { emoji:'🌑', couleur:'#8e44ad', halo:'#bb8fce' },
+      neutre:{ emoji:'✨', couleur:'#b48cff', halo:'#ffffff' }
     };
 
 function effetElementaireEnnemi(element){
@@ -3548,6 +3699,20 @@ function effetElementaireEnnemi(element){
             setTimeout(function(){ effetElementaireEnnemi(d.enElem); }, 900);
           }
 
+          if(d.ligueNextMonstre){
+            // Boss de Ligue envoie son prochain monstre : mort de l'ancien, puis spawn du suivant
+            combatEtat.combat = d.combat;
+            setTimeout(function(){
+              afficherCombat(d.log);
+              mortMonstre(false); // l'ancien meurt
+              setTimeout(function(){
+                // Re-render avec le nouveau monstre du boss et fumee de spawn
+                afficherCombat(['&#x1F525; '+d.nomNext+' entre en piste !'], true);
+              }, 1100);
+            }, 800);
+            return;
+          }
+
           if(d.fini){
             // Met a jour l'affichage une derniere fois
             setTimeout(function(){
@@ -3560,7 +3725,27 @@ function effetElementaireEnnemi(element){
                 if(d.events && d.events.indexOf('evo4')>=0) msg += '\\n👑 EVOLUTION FINALE !';
                 else if(d.events && d.events.indexOf('evo3')>=0) msg += '\\n✨ Evolution !';
                 else if(d.events && d.events.indexOf('niveau')>=0) msg += '\\n⬆️ Niveau '+d.niveau+' !';
-                if(d.estRival){
+                if(d.estLigue){
+                  // Victoire Ligue : arret musique, barre XP, dialogue victoire boss, enregistrement, retour Hall
+                  arreterMusiqueLigue();
+                  setTimeout(function(){
+                    animationBarreXp(d, function(){
+                      fetch('/eveil/ligue/victoire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,bossIdx:d.ligueBossIdx})})
+                        .then(function(r){return r.json();})
+                        .then(function(rv){
+                          var bAct = ligueBossActuel || {pnj:'Boss',victoire:'Bien joue.',couleur:'#b48cff',buste:'dark-n-ney-buste'};
+                          dialogueBoss(bAct.pnj, bAct.victoire || 'Bien joue.', bAct.couleur, IMG+'/eveil/'+bAct.buste+'.png', function(){
+                            if(rv && rv.maitre){
+                              alert('👑 Tu deviens MAITRE DE LA LIGUE DES PIRATES !\\n+'+rv.gainBrise+' Brise');
+                            } else {
+                              alert('🏅 Boss vaincu !\\n+'+rv.gainBrise+' Brise');
+                            }
+                            entrerLigue();
+                          });
+                        });
+                    });
+                  }, 900);
+                } else if(d.estRival){
                   arreterSon('boss'); arreterSon('rival');
                   jouerSon('fuite');
                   setTimeout(function(){
@@ -3583,8 +3768,8 @@ function effetElementaireEnnemi(element){
                     });
                   }, 900);
                 } else if(d.surCaptureVic){
-                  // Victoire avec un monstre capture : barre d'XP animee (du monstre capture)
-                  setTimeout(function(){ animationBarreXp(d); }, 900);
+                  // Victoire avec un monstre capture : alert simple (pas de barre animee, la fiche du monstre la montre deja)
+                  setTimeout(function(){ alert(msg); hub(); }, 1200);
                 } else {
                   // Victoire normale (fruit) : barre d'XP animee facon Pokemon
                   setTimeout(function(){ animationBarreXp(d); }, 900);
@@ -3593,9 +3778,15 @@ function effetElementaireEnnemi(element){
                 jouerSon('defaite');
                 mortMonstre(true); // le monstre du joueur clignote et disparait
                 setTimeout(function(){
-                  if(d.estRival){ alert('💀 Ton rival t&#39;a vaincu ! Il campe dans cette zone... Soigne ton monstre et reviens te venger !'.replace(/&#39;/g,"'")); }
-                  else { alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); }
-                  hub();
+                  if(d.estLigue){
+                    arreterMusiqueLigue();
+                    var bAct2 = ligueBossActuel || {pnj:'Boss',defaite:'Reviens plus fort.',couleur:'#b48cff',buste:'dark-n-ney-buste'};
+                    dialogueBoss(bAct2.pnj, bAct2.defaite || 'Reviens plus fort.', bAct2.couleur, IMG+'/eveil/'+bAct2.buste+'.png', function(){
+                      alert('💀 Ton equipe a ete vaincue. Soigne tes monstres et retente ta chance !');
+                      entrerLigue();
+                    });
+                  } else if(d.estRival){ alert('💀 Ton rival t&#39;a vaincu ! Il campe dans cette zone... Soigne ton monstre et reviens te venger !'.replace(/&#39;/g,"'")); hub(); }
+                  else { alert('💀 Ton monstre est KO ! Soigne-le avec une potion avant de recombattre.'); hub(); }
                 }, 1200);
               }
             }, 800);
@@ -4241,6 +4432,105 @@ var dialogueEnCours = null; // pour gerer le texte lettre par lettre
         .catch(function(){ alert('Erreur, reessaie.'); });
     }
 
+    // =================================================================
+    // LIGUE DES PIRATES : Hall + lancement combat
+    // =================================================================
+    var ligueBossActuel = null; // memoire du boss en cours pour les dialogues
+
+    function entrerLigue(){
+      arreterSon('start'); arreterSon('boss'); arreterSon('rival');
+      fetch('/eveil/ligue/status?username='+encodeURIComponent(currentUser))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          var boss = d.boss || [];
+          var progres = d.progres || 0;
+          var maitre = !!d.maitre;
+          // Position des 4 emplacements sur l'image (etage par etage : Boss1 bas, Boss2, Boss3, Roi en haut)
+          // Coords en % (x,y) calees sur la composition etagee du fond
+          var positions = [
+            { x:18, y:84 }, // Boss 1 (bas)
+            { x:30, y:62 }, // Boss 2 (milieu-bas)
+            { x:54, y:42 }, // Boss 3 (milieu-haut)
+            { x:78, y:18 }  // Roi (sommet)
+          ];
+          var hots = '';
+          for(var i=0;i<boss.length;i++){
+            var b = boss[i];
+            var p = positions[i];
+            var etat;
+            if(i < progres){
+              // Boss deja battu - vert
+              etat = '<div style="position:absolute;left:'+p.x+'%;top:'+p.y+'%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(46,204,113,0.6);border:3px solid #2ecc71;box-shadow:0 0 22px #2ecc71aa;cursor:default;" title="'+b.pnj+' (vaincu)"><span style="font-size:36px;">&#x2705;</span></div>';
+            } else if(i === progres){
+              // Boss actuel - actif, cliquable, halo de sa couleur
+              etat = '<div onclick="lancerCombatLigue('+i+')" style="position:absolute;left:'+p.x+'%;top:'+p.y+'%;transform:translate(-50%,-50%);width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);border:3px solid '+b.couleur+';box-shadow:0 0 28px '+b.couleur+'cc;cursor:pointer;animation:pulseTemple 1.5s infinite;" title="Defier '+b.pnj+'">'
+                + '<img src="'+IMG+'/eveil/'+b.buste+'.png" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">'
+                + '<div style="position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);border:1px solid '+b.couleur+';color:'+b.couleur+';font-family:Cinzel,serif;font-size:11px;padding:2px 10px;border-radius:8px;white-space:nowrap;">'+b.pnj+'</div>'
+                + '</div>';
+            } else {
+              // Boss verrouille - grise + cadenas
+              etat = '<div style="position:absolute;left:'+p.x+'%;top:'+p.y+'%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);border:3px dashed rgba(255,255,255,0.2);filter:grayscale(1);opacity:0.55;cursor:not-allowed;" title="Verrouille"><span style="font-size:30px;">&#x1F512;</span></div>';
+            }
+            hots += etat;
+          }
+          var titreRoi = maitre ? '<div style="text-align:center;margin-bottom:14px;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:13px;letter-spacing:2px;padding:5px 18px;border-radius:14px;box-shadow:0 0 18px #b48cff88;">&#x2B50; MAITRE DE LA LIGUE</span></div>' : '';
+          var html = '<div style="max-width:1000px;margin:0 auto;">'
+            + '<div style="text-align:center;font-family:Cinzel,serif;font-size:26px;color:#b48cff;letter-spacing:3px;text-shadow:0 0 20px rgba(180,140,255,0.6);margin-bottom:8px;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F; LIGUE DES PIRATES</div>'
+            + '<div style="text-align:center;font-size:13px;color:#aaa;margin-bottom:14px;">Gravis les etages, defie les 3 maitres et affronte le Roi des Pirates</div>'
+            + titreRoi
+            + '<div style="position:relative;width:100%;aspect-ratio:16 / 9;background:url('+IMG+'/eveil/lobby-ligue.png) center/cover;border-radius:16px;border:2px solid #b48cff;box-shadow:0 0 30px rgba(180,140,255,0.45);overflow:hidden;">'
+            + hots
+            + '</div>'
+            + '<div style="text-align:center;margin-top:22px;"><button class="connect-btn" style="border:none;cursor:pointer;background:rgba(0,0,0,0.5);font-size:13px;padding:10px 25px;" onclick="carteMonde()">&#x2190; Retour a la carte</button></div>'
+            + '</div>';
+          document.getElementById('content').innerHTML = html;
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    function lancerCombatLigue(idx){
+      fetch('/eveil/ligue/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:currentUser,bossIdx:idx})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.error){ alert(d.error); entrerLigue(); return; }
+          ligueBossActuel = d.boss;
+          combatEtat = { combat:d.combat, joFruit:d.joFruit, joNiveau:d.joNiveau, joStade:d.joStade };
+          // Dialogue d'intro avec buste, puis combat
+          arreterSon('start'); arreterSon('boss');
+          // Charger la musique custom de ce boss
+          try{
+            var nouv = new Audio(IMG+'/eveil/'+d.boss.musique+'.mp3');
+            nouv.loop = true; nouv.volume = 0.5; nouv.play().catch(function(){});
+            sonsCombat[d.boss.musique] = nouv;
+          }catch(e){}
+          dialogueBoss(d.boss.pnj, d.boss.intro, d.boss.couleur, IMG+'/eveil/'+d.boss.buste+'.png', function(){
+            afficherCombat(['&#x1F3F4;&#x200D;&#x2620;&#xFE0F; '+d.boss.pnj+' envoie son premier monstre !'], true);
+          });
+        })
+        .catch(function(){ alert('Erreur, reessaie.'); });
+    }
+
+    // Dialogue avec un boss en buste (style rival)
+    function dialogueBoss(nom, texte, couleur, imgBuste, callback){
+      var overlay = document.createElement('div');
+      overlay.id = 'dlg-boss-ligue';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99998;display:flex;align-items:center;justify-content:center;padding:20px;';
+      var lignes = texte.split('\\n').map(function(l){ return l.trim(); }).filter(Boolean);
+      var html = '<div style="max-width:640px;background:linear-gradient(140deg,#1a0f3a,#0a0518);border:3px solid '+couleur+';border-radius:18px;box-shadow:0 0 32px '+couleur+'88;padding:24px;text-align:center;">'
+        + '<img src="'+imgBuste+'" style="width:200px;height:200px;object-fit:cover;border-radius:50%;border:4px solid '+couleur+';box-shadow:0 0 22px '+couleur+'aa;" alt="'+nom+'">'
+        + '<div style="font-family:Cinzel,serif;font-size:22px;color:'+couleur+';letter-spacing:3px;margin-top:12px;text-shadow:0 0 14px '+couleur+'88;">'+nom+'</div>'
+        + '<div style="font-size:15px;color:#e5d4ff;margin-top:14px;line-height:1.6;font-style:italic;">'+lignes.map(function(l){return '&laquo; '+l+' &raquo;';}).join('<br><br>')+'</div>'
+        + '<button class="connect-btn" id="dlg-boss-next" style="margin-top:18px;border:none;cursor:pointer;background:'+couleur+';color:#000;font-weight:bold;font-size:13px;padding:9px 26px;border-radius:8px;">Continuer &#x25B6;</button>'
+        + '</div>';
+      overlay.innerHTML = html;
+      document.body.appendChild(overlay);
+      document.getElementById('dlg-boss-next').onclick = function(){ document.body.removeChild(overlay); if(callback) callback(); };
+    }
+
+    function arreterMusiqueLigue(){
+      ['ligue-1','ligue-2','ligue-3','ligue-roi'].forEach(function(k){ try{ if(sonsCombat[k]){ sonsCombat[k].pause(); sonsCombat[k].currentTime=0; } }catch(e){} });
+    }
+
 function boiteMedaillons(){
       fetch('/eveil/carte?username='+encodeURIComponent(currentUser))
         .then(function(r){return r.json();})
@@ -4416,7 +4706,7 @@ function carteMonde(){
           if(ligueDebloque){
             ligueEtat = 'border:3px solid #fff;box-shadow:0 0 30px #f1c40f;animation:pulseTemple 1.5s infinite;cursor:pointer;background:linear-gradient(135deg,rgba(241,196,15,0.5),rgba(230,126,34,0.5));';
             ligueContenu = '<div style="font-size:30px;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div>';
-            ligueClick = 'onclick="alert(&#39;La Ligue des Pirates arrive bientot ! Tu as tous les medaillons, champion ! &#x1F3C6;&#39;)"';
+            ligueClick = 'onclick="entrerLigue()"';
           } else {
             ligueEtat = 'border:3px solid rgba(241,196,15,0.3);background:rgba(0,0,0,0.4);';
             ligueContenu = '<div style="font-size:26px;filter:grayscale(1);opacity:0.5;">&#x1F3F4;&#x200D;&#x2620;&#xFE0F;</div><div style="position:absolute;bottom:-4px;right:-4px;font-size:16px;">&#x1F512;</div>';
@@ -4473,6 +4763,9 @@ function hub(){
           var nbCap = (d.nbCaptures != null) ? d.nbCaptures : 0;
           var totCap = (d.totalMonstres != null) ? d.totalMonstres : 45;
           var brise = (d.brise != null) ? d.brise : 0;
+          var maitreLigue = !!(j.maitre_ligue);
+          var badgeMaitre = maitreLigue ? '<div style="text-align:center;margin-top:0.6cqw;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:1.05cqw;letter-spacing:1px;padding:0.25cqw 0.9cqw;border-radius:8px;box-shadow:0 0 10px #b48cff88;">&#x2B50; MAITRE DE LA LIGUE</span></div>' : '';
+          var badgeMaitreMob = maitreLigue ? '<div style="margin-top:6px;"><span style="display:inline-block;background:linear-gradient(90deg,#b48cff,#8a2be2);color:#fff;font-family:Cinzel,serif;font-size:10px;letter-spacing:1px;padding:2px 10px;border-radius:8px;">&#x2B50; MAITRE DE LA LIGUE</span></div>' : '';
 
           // Les 8 menus
           var ronds = [
@@ -4512,6 +4805,7 @@ function hub(){
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:1.7cqw;line-height:1.9;"><span style="color:#cfe1ff;letter-spacing:0.5px;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + badgeMaitre
             + '<div style="flex:1;display:flex;align-items:flex-end;justify-content:center;margin-top:0.6cqw;"><img src="'+IMG+'/eveil/'+genreImg+'.png" style="max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));" alt="Perso"></div>'
             + '</div>'
             + hots
@@ -4530,6 +4824,7 @@ function hub(){
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">ID</span><span style="color:#fff;font-family:Cinzel,serif;">'+currentUser+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">BRISE</span><span style="color:#fff;">'+brise+'</span></div>'
             + '<div style="display:flex;justify-content:space-between;line-height:1.9;"><span style="color:#cfe1ff;">COLLECTION</span><span style="color:#9fd3ec;">'+nbCap+'/'+totCap+'</span></div>'
+            + badgeMaitreMob
             + '</div></div>'
             + '<div class="grille-menu">'+grille+'</div>'
             + '</div>';
