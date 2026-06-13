@@ -2698,6 +2698,19 @@ app.get('/eveil', (req, res) => {
     var owner = params.get('owner');
     var currentUser = (verified && owner) ? owner.toLowerCase() : null;
     var IMG = '${EVEIL_IMG}';
+    // Patch global : decoder les entites HTML dans les alert() et confirm() pour eviter d'afficher &#39; en clair
+    (function(){
+      var _alert = window.alert;
+      var _confirm = window.confirm;
+      function decode(s){
+        if(typeof s !== 'string') return s;
+        var t = document.createElement('textarea');
+        t.innerHTML = s;
+        return t.value;
+      }
+      window.alert = function(msg){ return _alert(decode(msg)); };
+      window.confirm = function(msg){ return _confirm(decode(msg)); };
+    })();
     var FRUITS = [
       { id:'lave',   nom:'Laviana no NLB',  img:'laviana-no-nlb',  emoji:'🌋', couleur:'#e74c3c', element:'Lave',  fort:'Givre', faible:'Roche' },
       { id:'marin',  nom:'Watame no NLB',   img:'watame-no-nlb',   emoji:'🌊', couleur:'#3498db', element:'Marin', fort:'Nuage', faible:'Givre' },
